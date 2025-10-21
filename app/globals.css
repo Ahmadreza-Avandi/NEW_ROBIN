@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Global shadcn/ui variables - Green/Teal Theme */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%; /* Black text */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%; /* Black text */
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%; /* Black text */
+    
+    /* Primary: Teal-600 (#0d9488) - matches teal-600 in Tailwind */
+    --primary: 173 80% 40%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary: Emerald-600 (#059669) */
+    --secondary: 160 84% 39%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Accent: Lime-500 (#84cc16) - softer than orange */
+    --accent: 82 65% 45%;
+    --accent-foreground: 0 0% 100%;
+    
+    --muted: 173 60% 96%; /* Light teal */
+    --muted-foreground: 0 0% 10%; /* Almost black */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 173 40% 90%; /* Light teal border */
+    --input: 173 40% 90%;
+    --ring: 173 80% 40%; /* Teal ring */
+    --radius: 0.5rem;
+    --chart-1: 173 80% 40%; /* Teal */
+    --chart-2: 160 84% 39%; /* Emerald */
+    --chart-3: 142 76% 36%; /* Green */
+    --chart-4: 173 60% 50%; /* Light Teal */
+    --chart-5: 160 70% 50%; /* Light Emerald */
+  }
+
+  .dark {
+    --background: 173 50% 5%;
+    --foreground: 0 0% 100%;
+    --card: 173 40% 8%;
+    --card-foreground: 0 0% 100%;
+    --popover: 173 40% 8%;
+    --popover-foreground: 0 0% 100%;
+    
+    /* Primary: Teal-500 for dark mode */
+    --primary: 173 80% 45%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary: Emerald-500 for dark mode */
+    --secondary: 160 84% 45%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Accent: Lime-400 for dark mode */
+    --accent: 82 70% 50%;
+    --accent-foreground: 0 0% 0%;
+    
+    --muted: 173 40% 15%;
+    --muted-foreground: 0 0% 70%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 173 40% 15%;
+    --input: 173 40% 15%;
+    --ring: 173 80% 45%;
+    --chart-1: 173 80% 45%;
+    --chart-2: 160 84% 45%;
+    --chart-3: 142 76% 45%;
+    --chart-4: 173 60% 55%;
+    --chart-5: 160 70% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+    direction: rtl;
+  }
+
+  /* Prevent FOUC - Critical styles */
+  .dashboard-layout {
+    background-color: #FAF9F6;
+    color: #000000;
+  }
+
+  /* Ensure sidebar is always styled */
+  .dashboard-layout nav,
+  .dashboard-layout aside {
+    background-color: rgba(255, 255, 255, 0.98);
+    color: #000000;
+  }
+}
+
+@layer components {
+
+  /* Global Animation Utilities */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+    /* Don't set opacity: 0 here - it causes content to be hidden if animation fails */
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Login page specific animations */
+  .login-card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .login-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Button hover animations */
+  .login-button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .login-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+  }
+
+  .login-button:active {
+    transform: translateY(0);
+  }
+
+  /* Input focus animations */
+  .login-input {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .login-input:focus {
+    transform: scale(1.01);
+  }
+}

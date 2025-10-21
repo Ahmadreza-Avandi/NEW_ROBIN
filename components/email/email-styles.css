@@ -1,0 +1,344 @@
+/* استایل‌های اضافی برای کامپوننت‌های ایمیل */
+
+/* کلاس‌های کاربردی برای استفاده در محتوای ایمیل */
+.email-highlight {
+    background: linear-gradient(135deg, rgba(0, 188, 212, 0.1) 0%, rgba(76, 175, 80, 0.1) 100%);
+    border: 1px solid rgba(0, 188, 212, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    position: relative;
+}
+
+.email-highlight::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, #00BCD4 0%, #4CAF50 100%);
+    border-radius: 0 12px 12px 0;
+}
+
+.email-button {
+    display: inline-block;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #00BCD4 0%, #4CAF50 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 16px;
+    margin: 20px 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: none;
+    cursor: pointer;
+}
+
+.email-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #00ACC1 0%, #43A047 100%);
+}
+
+.email-button-secondary {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+}
+
+.email-button-secondary:hover {
+    background: linear-gradient(135deg, #FB8C00 0%, #EF6C00 100%);
+}
+
+.email-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 188, 212, 0.3) 50%, transparent 100%);
+    margin: 30px 0;
+}
+
+.email-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 188, 212, 0.1);
+}
+
+.email-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #00BCD4 0%, #4CAF50 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0 4px;
+}
+
+.email-badge-warning {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+}
+
+.email-badge-success {
+    background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+}
+
+.email-badge-info {
+    background: linear-gradient(135deg, #00BCD4 0%, #26C6DA 100%);
+}
+
+/* استایل‌های خاص برای لیست‌ها */
+.email-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.email-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 188, 212, 0.1);
+    position: relative;
+    padding-right: 20px;
+}
+
+.email-list li:before {
+    content: '•';
+    color: #00BCD4;
+    font-weight: bold;
+    position: absolute;
+    right: 0;
+}
+
+.email-list li:last-child {
+    border-bottom: none;
+}
+
+/* استایل‌های خاص برای جدول */
+.email-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.email-table th {
+    background: linear-gradient(135deg, #00BCD4 0%, #4CAF50 100%);
+    color: white;
+    padding: 12px;
+    text-align: right;
+    font-weight: 600;
+}
+
+.email-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0, 188, 212, 0.1);
+    text-align: right;
+}
+
+.email-table tr:last-child td {
+    border-bottom: none;
+}
+
+.email-table tr:nth-child(even) {
+    background: rgba(0, 188, 212, 0.02);
+}
+
+/* استایل‌های خاص برای آیکون‌ها */
+.email-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.email-icon-success {
+    color: #4CAF50;
+}
+
+.email-icon-warning {
+    color: #FF9800;
+}
+
+.email-icon-info {
+    color: #00BCD4;
+}
+
+.email-icon-error {
+    color: #f44336;
+}
+
+/* استایل‌های خاص برای نقل قول */
+.email-quote {
+    border-right: 4px solid #00BCD4;
+    padding: 16px 20px;
+    margin: 20px 0;
+    background: rgba(0, 188, 212, 0.05);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #374151;
+}
+
+.email-quote::before {
+    content: '"';
+    font-size: 48px;
+    color: #00BCD4;
+    opacity: 0.3;
+    position: absolute;
+    margin-top: -10px;
+    margin-right: -10px;
+}
+
+/* استایل‌های خاص برای کد */
+.email-code {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #e83e8c;
+}
+
+.email-code-block {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    overflow-x: auto;
+    direction: ltr;
+    text-align: left;
+}
+
+/* استایل‌های خاص برای فرم‌ها */
+.email-form {
+    background: rgba(0, 188, 212, 0.05);
+    border: 1px solid rgba(0, 188, 212, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+}
+
+.email-form-group {
+    margin-bottom: 16px;
+}
+
+.email-form-label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.email-form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid rgba(0, 188, 212, 0.3);
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+}
+
+.email-form-input:focus {
+    outline: none;
+    border-color: #00BCD4;
+    box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.2);
+}
+
+/* استایل‌های خاص برای پیام‌های وضعیت */
+.email-alert {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border: 1px solid;
+}
+
+.email-alert-success {
+    background: rgba(76, 175, 80, 0.1);
+    border-color: rgba(76, 175, 80, 0.3);
+    color: #2e7d32;
+}
+
+.email-alert-warning {
+    background: rgba(255, 152, 0, 0.1);
+    border-color: rgba(255, 152, 0, 0.3);
+    color: #ef6c00;
+}
+
+.email-alert-info {
+    background: rgba(0, 188, 212, 0.1);
+    border-color: rgba(0, 188, 212, 0.3);
+    color: #00838f;
+}
+
+.email-alert-error {
+    background: rgba(244, 67, 54, 0.1);
+    border-color: rgba(244, 67, 54, 0.3);
+    color: #c62828;
+}
+
+/* استایل‌های خاص برای تصاویر */
+.email-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 20px 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.email-image-rounded {
+    border-radius: 50%;
+}
+
+.email-image-bordered {
+    border: 3px solid #00BCD4;
+}
+
+/* استایل‌های خاص برای فوتر */
+.email-footer-links {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.email-footer-links a {
+    color: #00BCD4;
+    text-decoration: none;
+    margin: 0 10px;
+    font-size: 14px;
+}
+
+.email-footer-links a:hover {
+    text-decoration: underline;
+}
+
+/* استایل‌های خاص برای شبکه‌های اجتماعی */
+.email-social {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.email-social a {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    margin: 0 5px;
+    background: linear-gradient(135deg, #00BCD4 0%, #4CAF50 100%);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    line-height: 40px;
+    transition: all 0.3s ease;
+}
+
+.email-social a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 188, 212, 0.3);
+}

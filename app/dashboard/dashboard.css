@@ -1,0 +1,792 @@
+/* Dashboard Specific Styles */
+/* Note: Do NOT import @tailwind directives here to avoid conflicts with globals.css */
+
+/* Dashboard CSS Variables - Always available */
+:root {
+  /* Dashboard Color Palette - Turquoise, Green & Orange */
+  --dashboard-primary: #00BCD4; /* Turquoise */
+  --dashboard-secondary: #4CAF50; /* Green */
+  --dashboard-accent: #FF9800; /* Orange */
+  --dashboard-light: #FAF9F6; /* Off-white / Cream */
+  --dashboard-background: #FAF9F6; /* Off-white / Cream Background */
+  --dashboard-card-background: #ffffff;
+  --dashboard-border: #B2EBF2; /* Light Turquoise Border */
+  --dashboard-text-primary: #000000; /* Black */
+  --dashboard-text-secondary: #1a1a1a; /* Almost Black */
+  --dashboard-success: #4CAF50;
+  --dashboard-warning: #FF9800; /* Orange Warning */
+  --dashboard-error: #ef4444;
+}
+
+/* Critical CSS - Prevent FOUC (Flash of Unstyled Content) */
+/* These styles are loaded immediately before any JavaScript */
+html {
+  background-color: #FAF9F6;
+}
+
+body {
+  background-color: #FAF9F6;
+  color: #000000;
+}
+
+/* Dashboard Layout - Critical styles loaded immediately */
+.dashboard-layout {
+  background-color: #FAF9F6 !important;
+  color: #000000 !important;
+  min-height: 100vh;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+}
+
+/* Critical Sidebar Styles - Load immediately to prevent FOUC */
+.dashboard-layout nav {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(16px);
+}
+
+.dashboard-layout nav a,
+.dashboard-layout nav button {
+  color: #000000 !important;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif !important;
+}
+
+.dashboard-layout nav svg {
+  color: #1a1a1a !important;
+}
+
+/* Ensure sidebar background is always white */
+.dashboard-layout aside,
+.dashboard-layout [role="navigation"] {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(16px);
+}
+
+/* Dashboard Typography - No @layer needed */
+.dashboard-heading-xl {
+  color: #000000 !important;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+}
+
+.dashboard-heading-lg {
+  color: #000000 !important;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+}
+
+.dashboard-heading-md {
+  color: #000000 !important;
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.375;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+}
+
+.dashboard-body {
+  color: #000000 !important;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.625;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+}
+
+.dashboard-body-muted {
+  color: #1a1a1a !important;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.625;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+}
+
+/* Dashboard Layout */
+.dashboard-container {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .dashboard-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.dashboard-section {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.dashboard-section > * + * {
+  margin-top: 1.5rem;
+}
+
+.dashboard-card {
+  background-color: white;
+  border: 1px solid #a5f3fc;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #a5f3fc;
+}
+
+.dashboard-card-content {
+  padding: 1rem 1.5rem;
+}
+
+.dashboard-card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #a5f3fc;
+  background-color: #ecfeff;
+}
+
+/* Dashboard Buttons */
+.dashboard-btn-primary {
+  background-color: #00BCD4 !important;
+  color: white !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+}
+
+.dashboard-btn-primary:hover {
+  background-color: #0097a7 !important;
+}
+
+.dashboard-btn-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.5);
+}
+
+.dashboard-btn-secondary {
+  background-color: #4CAF50 !important;
+  color: white !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+}
+
+.dashboard-btn-secondary:hover {
+  background-color: #388e3c !important;
+}
+
+.dashboard-btn-secondary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.4);
+}
+
+.dashboard-btn-accent {
+  background-color: #FF9800 !important;
+  color: white !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+}
+
+.dashboard-btn-accent:hover {
+  background-color: #f57c00 !important;
+}
+
+.dashboard-btn-accent:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.4);
+}
+
+.dashboard-btn-outline {
+  border: 1px solid #00BCD4 !important;
+  color: #000000 !important;
+  background-color: transparent;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.dashboard-btn-outline:hover {
+  background-color: #ecfeff !important;
+}
+
+.dashboard-btn-outline:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.5);
+}
+
+.dashboard-btn-ghost {
+  background-color: transparent;
+  color: #0e7490;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.dashboard-btn-ghost:hover {
+  background-color: #a5f3fc;
+}
+
+.dashboard-btn-ghost:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.5);
+}
+
+/* Dashboard Form Elements */
+.dashboard-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #67e8f9;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-input::placeholder {
+  color: #06b6d4;
+}
+
+.dashboard-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.5);
+  border-color: #06b6d4;
+}
+
+.dashboard-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #67e8f9;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background-color: white;
+  color: #164e63;
+}
+
+.dashboard-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.5);
+  border-color: #06b6d4;
+}
+
+.dashboard-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #67e8f9;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  resize: vertical;
+}
+
+.dashboard-textarea::placeholder {
+  color: #06b6d4;
+}
+
+.dashboard-textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.5);
+  border-color: #06b6d4;
+}
+
+/* Dashboard Status Badges */
+.dashboard-badge-success {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.dashboard-badge-warning {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #fed7aa;
+  color: #9a3412;
+}
+
+.dashboard-badge-error {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.dashboard-badge-info {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #cffafe;
+  color: #164e63;
+}
+
+.dashboard-badge-accent {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #fed7aa;
+  color: #9a3412;
+}
+
+/* Dashboard Table Utilities */
+.dashboard-table {
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.dashboard-table thead {
+  border-bottom: 1px solid #a5f3fc;
+}
+
+.dashboard-table-header {
+  background-color: #ecfeff;
+}
+
+.dashboard-table-header-cell {
+  padding: 0.75rem 1.5rem;
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #0e7490;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dashboard-table-body {
+  background-color: white;
+}
+
+.dashboard-table-body tr {
+  border-bottom: 1px solid #a5f3fc;
+}
+
+.dashboard-table-row {
+  transition: background-color 0.15s;
+}
+
+.dashboard-table-row:hover {
+  background-color: #ecfeff;
+}
+
+.dashboard-table-cell {
+  padding: 1rem 1.5rem;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #164e63;
+}
+
+/* Dashboard Sidebar Utilities */
+.dashboard-sidebar {
+  background-color: #0891b2;
+  color: white;
+  min-height: 100vh;
+  width: 16rem;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 40;
+}
+
+.dashboard-sidebar-nav {
+  padding: 1rem 0.75rem;
+}
+
+.dashboard-sidebar-nav > * + * {
+  margin-top: 0.25rem;
+}
+
+.dashboard-sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.dashboard-sidebar-item-active {
+  background-color: #FF9800;
+  color: white;
+}
+
+.dashboard-sidebar-item-inactive {
+  color: #cffafe;
+}
+
+.dashboard-sidebar-item-inactive:hover {
+  background-color: #0e7490;
+  color: white;
+}
+
+/* Dashboard Spacing Utilities */
+.dashboard-space-xs > * + * {
+  margin-top: 0.25rem;
+}
+
+.dashboard-space-sm > * + * {
+  margin-top: 0.5rem;
+}
+
+.dashboard-space-md > * + * {
+  margin-top: 1rem;
+}
+
+.dashboard-space-lg > * + * {
+  margin-top: 1.5rem;
+}
+
+.dashboard-space-xl > * + * {
+  margin-top: 2rem;
+}
+
+/* D
+ashboard Sidebar Specific Styles */
+.dashboard-layout .bg-card {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px);
+}
+
+.dashboard-layout .text-primary {
+  color: #00BCD4 !important;
+}
+
+.dashboard-layout .text-secondary {
+  color: #4CAF50 !important;
+}
+
+.dashboard-layout .text-accent {
+  color: #FF9800 !important;
+}
+
+.dashboard-layout .bg-primary\/20 {
+  background-color: rgba(0, 188, 212, 0.2) !important;
+}
+
+.dashboard-layout .bg-secondary\/20 {
+  background-color: rgba(76, 175, 80, 0.2) !important;
+}
+
+.dashboard-layout .bg-accent\/20 {
+  background-color: rgba(255, 152, 0, 0.2) !important;
+}
+
+.dashboard-layout .border-primary\/20 {
+  border-color: rgba(0, 188, 212, 0.2) !important;
+}
+
+.dashboard-layout .hover\:text-primary:hover {
+  color: #00BCD4 !important;
+}
+
+.dashboard-layout .group-hover\:text-primary {
+  color: #00BCD4 !important;
+}
+
+/* Dashboard Header Styles */
+.dashboard-layout .bg-background {
+  background-color: #FAF9F6 !important;
+}
+
+.dashboard-layout .text-foreground {
+  color: #000000 !important;
+}
+
+.dashboard-layout .text-muted-foreground {
+  color: #1a1a1a !important;
+}/* Sidebar g
+radient backgrounds */
+.dashboard-layout .bg-gradient-to-r.from-primary\/20.via-secondary\/20.to-accent\/20 {
+  background: linear-gradient(to right, rgba(0, 188, 212, 0.2), rgba(76, 175, 80, 0.2), rgba(255, 152, 0, 0.2)) !important;
+}
+
+.dashboard-layout .hover\:bg-gradient-to-r.hover\:from-primary\/5.hover\:via-secondary\/5.hover\:to-accent\/5:hover {
+  background: linear-gradient(to right, rgba(0, 188, 212, 0.05), rgba(76, 175, 80, 0.05), rgba(255, 152, 0, 0.05)) !important;
+}
+
+.dashboard-layout .before\:bg-gradient-to-r.before\:from-primary\/10.before\:via-secondary\/10.before\:to-accent\/10::before {
+  background: linear-gradient(to right, rgba(0, 188, 212, 0.1), rgba(76, 175, 80, 0.1), rgba(255, 152, 0, 0.1)) !important;
+}
+
+.dashboard-layout .hover\:bg-primary\/10:hover {
+  background-color: rgba(0, 188, 212, 0.1) !important;
+}
+
+.dashboard-layout .border-primary {
+  border-color: #00BCD4 !important;
+}
+
+.dashboard-layout .border-b-2.border-primary {
+  border-bottom-color: #00BCD4 !important;
+}
+
+/* Header gradient logo */
+.dashboard-layout .bg-gradient-to-br.from-primary.via-secondary.to-accent {
+  background: linear-gradient(135deg, #00BCD4, #4CAF50, #FF9800) !important;
+}
+
+.dashboard-layout .bg-gradient-to-r.from-primary.via-secondary.to-accent.bg-clip-text.text-transparent {
+  background: linear-gradient(to right, #00BCD4, #4CAF50, #FF9800) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+/* Fix specific Tailwind classes */
+.dashboard-layout [class*="text-primary"] {
+  color: #00BCD4 !important;
+}
+
+.dashboard-layout [class*="text-secondary"] {
+  color: #4CAF50 !important;
+}
+
+.dashboard-layout [class*="text-accent"] {
+  color: #FF9800 !important;
+}
+
+.dashboard-layout [class*="bg-primary"] {
+  background-color: #00BCD4 !important;
+}
+
+.dashboard-layout [class*="bg-secondary"] {
+  background-color: #4CAF50 !important;
+}
+
+.dashboard-layout [class*="bg-accent"] {
+  background-color: #FF9800 !important;
+}
+
+.dashboard-layout [class*="border-primary"] {
+  border-color: #00BCD4 !important;
+}
+
+.dashboard-layout [class*="border-secondary"] {
+  border-color: #4CAF50 !important;
+}
+
+.dashboard-layout [class*="border-accent"] {
+  border-color: #FF9800 !important;
+}
+
+/* Button Styles Override */
+.dashboard-layout button {
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif !important;
+}
+
+.dashboard-layout .btn-primary,
+.dashboard-layout button[class*="bg-primary"] {
+  background-color: #00BCD4 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.dashboard-layout .btn-primary:hover,
+.dashboard-layout button[class*="bg-primary"]:hover {
+  background-color: #00ACC1 !important;
+}
+
+.dashboard-layout .btn-secondary,
+.dashboard-layout button[class*="bg-secondary"] {
+  background-color: #4CAF50 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.dashboard-layout .btn-secondary:hover,
+.dashboard-layout button[class*="bg-secondary"]:hover {
+  background-color: #43A047 !important;
+}
+
+.dashboard-layout .btn-accent,
+.dashboard-layout button[class*="bg-accent"] {
+  background-color: #FF9800 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.dashboard-layout .btn-accent:hover,
+.dashboard-layout button[class*="bg-accent"]:hover {
+  background-color: #FB8C00 !important;
+}
+
+/* Card Styles */
+.dashboard-layout .card,
+.dashboard-layout [class*="card"] {
+  background-color: white !important;
+  border: 1px solid #B2EBF2 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 188, 212, 0.08) !important;
+}
+
+.dashboard-layout .card:hover {
+  box-shadow: 0 4px 16px rgba(0, 188, 212, 0.12) !important;
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Input Styles */
+.dashboard-layout input,
+.dashboard-layout textarea,
+.dashboard-layout select {
+  border-color: #B2EBF2 !important;
+  color: #000000 !important;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif !important;
+}
+
+.dashboard-layout input:focus,
+.dashboard-layout textarea:focus,
+.dashboard-layout select:focus {
+  border-color: #00BCD4 !important;
+  ring-color: #00BCD4 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1) !important;
+}
+
+/* Badge Styles */
+.dashboard-layout .badge {
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif !important;
+  font-weight: 500 !important;
+}
+
+/* Link Styles */
+.dashboard-layout a {
+  color: #00BCD4 !important;
+  text-decoration: none !important;
+  transition: color 0.2s ease !important;
+}
+
+.dashboard-layout a:hover {
+  color: #00ACC1 !important;
+}
+
+/* Heading Styles */
+.dashboard-layout h1,
+.dashboard-layout h2,
+.dashboard-layout h3,
+.dashboard-layout h4,
+.dashboard-layout h5,
+.dashboard-layout h6 {
+  color: #000000 !important;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif !important;
+  font-weight: 600 !important;
+}
+
+/* Paragraph Styles */
+.dashboard-layout p {
+  color: #000000 !important;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif !important;
+  line-height: 1.6 !important;
+}
+
+/* Label Styles */
+.dashboard-layout label {
+  color: #000000 !important;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif !important;
+  font-weight: 500 !important;
+}
+
+/* Table Styles */
+.dashboard-layout table {
+  border-color: #B2EBF2 !important;
+}
+
+.dashboard-layout th {
+  background-color: #FAF9F6 !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif !important;
+}
+
+.dashboard-layout td {
+  color: #000000 !important;
+  font-family: 'Vazirmatn', Inter, system-ui, sans-serif !important;
+}
+
+.dashboard-layout tr:hover {
+  background-color: #FAF9F6 !important;
+}
+
+/* Sidebar Container - Prevent FOUC */
+.dashboard-layout .fixed.right-0 {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(16px) !important;
+  border-left: 2px solid rgba(0, 188, 212, 0.2) !important;
+}
+
+/* Sidebar Navigation Items */
+.dashboard-layout nav a span,
+.dashboard-layout nav button span {
+  color: #000000 !important;
+}
+
+/* Active Sidebar Item */
+.dashboard-layout nav a[aria-current="page"],
+.dashboard-layout nav button[aria-current="page"] {
+  background: linear-gradient(to right, rgba(0, 188, 212, 0.2), rgba(76, 175, 80, 0.2), rgba(255, 152, 0, 0.2)) !important;
+  color: #00BCD4 !important;
+  border: 1px solid rgba(0, 188, 212, 0.2) !important;
+}
+
+/* Scrollbar Styles */
+.dashboard-layout ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dashboard-layout ::-webkit-scrollbar-track {
+  background: #FAF9F6;
+  border-radius: 4px;
+}
+
+.dashboard-layout ::-webkit-scrollbar-thumb {
+  background: #00BCD4;
+  border-radius: 4px;
+}
+
+.dashboard-layout ::-webkit-scrollbar-thumb:hover {
+  background: #00ACC1;
+}

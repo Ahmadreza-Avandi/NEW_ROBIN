@@ -1,0 +1,418 @@
+/* CRM Admin Panel Specific Styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* CRM Admin Blue Color Palette */
+    --crm-primary-blue: #1e40af;
+    --crm-secondary-blue: #3b82f6;
+    --crm-light-blue: #60a5fa;
+    --crm-background: #f8fafc;
+    --crm-card-background: #ffffff;
+    --crm-border: #e2e8f0;
+    --crm-text-primary: #1e293b;
+    --crm-text-secondary: #64748b;
+    --crm-success: #10b981;
+    --crm-warning: #f59e0b;
+    --crm-error: #ef4444;
+  }
+
+  body {
+  background-color: var(--crm-background);
+  color: var(--crm-text-primary);
+  font-family: Inter, system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* CRM Admin Typography Utilities */
+  .crm-heading-xl {
+  @apply text-2xl font-semibold leading-tight;
+  color: var(--crm-text-primary);
+  }
+  
+  .crm-heading-lg {
+  @apply text-xl font-semibold leading-tight;
+  color: var(--crm-text-primary);
+  }
+  
+  .crm-heading-md {
+  @apply text-lg font-medium leading-snug;
+  color: var(--crm-text-primary);
+  }
+  
+  .crm-heading-sm {
+  @apply text-base font-medium leading-snug;
+  color: var(--crm-text-primary);
+  }
+  
+  .crm-body {
+  @apply text-sm font-normal leading-relaxed;
+  color: var(--crm-text-primary);
+  }
+  
+  .crm-body-muted {
+  @apply text-sm font-normal leading-relaxed;
+  color: var(--crm-text-secondary);
+  }
+  
+  .crm-caption {
+  @apply text-xs font-normal leading-normal;
+  color: var(--crm-text-secondary);
+  }
+
+  /* CRM Admin Layout Utilities */
+  .crm-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .crm-section {
+    @apply py-6 space-y-6;
+  }
+  
+  .crm-card {
+  @apply border rounded-lg shadow-sm;
+  background-color: var(--crm-card-background);
+  border-color: var(--crm-border);
+  }
+  
+  .crm-card-header {
+    @apply px-6 py-4 border-b;
+    border-color: var(--crm-border);
+  }
+  
+  .crm-card-content {
+    @apply px-6 py-4;
+  }
+  
+  .crm-card-footer {
+    @apply px-6 py-4 border-t bg-gray-50;
+    border-color: var(--crm-border);
+  }
+
+  /* CRM Admin Button Utilities */
+  .crm-btn-primary {
+    @apply hover:bg-blue-800 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    background-color: var(--crm-primary-blue);
+    --tw-ring-color: var(--crm-secondary-blue);
+  }
+  
+  .crm-btn-secondary {
+    @apply hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    background-color: var(--crm-secondary-blue);
+    --tw-ring-color: var(--crm-light-blue);
+  }
+  
+  .crm-btn-outline {
+    @apply border hover:bg-gray-50 font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    border-color: var(--crm-border);
+    color: var(--crm-text-primary);
+    --tw-ring-color: var(--crm-secondary-blue);
+  }
+  
+  .crm-btn-ghost {
+    @apply hover:bg-gray-100 font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    color: var(--crm-text-primary);
+    --tw-ring-color: var(--crm-secondary-blue);
+  }
+
+  /* CRM Admin Form Utilities */
+  .crm-input {
+    @apply w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2;
+    border-color: var(--crm-border);
+    --tw-ring-color: var(--crm-secondary-blue);
+    --tw-placeholder-opacity: 1;
+    --tw-placeholder-color: var(--crm-text-secondary);
+    &:focus { border-color: var(--crm-secondary-blue); }
+  }
+  
+  .crm-select {
+    @apply w-full px-3 py-2 border rounded-md shadow-sm bg-white focus:outline-none focus:ring-2;
+    border-color: var(--crm-border);
+    color: var(--crm-text-primary);
+    --tw-ring-color: var(--crm-secondary-blue);
+    &:focus { border-color: var(--crm-secondary-blue); }
+  }
+  
+  .crm-textarea {
+    @apply w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 resize-y;
+    border-color: var(--crm-border);
+    --tw-ring-color: var(--crm-secondary-blue);
+    --tw-placeholder-opacity: 1;
+    --tw-placeholder-color: var(--crm-text-secondary);
+    &:focus { border-color: var(--crm-secondary-blue); }
+  }
+
+  /* CRM Admin Status Badges */
+  .crm-badge-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
+  }
+  
+  .crm-badge-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800;
+  }
+  
+  .crm-badge-error {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
+  }
+  
+  .crm-badge-info {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800;
+  }
+
+  /* CRM Admin Table Utilities */
+  .crm-table {
+    @apply min-w-full divide-y;
+    --tw-divide-color: var(--crm-border);
+  }
+  
+  .crm-table-header {
+    @apply bg-gray-50;
+  }
+  
+  .crm-table-header-cell {
+    @apply px-6 py-3 text-left text-xs font-medium text-crm-text-muted uppercase tracking-wider;
+  }
+  
+  .crm-table-body {
+    @apply bg-white divide-y divide-crm-border;
+  }
+  
+  .crm-table-row {
+    @apply hover:bg-gray-50 transition-colors duration-150;
+  }
+  
+  .crm-table-cell {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-crm-text;
+  }
+
+  /* CRM Admin Spacing Utilities */
+  .crm-space-xs {
+    @apply space-y-1;
+  }
+  
+  .crm-space-sm {
+    @apply space-y-2;
+  }
+  
+  .crm-space-md {
+    @apply space-y-4;
+  }
+  
+  .crm-space-lg {
+    @apply space-y-6;
+  }
+  
+  .crm-space-xl {
+    @apply space-y-8;
+  }
+
+  /* CRM Admin Sidebar Utilities */
+  .crm-sidebar {
+    @apply text-white min-h-screen w-64 fixed left-0 top-0 z-40;
+    background-color: var(--crm-primary-blue);
+  }
+  
+  .crm-sidebar-nav {
+    @apply space-y-1 px-3 py-4;
+  }
+  
+  .crm-sidebar-item {
+    @apply flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200;
+  }
+  
+  .crm-sidebar-item-active {
+    @apply bg-blue-800 text-white;
+  }
+  
+  .crm-sidebar-item-inactive {
+    @apply text-blue-100 hover:bg-blue-700 hover:text-white;
+  }
+}
+/* Ful
+lCalendar RTL Styles for Admin Panel */
+.fc-direction-rtl {
+  direction: rtl;
+}
+
+.fc-direction-rtl .fc-toolbar {
+  direction: rtl;
+}
+
+.fc-direction-rtl .fc-toolbar-chunk {
+  display: flex;
+  align-items: center;
+}
+
+.fc-direction-rtl .fc-button-group {
+  direction: ltr;
+}
+
+.fc-direction-rtl .fc-daygrid-day-number {
+  text-align: right;
+  padding: 4px 8px;
+}
+
+.fc-direction-rtl .fc-col-header-cell {
+  text-align: center;
+}
+
+.fc-direction-rtl .fc-event {
+  text-align: right;
+}
+
+.fc-direction-rtl .fc-event-title {
+  direction: rtl;
+  text-align: right;
+}
+
+.fc-direction-rtl .fc-list-event-title {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Custom FullCalendar Styles for Admin Panel */
+.fc {
+  font-family: 'Vazir', sans-serif !important;
+}
+
+.fc-toolbar-title {
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  color: var(--crm-text-primary) !important;
+}
+
+.fc-button {
+  background-color: var(--crm-primary-blue) !important;
+  border-color: var(--crm-primary-blue) !important;
+  color: white !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.875rem !important;
+  padding: 0.375rem 0.75rem !important;
+}
+
+.fc-button:hover {
+  background-color: var(--crm-secondary-blue) !important;
+  opacity: 0.9;
+}
+
+.fc-button:disabled {
+  opacity: 0.5 !important;
+}
+
+.fc-button-active {
+  background-color: var(--crm-primary-blue) !important;
+  border-color: var(--crm-primary-blue) !important;
+}
+
+.fc-today-button {
+  background-color: var(--crm-secondary-blue) !important;
+  border-color: var(--crm-secondary-blue) !important;
+  color: white !important;
+}
+
+.fc-daygrid-day {
+  border-color: var(--crm-border) !important;
+}
+
+.fc-daygrid-day-top {
+  flex-direction: row-reverse;
+}
+
+.fc-daygrid-day-number {
+  color: var(--crm-text-primary) !important;
+  font-weight: 500 !important;
+}
+
+.fc-day-today {
+  background-color: var(--crm-light-blue) !important;
+  opacity: 0.1;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+  color: var(--crm-primary-blue) !important;
+  font-weight: bold !important;
+}
+
+.fc-col-header-cell {
+  background-color: var(--crm-background) !important;
+  border-color: var(--crm-border) !important;
+  color: var(--crm-text-secondary) !important;
+  font-weight: 600 !important;
+}
+
+.fc-event {
+  border: none !important;
+  border-radius: 0.25rem !important;
+  padding: 2px 4px !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+
+.fc-event:hover {
+  opacity: 0.8 !important;
+}
+
+.fc-event-title {
+  font-weight: 500 !important;
+}
+
+.fc-more-link {
+  color: var(--crm-primary-blue) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+}
+
+.fc-more-link:hover {
+  color: var(--crm-primary-blue) !important;
+  text-decoration: underline !important;
+}
+
+.fc-list-event {
+  border-color: var(--crm-border) !important;
+}
+
+.fc-list-event:hover {
+  background-color: var(--crm-background) !important;
+}
+
+.fc-list-event-title {
+  color: var(--crm-text-primary) !important;
+}
+
+.fc-list-event-time {
+  color: var(--crm-text-secondary) !important;
+}
+
+.fc-scrollgrid {
+  border-color: var(--crm-border) !important;
+}
+
+.fc-scrollgrid-section>* {
+  border-color: var(--crm-border) !important;
+}
+
+/* Responsive adjustments for Admin Panel */
+@media (max-width: 768px) {
+  .fc-toolbar {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .fc-toolbar-chunk {
+    justify-content: center !important;
+  }
+
+  .fc-button {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .fc-toolbar-title {
+    font-size: 1.25rem !important;
+    margin: 0.5rem 0 !important;
+  }
+}

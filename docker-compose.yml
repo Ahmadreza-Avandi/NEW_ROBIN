@@ -1,0 +1,209 @@
+version: '3.8'
+
+services:
+  # Rabin Voice Assistant - باید اول بیاید بالا
+  rabin-voice:
+    build: ./صدای رابین
+    container_name: crm-rabin-voice
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - OPENROUTER_API_KEY=${RABIN_VOICE_OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${RABIN_VOICE_OPENROUTER_MODEL:-anthropic/claude-3-haiku}
+      - TTS_API_URL=${RABIN_VOICE_TTS_API_URL:-https://api.ahmadreza-avandi.ir/text-to-speech}
+      - PORT=3001
+      - LOG_LEVEL=${RABIN_VOICE_LOG_LEVEL:-INFO}
+      - RABIN_VOICE_OPENROUTER_API_KEY=${RABIN_VOICE_OPENROUTER_API_KEY}
+      - RABIN_VOICE_OPENROUTER_MODEL=${RABIN_VOICE_OPENROUTER_MODEL:-anthropic/claude-3-haiku}
+      - RABIN_VOICE_TTS_API_URL=${RABIN_VOICE_TTS_API_URL:-https://api.ahmadreza-avandi.ir/text-to-speech}
+      - RABIN_VOICE_LOG_LEVEL=${RABIN_VOICE_LOG_LEVEL:-INFO}
+      - DATABASE_HOST=mysql
+      - DATABASE_NAME=${DATABASE_NAME:-crm_system}
+      - DATABASE_USER=${DATABASE_USER:-crm_user}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-1234}
+    volumes:
+      # Mount logs for debugging
+      - ./صدای رابین/logs:/app/logs:rw
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3001/rabin-voice"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    networks:
+      - crm-network
+
+  # Next.js Application - بعد از Rabin Voice
+  nextjs:
+    build: .
+    container_name: crm-nextjs
+    env_file:
+      - .env
+    environment:
+      # All environment variables are loaded from .env file
+      # Override specific Docker-related variables if needed
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - DATABASE_HOST=${DATABASE_HOST:-mysql}
+      - DATABASE_USER=${DATABASE_USER:-crm_user}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-1234}
+      - DATABASE_NAME=${DATABASE_NAME:-crm_system}
+      - SAAS_DATABASE_NAME=${SAAS_DATABASE_NAME:-saas_master}
+      - DATABASE_URL=${DATABASE_URL}
+      # Audio-related environment variables
+      - PULSE_RUNTIME_PATH=/var/run/pulse
+      - AUDIO_ENABLED=false
+      - VPS_MODE=true
+      - FALLBACK_TO_MANUAL_INPUT=true
+    volumes:
+      # Mount uploads directory for file storage with proper permissions
+      - ./uploads:/app/uploads:rw
+      - ./public/uploads:/app/public/uploads:rw
+      # Mount logs for debugging
+      - ./logs:/app/logs:rw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabin-voice:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    networks:
+      - crm-network
+
+  # MySQL Database
+  mysql:
+    image: mariadb:10.4.32
+    container_name: crm-mysql
+    env_file:
+      - .env
+    environment:
+      # Root password
+      MYSQL_ROOT_PASSWORD: "1234"
+      # Default database to create
+      MYSQL_DATABASE: "${DATABASE_NAME:-crm_system}"
+      # Default user to create (MariaDB will create this automatically)
+      MYSQL_USER: "${DATABASE_USER:-crm_user}"
+      MYSQL_PASSWORD: "1234"
+    # Remove external port exposure for security
+    # ports:
+    #   - "3306:3306"
+    expose:
+      - "3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Init scripts will run in alphabetical order
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/crm_system.sql:/docker-entrypoint-initdb.d/02-crm_system.sql:ro
+    restart: unless-stopped
+    command: --innodb-buffer-pool-size=256M --max-connections=100
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - crm-network
+
+  # phpMyAdmin - Hidden and Secured
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2.2
+    container_name: crm-phpmyadmin
+    env_file:
+      - .env
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      # Allow login with any valid MySQL user (set to 1 for flexibility)
+      PMA_ARBITRARY: 1
+      # Pre-fill login form with default user (users can still change it)
+      PMA_USER: "${DATABASE_USER:-crm_user}"
+      PMA_PASSWORD: "1234"
+      # Root password for phpMyAdmin to connect
+      MYSQL_ROOT_PASSWORD: "1234"
+      PMA_ABSOLUTE_URI: "${NEXTAUTH_URL}/secure-db-admin-panel-x7k9m2/"
+      # Hide phpMyAdmin version for security
+      HIDE_PHP_VERSION: 1
+    restart: unless-stopped
+    # Remove external port exposure
+    expose:
+      - "80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    networks:
+      - crm-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: crm-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot
+    restart: unless-stopped
+    depends_on:
+      - nextjs
+      - phpmyadmin
+      - rabin-voice
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    networks:
+      - crm-network
+
+  # Certbot for SSL certificates
+  certbot:
+    image: certbot/certbot
+    container_name: crm-certbot
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    command: certonly --webroot --webroot-path=/var/www/certbot --email admin@crm.robintejarat.com --agree-tos --no-eff-email -d crm.robintejarat.com -d www.crm.robintejarat.com
+    networks:
+      - crm-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  crm-network:
+    driver: bridge

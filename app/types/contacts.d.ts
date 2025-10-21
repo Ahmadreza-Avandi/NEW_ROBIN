@@ -1,0 +1,43 @@
+export interface Contact {
+    id: string;
+    company_id?: string;
+    first_name: string;
+    last_name: string;
+    name?: string;
+    full_name?: string;
+    job_title?: string;
+    department?: string;
+    email?: string;
+    phone?: string;
+    mobile?: string;
+    linkedin_url?: string;
+    twitter_url?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    postal_code?: string;
+    birth_date?: string;
+    notes?: string;
+    tags?: string[];
+    custom_fields?: Record<string, any>;
+    avatar_url?: string;
+    status: string;
+    is_primary: boolean;
+    source?: string;
+    last_contact_date?: string;
+    assigned_to?: string;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+    customer_id?: string;
+    role?: string;
+    type?: string;
+    company?: {
+        id: string;
+        name: string;
+        industry?: string;
+        size?: string;
+        status?: string;
+    } | null;
+    assigned_user_name?: string;
+}

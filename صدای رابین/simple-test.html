@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Audio Test</title>
+</head>
+<body>
+    <button onclick="playTestAudio()">Play Test Audio</button>
+    <div id="log"></div>
+
+    <script>
+        function log(message) {
+            document.getElementById('log').innerHTML += message + '<br>';
+            console.log(message);
+        }
+
+        function playTestAudio() {
+            // Use the exact URL from your curl test
+            const audioUrl = 'https://partai.gw.isahab.ir/service_output/TextToSpeech/service/speech-synthesys@3/094879f495a411f08911ca560b876cb7.mp3';
+            
+            log('Creating audio with URL: ' + audioUrl);
+            
+            const audio = new Audio(audioUrl);
+            audio.crossOrigin = 'anonymous';
+            audio.volume = 0.8;
+            
+            audio.onloadstart = () => log('loadstart');
+            audio.onloadedmetadata = () => log('loadedmetadata');
+            audio.onloadeddata = () => log('loadeddata');
+            audio.oncanplay = () => {
+                log('canplay - attempting to play');
+                audio.play().then(() => {
+                    log('Play successful!');
+                }).catch(err => {
+                    log('Play failed: ' + err.message);
+                });
+            };
+            audio.onplay = () => log('play event');
+            audio.onplaying = () => log('playing event');
+            audio.onended = () => log('ended');
+            audio.onerror = (e) => log('error: ' + audio.error?.message);
+            
+            audio.load();
+        }
+    </script>
+</body>
+</html>
