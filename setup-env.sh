@@ -60,10 +60,10 @@ if [ "$ENVIRONMENT" = "server" ]; then
     NODE_ENV="production"
     DATABASE_HOST="mysql"
     NEXTAUTH_URL="http://crm.robintejarat.com"
-    APP_URL="https://crm.robintejarat.com"
+    APP_URL="http://crm.robintejarat.com"
 else
     NODE_ENV="development"
-    DATABASE_HOST="localhost"
+    DATABASE_HOST="mysql"  # برای Docker همیشه mysql
     NEXTAUTH_URL="http://localhost:3000"
     APP_URL="http://localhost:3000"
 fi
@@ -94,8 +94,8 @@ NEXT_PUBLIC_APP_URL=__APP_URL__
 # 🗄️ Database Configuration
 # ===========================================
 # Database Host: 
-#   - Local: localhost
-#   - Docker: mysql (service name)
+#   - Local Development: localhost (اگر MySQL محلی داری)
+#   - Docker: mysql (service name) - پیشنهادی
 DATABASE_HOST=__DATABASE_HOST__
 DATABASE_USER=crm_user
 DATABASE_PASSWORD=__DATABASE_PASSWORD__
@@ -174,7 +174,7 @@ sed -i "s|__ENVIRONMENT__|$ENVIRONMENT|g" .env
 sed -i "s|__NODE_ENV__|$NODE_ENV|g" .env
 sed -i "s|__APP_URL__|$APP_URL|g" .env
 sed -i "s|__DATABASE_HOST__|$DATABASE_HOST|g" .env
-sed -i "s|__DATABASE_PASSWORD__|1234|g" .env
+sed -i "s|__DATABASE_PASSWORD__|$DB_PASSWORD|g" .env
 sed -i "s|__JWT_SECRET__|$JWT_SECRET|g" .env
 sed -i "s|__NEXTAUTH_SECRET__|$NEXTAUTH_SECRET|g" .env
 sed -i "s|__NEXTAUTH_URL__|$NEXTAUTH_URL|g" .env

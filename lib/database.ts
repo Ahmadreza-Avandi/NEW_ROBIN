@@ -67,8 +67,8 @@ export async function executeQuery<T = any>(
     // Use individual connection instead of pool for better error handling
     connection = await mysql.createConnection({
       host: process.env.DB_HOST || process.env.DATABASE_HOST || (process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost'),
-      user: process.env.DB_USER || process.env.DATABASE_USER || 'root',
-      password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '',
+      user: process.env.DB_USER || process.env.DATABASE_USER || 'crm_user',
+      password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '1234',
       database: process.env.DB_NAME || process.env.DATABASE_NAME || 'crm_system',
       timezone: '+00:00',
       charset: 'utf8mb4',
@@ -133,8 +133,8 @@ export async function executeSingle(
     // Use individual connection instead of pool for better error handling
     connection = await mysql.createConnection({
       host: process.env.DB_HOST || process.env.DATABASE_HOST || (process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost'),
-      user: process.env.DB_USER || process.env.DATABASE_USER || 'root',
-      password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '',
+      user: process.env.DB_USER || process.env.DATABASE_USER || 'crm_user',
+      password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '1234',
       database: process.env.DB_NAME || process.env.DATABASE_NAME || 'crm_system',
       timezone: '+00:00',
       charset: 'utf8mb4',
