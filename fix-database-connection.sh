@@ -74,6 +74,8 @@ fi
 echo ""
 echo "🧪 تست اتصال از NextJS..."
 if [ -f "test-database-connection.js" ]; then
+    echo "🔧 کپی فایل تست به کانتینر NextJS..."
+    docker cp test-database-connection.js nextjs:/app/test-database-connection.js
     echo "🔧 اجرای تست اتصال در NextJS container..."
     docker-compose -f $COMPOSE_FILE exec -T nextjs node test-database-connection.js || echo "⚠️  تست اتصال ناموفق"
 else
@@ -84,6 +86,20 @@ fi
 echo ""
 echo "🔧 مرحله 3: اصلاح مشکلات..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# ایجاد دیتابیس‌ها اگر وجود ندارن
+echo "🗄️ ایجاد دیتابیس‌های CRM..."
+docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p1234 << 'EOF'
+-- ایجاد دیتابیس‌ها
+CREATE DATABASE IF NOT EXISTS `crm_system` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `saas_master` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- نمایش دیتابیس‌های ایجاد شده
+SHOW DATABASES LIKE '%crm%';
+SHOW DATABASES LIKE '%saas%';
+EOF
+
+echo "✅ دیتابیس‌ها ایجاد شدند"
 
 # اصلاح دسترسی‌های دیتابیس
 echo "🔐 اصلاح دسترسی‌های دیتابیس..."
@@ -119,6 +135,13 @@ EOF
 
 echo "✅ دسترسی‌های دیتابیس اصلاح شد"
 
+# اصلاح مشکل redirect
+echo ""
+echo "🔧 اصلاح مشکل redirect..."
+# اطمینان از HTTP در NEXTAUTH_URL برای تست اولیه
+sed -i 's|NEXTAUTH_URL=https://|NEXTAUTH_URL=http://|g' .env
+echo "✅ NEXTAUTH_URL به HTTP تنظیم شد"
+
 # راه‌اندازی مجدد NextJS
 echo ""
 echo "🔄 راه‌اندازی مجدد NextJS..."
@@ -126,7 +149,7 @@ docker-compose -f $COMPOSE_FILE restart nextjs
 
 # انتظار برای آماده شدن
 echo "⏳ انتظار برای آماده شدن سرویس‌ها..."
-sleep 15
+sleep 20
 
 # مرحله 4: تست نهایی
 echo ""

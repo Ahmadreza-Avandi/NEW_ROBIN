@@ -331,32 +331,122 @@ echo "   📁 public/uploads/{documents,avatars,chat}"
 # آماده‌سازی فایل‌های دیتابیس
 echo "🗄️ آماده‌سازی فایل‌های دیتابیس..."
 
-# بررسی و کپی فایل دیتابیس جدید
+# ایجاد فایل init اصلی برای ایجاد دیتابیس‌ها و کاربر
+echo "📝 ایجاد فایل init دیتابیس..."
+cat > database/00-init-databases.sql << 'EOF'
+-- ===========================================
+-- Database Initialization Script for CRM System
+-- ===========================================
+
+-- Create CRM System Database
+CREATE DATABASE IF NOT EXISTS `crm_system` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Create SaaS Master Database  
+CREATE DATABASE IF NOT EXISTS `saas_master` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Create user and grant privileges
+DROP USER IF EXISTS 'crm_user'@'%';
+DROP USER IF EXISTS 'crm_user'@'localhost';
+DROP USER IF EXISTS 'crm_user'@'127.0.0.1';
+DROP USER IF EXISTS 'crm_user'@'172.%.%.%';
+
+CREATE USER 'crm_user'@'%' IDENTIFIED BY '1234';
+CREATE USER 'crm_user'@'localhost' IDENTIFIED BY '1234';
+CREATE USER 'crm_user'@'127.0.0.1' IDENTIFIED BY '1234';
+CREATE USER 'crm_user'@'172.%.%.%' IDENTIFIED BY '1234';
+
+-- Grant all privileges on both databases
+GRANT ALL PRIVILEGES ON `crm_system`.* TO 'crm_user'@'%';
+GRANT ALL PRIVILEGES ON `crm_system`.* TO 'crm_user'@'localhost';
+GRANT ALL PRIVILEGES ON `crm_system`.* TO 'crm_user'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON `crm_system`.* TO 'crm_user'@'172.%.%.%';
+
+GRANT ALL PRIVILEGES ON `saas_master`.* TO 'crm_user'@'%';
+GRANT ALL PRIVILEGES ON `saas_master`.* TO 'crm_user'@'localhost';
+GRANT ALL PRIVILEGES ON `saas_master`.* TO 'crm_user'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON `saas_master`.* TO 'crm_user'@'172.%.%.%';
+
+FLUSH PRIVILEGES;
+
+-- Set timezone
+SET time_zone = '+00:00';
+EOF
+
+# کپی فایل‌های دیتابیس اصلی
+echo "📋 کپی فایل‌های دیتابیس..."
+
+# کپی crm_system.sql
 if [ -f "دیتاییس تغیر کرده.sql" ]; then
     echo "📋 استفاده از فایل دیتابیس جدید..."
-    cp "دیتاییس تغیر کرده.sql" database/crm_system.sql
+    cp "دیتاییس تغیر کرده.sql" database/01-crm_system.sql
     echo "✅ فایل دیتابیس جدید کپی شد"
 elif [ -f "crm_system.sql" ]; then
-    echo "📋 کپی فایل crm_system.sql به فولدر database..."
-    cp crm_system.sql database/crm_system.sql
+    echo "📋 کپی فایل crm_system.sql..."
+    cp crm_system.sql database/01-crm_system.sql
+    echo "✅ فایل crm_system.sql کپی شد"
 else
-    echo "⚠️  هیچ فایل دیتابیس یافت نشد!"
+    echo "⚠️  فایل crm_system.sql یافت نشد!"
 fi
 
-# بررسی فایل‌های init
-echo "📝 بررسی فایل‌های init دیتابیس..."
-if [ ! -f "database/00-init-databases.sql" ]; then
-    echo "⚠️  فایل 00-init-databases.sql یافت نشد!"
+# کپی saas_master.sql
+if [ -f "database/saas_master.sql" ]; then
+    echo "📋 کپی فایل saas_master.sql..."
+    cp database/saas_master.sql database/02-saas_master.sql
+    echo "✅ فایل saas_master.sql کپی شد"
+else
+    echo "⚠️  فایل saas_master.sql یافت نشد!"
 fi
 
-if [ ! -f "database/01-grant-privileges.sql" ]; then
-    echo "⚠️  فایل 01-grant-privileges.sql یافت نشد!"
+# اضافه کردن USE statements به فایل‌ها
+if [ -f "database/01-crm_system.sql" ]; then
+    echo "🔧 اضافه کردن USE statement به crm_system.sql..."
+    sed -i '1i USE `crm_system`;' database/01-crm_system.sql
+fi
+
+if [ -f "database/02-saas_master.sql" ]; then
+    echo "🔧 اضافه کردن USE statement به saas_master.sql..."
+    sed -i '1i USE `saas_master`;' database/02-saas_master.sql
 fi
 
 # ایجاد فایل .gitkeep برای migrations
 if [ ! -f "database/migrations/.gitkeep" ]; then
     echo "# This folder is for future database migrations" > database/migrations/.gitkeep
 fi
+
+# ایجاد فایل کاربران ادمین
+echo "👑 ایجاد فایل کاربران ادمین..."
+cat > database/03-admin-users.sql << 'EOF'
+-- ===========================================
+-- Admin Users Creation Script
+-- ===========================================
+
+USE `crm_system`;
+
+-- اطمینان از وجود کاربر CEO (مهندس کریمی)
+-- این کاربر از فایل اصلی crm_system.sql می‌آید
+-- فقط اطمینان حاصل می‌کنیم که رمز عبور درست است
+
+UPDATE users SET 
+    password = '$2a$10$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye'
+WHERE id = 'ceo-001' AND email = 'Robintejarat@gmail.com';
+
+USE `saas_master`;
+
+-- اطمینان از وجود Super Admin (احمدرضا اوندی)
+-- این کاربر از فایل اصلی saas_master.sql می‌آید
+-- فقط اطمینان حاصل می‌کنیم که فعال است
+
+UPDATE super_admins SET 
+    is_active = 1,
+    updated_at = NOW()
+WHERE username = 'Ahmadreza.avandi' AND email = 'ahmadrezaavandi@gmail.com';
+EOF
+
+echo "✅ فایل‌های دیتابیس آماده شدند:"
+echo "   📄 00-init-databases.sql - ایجاد دیتابیس‌ها و کاربر"
+echo "   📄 01-crm_system.sql - جداول CRM"
+echo "   📄 02-saas_master.sql - جداول SaaS"
+echo "   📄 03-admin-users.sql - کاربران ادمین"
 
 # ═══════════════════════════════════════════════════════════════
 # ⚙️ مرحله 4: تنظیم فایل .env
@@ -1145,39 +1235,56 @@ echo "📋 لاگ‌های اخیر:"
 docker-compose -f $COMPOSE_FILE logs --tail=20
 
 # ═══════════════════════════════════════════════════════════════
-# 🔧 مرحله 11: اصلاح اتصال دیتابیس و ایجاد کاربران تست
+# 🔧 مرحله 11: تست اتصال دیتابیس
 # ═══════════════════════════════════════════════════════════════
 
 echo ""
-echo "🔧 مرحله 11: اصلاح اتصال دیتابیس و ایجاد کاربران تست..."
+echo "🔧 مرحله 11: تست اتصال دیتابیس..."
 
-# اجرای اسکریپت اصلاح دیتابیس
-if [ -f "fix-database-connection.sh" ]; then
-    echo "🔧 اجرای اسکریپت اصلاح اتصال دیتابیس..."
-    chmod +x fix-database-connection.sh
-    ./fix-database-connection.sh
-else
-    echo "⚠️  اسکریپت fix-database-connection.sh یافت نشد"
-fi
+# انتظار اضافی برای آماده شدن دیتابیس
+echo "⏳ انتظار برای آماده شدن کامل دیتابیس..."
+sleep 30
 
-# اجرای اسکریپت ایجاد کاربران تست
-if [ -f "create-test-users.sh" ]; then
-    echo ""
-    echo "👥 ایجاد کاربران تست..."
-    chmod +x create-test-users.sh
-    ./create-test-users.sh
+# تست اتصال دیتابیس با کاربر crm_user
+echo "🔌 تست اتصال دیتابیس..."
+if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "SELECT 1;" >/dev/null 2>&1; then
+    echo "✅ کاربر crm_user می‌تواند به دیتابیس متصل شود"
+    
+    # تست دسترسی به crm_system
+    if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE crm_system; SHOW TABLES;" >/dev/null 2>&1; then
+        TABLE_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
+        echo "✅ دیتابیس crm_system آماده است - تعداد جداول: $((TABLE_COUNT - 1))"
+    else
+        echo "❌ دسترسی به crm_system ناموفق"
+    fi
+    
+    # تست دسترسی به saas_master
+    if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SHOW TABLES;" >/dev/null 2>&1; then
+        TABLE_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
+        echo "✅ دیتابیس saas_master آماده است - تعداد جداول: $((TABLE_COUNT - 1))"
+        
+        # بررسی کاربر Super Admin
+        SUPER_ADMIN_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SELECT COUNT(*) FROM super_admins WHERE username='Ahmadreza.avandi';" 2>/dev/null | tail -1)
+        if [ "$SUPER_ADMIN_COUNT" = "1" ]; then
+            echo "✅ Super Admin (Ahmadreza.avandi) موجود است"
+        else
+            echo "⚠️  Super Admin یافت نشد"
+        fi
+    else
+        echo "❌ دسترسی به saas_master ناموفق"
+    fi
+    
+    # بررسی کاربر CEO در crm_system
+    CEO_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE crm_system; SELECT COUNT(*) FROM users WHERE id='ceo-001';" 2>/dev/null | tail -1)
+    if [ "$CEO_COUNT" = "1" ]; then
+        echo "✅ کاربر CEO (مهندس کریمی) موجود است"
+    else
+        echo "⚠️  کاربر CEO یافت نشد"
+    fi
 else
-    echo "⚠️  اسکریپت create-test-users.sh یافت نشد"
-fi
-
-# اجرای تست endpoint های لاگین
-if [ -f "test-login-endpoints.sh" ]; then
-    echo ""
-    echo "🧪 تست endpoint های لاگین..."
-    chmod +x test-login-endpoints.sh
-    ./test-login-endpoints.sh
-else
-    echo "⚠️  اسکریپت test-login-endpoints.sh یافت نشد"
+    echo "❌ کاربر crm_user نمی‌تواند به دیتابیس متصل شود!"
+    echo "🔍 بررسی لاگ MySQL:"
+    docker-compose -f $COMPOSE_FILE logs mysql | tail -10
 fi
 
 # ═══════════════════════════════════════════════════════════════
@@ -1310,6 +1417,19 @@ else
     echo "🎤 دستیار صوتی رابین: http://$DOMAIN/rabin-voice"
     echo "🔐 phpMyAdmin: http://$DOMAIN/secure-db-admin-panel-x7k9m2/"
 fi
+echo ""
+echo "👑 اطلاعات لاگین:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔐 CRM System (مهندس کریمی):"
+echo "   ایمیل: Robintejarat@gmail.com"
+echo "   رمز عبور: [رمز موجود در دیتابیس]"
+echo "   لینک: http://$DOMAIN/login"
+echo ""
+echo "👑 SaaS Admin Panel (احمدرضا اوندی):"
+echo "   نام کاربری: Ahmadreza.avandi"
+echo "   ایمیل: ahmadrezaavandi@gmail.com"
+echo "   رمز عبور: [رمز موجود در دیتابیس]"
+echo "   لینک: http://$DOMAIN/secret-zone-789/login"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📋 دستورات مفید:"
