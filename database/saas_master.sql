@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 24, 2025 at 05:21 PM
+-- Generation Time: Oct 24, 2025 at 08:43 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -82,7 +82,8 @@ CREATE TABLE `subscription_history` (
 INSERT INTO `subscription_history` (`id`, `tenant_id`, `plan_key`, `subscription_type`, `start_date`, `end_date`, `amount`, `status`, `notes`, `created_at`, `created_by`) VALUES
 (1, 1, 'professional', 'yearly', '2025-10-13', '2026-10-13', 15000000.00, '', NULL, '2025-10-13 17:00:20', NULL),
 (2, 4, 'professional', 'monthly', '2025-10-13', '2026-04-13', 1500000.00, '', NULL, '2025-10-13 17:35:23', NULL),
-(3, 5, 'basic', 'yearly', '2025-10-13', '2026-10-13', 5000000.00, '', NULL, '2025-10-13 17:39:19', NULL);
+(3, 5, 'basic', 'yearly', '2025-10-13', '2026-10-13', 5000000.00, '', NULL, '2025-10-13 17:39:19', NULL),
+(4, 7, 'basic', 'monthly', '2025-10-24', '2026-01-24', 500000.00, '', NULL, '2025-10-24 17:17:59', NULL);
 
 -- --------------------------------------------------------
 
@@ -143,7 +144,7 @@ CREATE TABLE `super_admins` (
 --
 
 INSERT INTO `super_admins` (`id`, `username`, `email`, `password_hash`, `full_name`, `phone`, `role`, `permissions`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 'Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '$2b$10$LZwtbXyn2q1sIMV5ymNU7ujRHGJJbdPOu2PKf6jUs3wmE.syBxiKK', 'احمدرضا اوندی', NULL, 'super_admin', NULL, 1, '2025-10-13 19:42:14', '2025-10-13 15:20:25', '2025-10-13 19:42:14');
+(1, 'Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '$2b$10$LZwtbXyn2q1sIMV5ymNU7ujRHGJJbdPOu2PKf6jUs3wmE.syBxiKK', 'احمدرضا اوندی', NULL, 'super_admin', NULL, 1, '2025-10-24 17:06:52', '2025-10-13 15:20:25', '2025-10-24 17:06:52');
 
 -- --------------------------------------------------------
 
@@ -213,7 +214,8 @@ CREATE TABLE `tenants` (
 INSERT INTO `tenants` (`id`, `tenant_key`, `company_name`, `db_name`, `db_host`, `db_port`, `db_user`, `db_password`, `admin_name`, `admin_email`, `admin_phone`, `subscription_status`, `subscription_plan`, `subscription_start`, `subscription_end`, `max_users`, `max_customers`, `max_storage_mb`, `features`, `settings`, `is_active`, `is_deleted`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1, 'rabin', 'شرکت رابین تجارت', 'crm_system', 'localhost', 3306, 'root', 'e36e2202897c1684aa5e53c3d217fef6:c0d0a907cfb47e31099308c02a92a258:', 'احمدرضا اوندی', 'ahmadrezaavandi@gmail.com', '', 'active', 'professional', '2025-10-13', '2026-10-13', 20, 5000, 2048, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\", \\\"advanced_reports\\\", \\\"api_access\\\"]\"', NULL, 1, 0, '2025-10-13 17:00:20', '2025-10-17 10:24:26', NULL),
 (4, 'samin', 'samin', 'crm_system', 'localhost', 3306, 'root', 'af03b9577c92f64a678d99cd73eb190b:c76545e0b3896dc3e842c4290cd0116f:', 'samin', 'samin@gmail.com', '09001234567', 'active', 'professional', '2025-10-13', '2026-04-13', 20, 5000, 2048, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\", \\\"advanced_reports\\\", \\\"api_access\\\"]\"', NULL, 1, 0, '2025-10-13 17:35:23', '2025-10-17 09:53:23', NULL),
-(5, 'testcompany', 'شرکت تست', 'crm_system', 'localhost', 3306, 'root', '693011d4f215d8e3eead9d67d4dc51fd:94037994541b2ca22a452c3ca2cee3b4:', 'مدیر تست', 'admin@test.com', '', 'active', 'basic', '2025-10-13', '2026-10-13', 5, 500, 512, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\"]\"', NULL, 1, 0, '2025-10-13 17:39:19', '2025-10-17 09:53:23', NULL);
+(5, 'testcompany', 'شرکت تست', 'crm_system', 'localhost', 3306, 'root', '693011d4f215d8e3eead9d67d4dc51fd:94037994541b2ca22a452c3ca2cee3b4:', 'مدیر تست', 'admin@test.com', '', 'active', 'basic', '2025-10-13', '2026-10-13', 5, 500, 512, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\"]\"', NULL, 1, 0, '2025-10-13 17:39:19', '2025-10-17 09:53:23', NULL),
+(7, 'demo', 'demo', 'crm_system', 'localhost', 3306, 'crm_user', '1234', 'demo', 'demo@gmail.com', '09921386634', 'active', 'basic', '2025-10-24', '2026-01-24', 5, 500, 512, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\"]\"', NULL, 1, 0, '2025-10-24 17:17:59', '2025-10-24 17:17:59', NULL);
 
 -- --------------------------------------------------------
 
@@ -240,7 +242,8 @@ CREATE TABLE `tenant_activity_logs` (
 INSERT INTO `tenant_activity_logs` (`id`, `tenant_id`, `activity_type`, `description`, `metadata`, `performed_by`, `ip_address`, `user_agent`, `created_at`) VALUES
 (1, 1, '', 'Tenant created: شرکت رابین تجارت', '{\"plan_key\":\"professional\",\"subscription_months\":12,\"admin_email\":\"ahmadrezaavandi@gmail.com\"}', NULL, NULL, NULL, '2025-10-13 17:00:20'),
 (2, 4, '', 'Tenant created: samin', '{\"plan_key\":\"professional\",\"subscription_months\":6,\"admin_email\":\"samin@gmail.com\"}', NULL, NULL, NULL, '2025-10-13 17:35:23'),
-(3, 5, '', 'Tenant created: شرکت تست', '{\"plan_key\":\"basic\",\"subscription_months\":12,\"admin_email\":\"admin@test.com\"}', NULL, NULL, NULL, '2025-10-13 17:39:19');
+(3, 5, '', 'Tenant created: شرکت تست', '{\"plan_key\":\"basic\",\"subscription_months\":12,\"admin_email\":\"admin@test.com\"}', NULL, NULL, NULL, '2025-10-13 17:39:19'),
+(4, 7, '', 'Tenant created: demo', '{\"plan_key\":\"basic\",\"subscription_months\":3,\"admin_email\":\"demo@gmail.com\"}', NULL, NULL, NULL, '2025-10-24 17:17:59');
 
 -- --------------------------------------------------------
 
@@ -330,7 +333,7 @@ ALTER TABLE `tenant_activity_logs`
 -- AUTO_INCREMENT for table `subscription_history`
 --
 ALTER TABLE `subscription_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `subscription_plans`
@@ -354,13 +357,13 @@ ALTER TABLE `system_settings`
 -- AUTO_INCREMENT for table `tenants`
 --
 ALTER TABLE `tenants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `tenant_activity_logs`
 --
 ALTER TABLE `tenant_activity_logs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables

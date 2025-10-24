@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 24, 2025 at 05:20 PM
+-- Generation Time: Oct 24, 2025 at 08:43 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -52,7 +52,6 @@ CREATE TABLE `activities` (
 
 INSERT INTO `activities` (`id`, `tenant_key`, `customer_id`, `deal_id`, `type`, `title`, `description`, `start_time`, `end_time`, `duration`, `performed_by`, `outcome`, `location`, `notes`, `created_at`, `updated_at`) VALUES
 ('6b942cfe-b8ad-45d9-8c75-6aa04bcadc07', 'rabin', 'bebf1a00-4bb3-459c-9661-b1587038c6ce', NULL, 'call', 'تماس تلفنی جهت فروش و ارائه خط تولید خوراک دام', 'ایشان نیز دامداری سنتی و برای خرید خوراک از پنجشنبه بازار و برای میکس خوراک نیز به صورت دستی انجام می شود، توضیحات کامل به ایشان داده و اطلاعات نیز در واتس اپ خدمت ایشان ارسال گردید', '2025-09-08 09:12:29', NULL, NULL, 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'follow_up_needed', NULL, NULL, '2025-09-08 09:12:29', '2025-09-08 09:12:29'),
-('844ca0d9-d6e3-45cb-959c-1528c247cd12', 'rabin', '15147929-6e36-42c5-b2bf-a6b2b1413292', NULL, 'meeting', 'جلسه ارائه طرح توجیهی', 'جلسه گرفته شد و پیشنهاد فروش 1200 میلیونی بش داده شد و نیاز به ارائه در جلسه شرکای خودش داشت.', '2025-09-08 07:07:47', NULL, NULL, 'e820e817-eed0-40c0-9916-d23599e7e2ef', 'follow_up_needed', NULL, NULL, '2025-09-08 07:07:47', '2025-09-08 07:07:47'),
 ('9a4b9aec-c16f-464b-90b1-21eda3a9ce9b', 'rabin', 'bb568c99-e785-4a1b-b29f-d307ae1a4679', NULL, 'call', 'تماس تلفنی جهت ارائه و فروش خط تولید خوراک دام', 'ایشان از توضیحات استقبال کردند و گفتند که یک کارگر برای ایشان 25 میلیون هزینه دارد و ایشان با دست خودشان و زن و بچه شان دامداری رو می گردانند و همچنین به دلیل افزایش قیمت ها دام سبک را دارند پرورش می دهند و همچنین 5 هکتار زمین یونجه دارند.', '2025-09-08 08:24:25', NULL, NULL, 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'follow_up_needed', NULL, NULL, '2025-09-08 08:24:25', '2025-09-08 08:24:25'),
 ('a1fe7f56-9740-4312-af95-89ccaab8fed9', 'rabin', '13876975-2160-4903-acb0-53102d194d77', NULL, 'call', 'تماس تلفنی جهت ارائه و فروش خط تولید خوراک دام', 'ایشان گفتند که در دامداری ایشان تولید خوراک به صورت دستی انجام می شود و نیاز به دستگاه دارند و گفتند که فیلم دستگاه را برای ایشان در واتس اپ ارسال کنم.', '2025-09-08 07:46:34', NULL, NULL, 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'follow_up_needed', NULL, NULL, '2025-09-08 07:46:34', '2025-09-08 07:46:34'),
 ('cb55c828-fe5e-4783-907c-e0e0b4b1082d', 'rabin', '18f05b00-f033-479d-b824-ceeb580377da', NULL, 'call', 'ارائه محصول و تماس برای فروش محصول', 'ایشان گفتند که آسیاب و میکسری که دارند به خوبی عمل نمی کند و به فکر جایگزینی آن هستند و گفتند که عکس دستگاه و قیمت رو براشون ارسال کنم/واتس اپ نداشتن و در تماس دوباره ایشان جوابگو نبودند', '2025-09-08 07:04:21', NULL, NULL, 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'follow_up_needed', NULL, NULL, '2025-09-08 07:04:21', '2025-09-08 07:04:21'),
@@ -70,7 +69,12 @@ INSERT INTO `activities` (`id`, `tenant_key`, `customer_id`, `deal_id`, `type`, 
 ('22273f81-3e24-4199-a7b6-185921519561', 'rabin', 'bb4af0df-a466-46e6-9e99-3cc4e40a8b6e', NULL, 'call', 'تماس تستی', 'توضیحات تماس', NULL, NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-10-14 19:06:05', '2025-10-14 19:06:05'),
 ('aa0cbecc-7c23-4694-bf02-d3c1455c285e', 'rabin', 'bb4af0df-a466-46e6-9e99-3cc4e40a8b6e', NULL, 'call', 'تماس تستی', 'توضیحات تماس', NULL, NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', 'completed', NULL, NULL, '2025-10-14 19:06:12', '2025-10-14 19:06:12'),
 ('586fa8b4-ab92-11f0-81d2-581122e4f0be', 'rabin', '65d3f604-a7cc-430a-bb15-83fb1208f3cb', NULL, 'call', 'dsc', 'dsc', '2025-10-17 19:49:08', NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-10-17 19:49:08', '2025-10-17 19:49:08'),
-('4e112362-ac36-11f0-87d1-581122e4f0be', 'rabin', '11ce5e8f-204d-42c3-abae-2145b09535b8', NULL, 'call', 'شی', 'شی', '2025-10-18 15:22:48', NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-10-18 15:22:48', '2025-10-18 15:22:48');
+('4e112362-ac36-11f0-87d1-581122e4f0be', 'rabin', '11ce5e8f-204d-42c3-abae-2145b09535b8', NULL, 'call', 'شی', 'شی', '2025-10-18 15:22:48', NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-10-18 15:22:48', '2025-10-18 15:22:48'),
+('7997d846-63a7-490d-914a-aeb0d63c7572', 'rabin', '8ad1e954-402b-4d9d-a593-74be80543b5f', NULL, 'meeting', 'ad', 'asa', '2025-10-24 16:18:16', NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-10-24 16:18:16', '2025-10-24 16:18:16'),
+('demo-activity-1', 'demo', 'demo-customer-1', NULL, 'call', 'تماس با شرکت دمو تجارت', 'بررسی نیازهای مشتری و ارائه پیشنهاد اولیه برای همکاری', '2025-10-24 21:02:32', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-24 17:32:32', '2025-10-24 17:32:32'),
+('demo-activity-2', 'demo', 'demo-customer-2', NULL, 'meeting', 'جلسه حضوری با مدیرعامل', 'جلسه رسمی برای بررسی جزئیات قرارداد و شرایط همکاری', '2025-10-24 21:02:32', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-24 17:32:32', '2025-10-24 17:32:32'),
+('demo-activity-3', 'demo', 'demo-customer-1', NULL, 'email', 'ارسال پیشنهاد قیمت', 'ارسال پروپوزال کامل شامل قیمت‌ها و شرایط پرداخت', '2025-10-24 21:02:32', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-24 17:32:32', '2025-10-24 17:32:32'),
+('demo-activity-4', 'demo', 'demo-customer-2', NULL, 'follow_up', 'پیگیری پاسخ مشتری', 'پیگیری وضعیت بررسی پیشنهاد و دریافت بازخورد', '2025-10-24 21:02:32', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-24 17:32:32', '2025-10-24 17:32:32');
 
 -- --------------------------------------------------------
 
@@ -166,7 +170,8 @@ INSERT INTO `calendar_events` (`id`, `tenant_key`, `title`, `description`, `star
 ('82c805f2-5ba9-4134-b16b-2a546854bd05', 'rabin', 'متشز', NULL, '2025-10-13 17:35:00', '2025-10-13 18:35:00', 0, 'meeting', NULL, 'confirmed', NULL, 'ceo-001', '2025-10-11 17:35:21', '2025-10-11 17:35:21'),
 ('0a068c78-5825-4af2-9c68-4f5b956b492c', 'rabin', 'سب', NULL, '2025-09-30 17:35:00', '2025-09-30 18:35:00', 0, 'meeting', NULL, 'confirmed', NULL, 'ceo-001', '2025-10-11 17:35:39', '2025-10-11 17:35:39'),
 ('2b9277e1-9e39-486d-961c-702bb521f5a7', 'rabin', 'تقویم', NULL, '2025-10-15 17:55:00', '2025-10-15 18:55:00', 0, 'meeting', NULL, 'confirmed', NULL, 'ceo-001', '2025-10-11 17:55:22', '2025-10-11 17:55:22'),
-('2c5c4987-ac38-11f0-87d1-581122e4f0be', 'rabin', 'adwad', NULL, '2025-10-18 19:06:00', '2025-10-18 20:06:00', 0, 'meeting', NULL, 'confirmed', NULL, 'ceo-001', '2025-10-18 15:36:11', '2025-10-18 15:36:11');
+('2c5c4987-ac38-11f0-87d1-581122e4f0be', 'rabin', 'adwad', NULL, '2025-10-18 19:06:00', '2025-10-18 20:06:00', 0, 'meeting', NULL, 'confirmed', NULL, 'ceo-001', '2025-10-18 15:36:11', '2025-10-18 15:36:11'),
+('7dd007ee-f075-4dbb-8452-e11c8128af93', 'rabin', 'awd', NULL, '2025-10-24 16:15:00', '2025-10-24 17:15:00', 0, 'meeting', NULL, 'confirmed', NULL, 'ceo-001', '2025-10-24 16:15:43', '2025-10-24 16:15:43');
 
 -- --------------------------------------------------------
 
@@ -398,7 +403,8 @@ INSERT INTO `contacts` (`id`, `tenant_key`, `company_id`, `first_name`, `last_na
 ('cnt-mgqxnco7', 'rabin', NULL, 'علی', 'احمدی', 'مدیر ارشد فروش', NULL, 'contact1760468764843@example.com', '09123456789', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'active', 0, 'other', NULL, 'ceo-001', 'ceo-001', '2025-10-14 15:36:04', '2025-10-14 15:36:04'),
 ('cnt-mgqxni65', 'rabin', NULL, 'علی', 'احمدی', 'مدیر ارشد فروش', NULL, 'contact1760468771980@example.com', '09123456789', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'active', 0, 'other', NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', 'd497a492-f183-4452-86c1-961e5a0e3e22', '2025-10-14 15:36:12', '2025-10-14 15:36:12'),
 ('83e47e42-ab69-11f0-81d2-581122e4f0be', 'rabin', NULL, 'نهطش', 'یشسیش', 'یشیص', NULL, 'شصی@شیش.سی', '232', '32', NULL, NULL, NULL, NULL, 'ایران', NULL, NULL, NULL, NULL, NULL, NULL, 'active', 0, 'other', NULL, NULL, 'unknown', '2025-10-17 14:56:52', '2025-10-17 14:56:52'),
-('3ffdfe2d-ac36-11f0-87d1-581122e4f0be', 'rabin', NULL, 'شیش', 'شصی', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ایران', NULL, NULL, NULL, NULL, NULL, NULL, 'active', 0, 'other', NULL, NULL, 'unknown', '2025-10-18 15:22:25', '2025-10-18 15:22:25');
+('3ffdfe2d-ac36-11f0-87d1-581122e4f0be', 'rabin', NULL, 'شیش', 'شصی', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ایران', NULL, NULL, NULL, NULL, NULL, NULL, 'active', 0, 'other', NULL, NULL, 'unknown', '2025-10-18 15:22:25', '2025-10-18 15:22:25'),
+('cnt-mh51x92t', 'rabin', NULL, 'sad', 'awd', '23', '', '', '32', '32', '', '', '', '', 'ایران', NULL, NULL, '', NULL, NULL, NULL, 'active', 0, 'other', NULL, 'ceo-001', 'ceo-001', '2025-10-24 12:44:31', '2025-10-24 12:44:31');
 
 -- --------------------------------------------------------
 
@@ -1080,7 +1086,10 @@ INSERT INTO `customers` (`id`, `tenant_key`, `first_name`, `last_name`, `company
 ('9f3e2b3f-605e-4c4f-b511-acda0949c46b', 'rabin', NULL, NULL, 'شرکت تستی', 'مشتری به‌روز شده 1760468703158', 'test1760468702975@example.com', '09123456789', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'high', 'd497a492-f183-4452-86c1-961e5a0e3e22', 0, NULL, NULL, 0.00, '2025-10-14 19:05:03', '2025-10-14 19:05:03', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
 ('bb4af0df-a466-46e6-9e99-3cc4e40a8b6e', 'rabin', NULL, NULL, 'شرکت تستی', 'مشتری به‌روز شده 1760468764180', 'test1760468764021@example.com', '09123456789', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'high', 'ceo-001', 0, NULL, NULL, 0.00, '2025-10-14 19:06:04', '2025-10-14 19:06:04', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
 ('a28cd576-d887-4255-a271-85d02fcfc029', 'rabin', NULL, NULL, 'شرکت تستی', 'مشتری به‌روز شده 1760468771165', 'test1760468770991@example.com', '09123456789', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'high', 'd497a492-f183-4452-86c1-961e5a0e3e22', 0, NULL, NULL, 0.00, '2025-10-14 19:06:11', '2025-10-14 19:06:11', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
-('bb19a347-ab65-11f0-81d2-581122e4f0be', 'rabin', NULL, NULL, NULL, 'مشتری جدید', NULL, NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-17 14:29:46', '2025-10-17 14:29:46', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead');
+('bb19a347-ab65-11f0-81d2-581122e4f0be', 'rabin', NULL, NULL, NULL, 'مشتری جدید', NULL, NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-17 14:29:46', '2025-10-17 14:29:46', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
+('8ad1e954-402b-4d9d-a593-74be80543b5f', 'rabin', NULL, NULL, NULL, 'dawdadaw', NULL, NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'individual', 'medium', 'ceo-001', 0, NULL, NULL, 0.00, '2025-10-24 16:13:52', '2025-10-24 16:13:52', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
+('demo-customer-1', 'demo', NULL, NULL, NULL, 'شرکت دمو تجارت', 'info@demo-company.com', '02133445566', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'active', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
+('demo-customer-2', 'demo', NULL, NULL, NULL, 'مشتری دمو دوم', 'customer2@demo.com', '09123456789', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead');
 
 -- --------------------------------------------------------
 
@@ -1831,7 +1840,8 @@ INSERT INTO `event_reminders` (`id`, `event_id`, `method`, `minutes_before`, `se
 ('51ad96c9-f27f-4766-9629-a51e927a8d67', 'fb6210b0-49b2-4f11-a5f6-ba67a4103d3b', 'popup', 15, 0, NULL, '2025-10-11 17:35:13'),
 ('4f63bd2a-131a-4251-a7a9-bcda665dcafc', '82c805f2-5ba9-4134-b16b-2a546854bd05', 'popup', 15, 0, NULL, '2025-10-11 17:35:21'),
 ('7578c29f-4fd6-4af7-aad3-aae22906e9ab', '0a068c78-5825-4af2-9c68-4f5b956b492c', 'popup', 15, 0, NULL, '2025-10-11 17:35:39'),
-('95fa244f-aecc-4e0c-86d9-8032fc8c12c4', '2b9277e1-9e39-486d-961c-702bb521f5a7', 'popup', 15, 0, NULL, '2025-10-11 17:55:22');
+('95fa244f-aecc-4e0c-86d9-8032fc8c12c4', '2b9277e1-9e39-486d-961c-702bb521f5a7', 'popup', 15, 0, NULL, '2025-10-11 17:55:22'),
+('352669bc-3c4a-403d-ae35-acf0eae11942', '7dd007ee-f075-4dbb-8452-e11c8128af93', 'popup', 15, 0, NULL, '2025-10-24 16:15:44');
 
 -- --------------------------------------------------------
 
@@ -2182,7 +2192,22 @@ INSERT INTO `modules` (`id`, `name`, `display_name`, `description`, `route`, `ic
 ('mod-020', 'sales-analysis', 'تحلیل فروش', 'تحلیل فروش', '/dashboard/insights/sales-analysis', 'TrendingUp', NULL, 44, 1, '2025-09-16 15:37:49'),
 ('mod-021', 'audio-analysis', 'تحلیل صوتی', 'تحلیل صوتی مکالمات', '/dashboard/insights/audio-analysis', 'Mic2', NULL, 3, 1, '2025-09-16 15:37:49'),
 ('mod-022', 'tasks', 'وظایف', 'مدیریت وظایف', '/dashboard/tasks', 'CheckSquare', NULL, 46, 1, '2025-09-16 15:37:49'),
-('mod-023', 'profile', 'پروفایل', 'پروفایل کاربری', '/dashboard/profile', 'User', NULL, 50, 1, '2025-09-16 15:37:49');
+('mod-023', 'profile', 'پروفایل', 'پروفایل کاربری', '/dashboard/profile', 'User', NULL, 50, 1, '2025-09-16 15:37:49'),
+('demo-001', 'dashboard', 'داشبورد', NULL, '/dashboard', 'LayoutDashboard', NULL, 1, 1, '2025-10-24 17:28:45'),
+('demo-002', 'customers', 'مشتریان', NULL, '/dashboard/customers', 'Users', NULL, 2, 1, '2025-10-24 17:28:45'),
+('demo-003', 'contacts', 'مخاطبین', NULL, '/dashboard/contacts', 'UserCheck', NULL, 3, 1, '2025-10-24 17:28:45'),
+('demo-004', 'activities', 'فعالیت‌ها', NULL, '/dashboard/activities', 'Activity', NULL, 4, 1, '2025-10-24 17:28:45'),
+('demo-005', 'coworkers', 'همکاران', NULL, '/dashboard/coworkers', 'Users2', NULL, 5, 1, '2025-10-24 17:28:45'),
+('demo-006', 'tasks', 'وظایف', NULL, '/dashboard/tasks', 'Target', NULL, 6, 1, '2025-10-24 17:28:45'),
+('demo-007', 'calendar', 'تقویم', NULL, '/dashboard/calendar', 'Calendar', NULL, 7, 1, '2025-10-24 17:28:45'),
+('demo-008', 'sales', 'فروش‌ها', NULL, '/dashboard/sales', 'TrendingUp', NULL, 8, 1, '2025-10-24 17:28:45'),
+('demo-009', 'deals', 'معاملات', NULL, '/dashboard/deals', 'Briefcase', NULL, 9, 1, '2025-10-24 17:28:45'),
+('demo-010', 'products', 'محصولات', NULL, '/dashboard/products', 'Package', NULL, 10, 1, '2025-10-24 17:28:45'),
+('demo-011', 'reports', 'گزارش‌ها', NULL, '/dashboard/reports', 'BarChart3', NULL, 11, 1, '2025-10-24 17:28:45'),
+('demo-012', 'documents', 'مدیریت اسناد', NULL, '/dashboard/documents', 'FileText', NULL, 12, 1, '2025-10-24 17:28:45'),
+('demo-013', 'chat', 'چت', NULL, '/dashboard/chat', 'MessageCircle', NULL, 13, 1, '2025-10-24 17:28:45'),
+('demo-014', 'customer-club', 'باشگاه مشتریان', NULL, '/dashboard/customer-club', 'Users', NULL, 14, 1, '2025-10-24 17:28:45'),
+('demo-015', 'feedback', 'بازخوردها', NULL, '/dashboard/feedback', 'MessageCircle2', NULL, 15, 1, '2025-10-24 17:28:45');
 
 -- --------------------------------------------------------
 
@@ -2353,12 +2378,17 @@ INSERT INTO `products` (`id`, `tenant_key`, `name`, `description`, `category`, `
 ('05ec0ff6-6769-4d7b-982b-6b773be6c08e', 'rabin', 'محصول به‌روز شده 1760468608284', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468608141', NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', '2025-10-14 19:03:28', '2025-10-14 19:03:28'),
 ('4fdfbc89-b356-4402-8af0-09739f410f6a', 'rabin', 'محصول به‌روز شده 1760468771579', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468771356', NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', '2025-10-14 19:06:11', '2025-10-14 19:06:11'),
 ('5f8a39a3-8509-46c2-bf55-6619d0d64599', 'rabin', 'محصول به‌روز شده 1760468364549', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468364220', NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', '2025-10-14 18:59:24', '2025-10-14 18:59:24'),
+('6448ebcd-1e10-4507-9df5-d5cece7093f4', 'rabin', 'awda', 'wada', 'awda', 2321.00, 'IRR', 'active', NULL, NULL, NULL, 'ceo-001', '2025-10-24 16:36:31', '2025-10-24 16:36:31'),
 ('9e36dfa8-be00-4a8f-8201-0000c9f21e50', 'rabin', 'محصول به‌روز شده 1760468764423', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468764298', NULL, NULL, 'ceo-001', '2025-10-14 19:06:04', '2025-10-14 19:06:04'),
 ('adc9ada6-451d-470d-b776-b9f5701531fc', 'rabin', 'محصول به‌روز شده 1760468052482', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468049743', NULL, NULL, 'ceo-001', '2025-10-14 18:54:09', '2025-10-14 18:54:12'),
 ('ba4143ee-c5f6-49fa-afb2-1ce01ac9fe86', 'rabin', 'نرم افزار CRM', 'نرم افزار جامع CRM , CEM', 'نرم افزار', 3000000.00, 'IRR', 'active', '1386', NULL, NULL, 'ceo-001', '2025-10-11 16:50:05', '2025-10-11 16:50:05'),
+('c18de587-78a8-430f-b328-d000ff62a0ab', 'rabin', 'محصول دمو', NULL, NULL, 1000000.00, 'IRR', 'active', NULL, NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '2025-10-24 17:34:07', '2025-10-24 17:34:07'),
 ('c909cf60-d688-4f49-b279-eddb8d1374bd', 'rabin', 'محصول به‌روز شده 1760468690367', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468690235', NULL, NULL, 'ceo-001', '2025-10-14 19:04:50', '2025-10-14 19:04:50'),
 ('ceb035fc-c022-4ed8-b040-50b342349522', 'rabin', 'یک محصول تستی', 'هیچی', 'نرم افزار', 200000000.00, 'IRR', 'active', '2323', NULL, NULL, 'ceo-001', '2025-10-11 17:53:16', '2025-10-11 17:53:16'),
 ('d4594aeb-ec15-4a51-98de-85c142aa035b', 'rabin', 'محصول به‌روز شده 1760468703443', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468703307', NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', '2025-10-14 19:05:03', '2025-10-14 19:05:03'),
+('demo-product-1', 'demo', 'نرم‌افزار CRM پایه', 'نرم‌افزار مدیریت ارتباط با مشتری برای کسب‌وکارهای کوچک', 'نرم‌افزار', 5000000.00, 'IRR', 'active', 'CRM-BASIC-001', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '2025-10-24 17:44:52', '2025-10-24 17:44:52'),
+('demo-product-2', 'demo', 'پکیج آموزش CRM', 'دوره جامع آموزش استفاده از سیستم CRM', 'آموزش', 2000000.00, 'IRR', 'active', 'TRN-CRM-001', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '2025-10-24 17:44:52', '2025-10-24 17:44:52'),
+('demo-product-3', 'demo', 'خدمات پشتیبانی ماهانه', 'پشتیبانی فنی و نگهداری سیستم CRM', 'خدمات', 1500000.00, 'IRR', 'active', 'SUP-MONTHLY-001', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '2025-10-24 17:44:52', '2025-10-24 17:44:52'),
 ('ea43727b-f4b1-4cf3-a501-3c6694bed68e', 'rabin', 'محصول به‌روز شده 1760468357100', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468356926', NULL, NULL, 'ceo-001', '2025-10-14 18:59:17', '2025-10-14 18:59:17'),
 ('eaa05d03-5d6b-4801-9e3b-7909a1df2467', 'rabin', 'CRM', '..', 'نرم افزاری', NULL, 'IRR', 'active', NULL, NULL, NULL, 'ceo-001', '2025-10-11 16:08:13', '2025-10-11 16:08:13'),
 ('prod-001', 'rabin', 'خط تولید خوراک دام', 'دستگاه کامل تولید خوراک دام با ظرفیت 1 تن در ساعت', 'ماشین‌آلات کشاورزی', 500000000.00, 'IRR', 'active', 'FEED-LINE-001', NULL, NULL, 'ceo-001', '2025-10-11 16:12:51', '2025-10-11 16:12:51'),
@@ -2514,7 +2544,8 @@ INSERT INTO `sales` (`id`, `title`, `tenant_key`, `deal_id`, `customer_id`, `cus
 ('f26a5643-c11b-47c9-b86c-1decc35622dc', 'فروش به مشتری به‌روز شده 1760468690103 - 2025/10/14', 'rabin', NULL, '146690b0-5551-47aa-bdbd-1a0b1da20442', 'مشتری به‌روز شده 1760468690103', 1000000.00, 'IRR', 'pending', NULL, '2025-10-14 15:35:03', NULL, NULL, NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', 'مدیر سامین', '2025-10-14 15:35:03', '2025-10-17 15:32:16'),
 ('289fbd44-a3a6-499c-be12-51f0f2cd5e00', 'فروش به مشتری به‌روز شده 1760468764180 - 2025/10/14', 'rabin', NULL, 'bb4af0df-a466-46e6-9e99-3cc4e40a8b6e', 'مشتری به‌روز شده 1760468764180', 1000000.00, 'IRR', 'pending', NULL, '2025-10-14 15:36:04', NULL, NULL, NULL, NULL, 'ceo-001', 'مهندس کریمی', '2025-10-14 15:36:04', '2025-10-17 15:32:16'),
 ('083f1ed3-23a8-4506-81b2-ba96c0453f9e', 'فروش به مشتری به‌روز شده 1760468764180 - 2025/10/14', 'rabin', NULL, 'bb4af0df-a466-46e6-9e99-3cc4e40a8b6e', 'مشتری به‌روز شده 1760468764180', 1000000.00, 'IRR', 'pending', NULL, '2025-10-14 15:36:11', NULL, NULL, NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', 'مدیر سامین', '2025-10-14 15:36:11', '2025-10-17 15:32:16'),
-('e299742e-ac35-11f0-87d1-581122e4f0be', NULL, 'rabin', NULL, '65d3f604-a7cc-430a-bb15-83fb1208f3cb', 'آذردخت محمودی', 10000000.00, 'IRR', 'paid', 'نقد', '2025-10-18 15:19:48', NULL, NULL, '..', '23453', 'unknown', 'ناشناس', '2025-10-18 15:19:48', '2025-10-18 15:19:48');
+('e299742e-ac35-11f0-87d1-581122e4f0be', NULL, 'rabin', NULL, '65d3f604-a7cc-430a-bb15-83fb1208f3cb', 'آذردخت محمودی', 10000000.00, 'IRR', 'paid', 'نقد', '2025-10-18 15:19:48', NULL, NULL, '..', '23453', 'unknown', 'ناشناس', '2025-10-18 15:19:48', '2025-10-18 15:19:48'),
+('5b6bfde3-b0f4-11f0-b87f-581122e4f0be', NULL, 'rabin', NULL, '65d3f604-a7cc-430a-bb15-83fb1208f3cb', 'آذردخت محمودی', 2344443.00, 'IRR', 'pending', NULL, '2025-10-24 16:13:20', NULL, NULL, 'qe', NULL, 'unknown', 'ناشناس', '2025-10-24 16:13:20', '2025-10-24 16:13:20');
 
 -- --------------------------------------------------------
 
@@ -2761,9 +2792,11 @@ CREATE TABLE `tasks` (
 
 INSERT INTO `tasks` (`id`, `tenant_key`, `title`, `description`, `customer_id`, `deal_id`, `project_id`, `assigned_to`, `assigned_by`, `priority`, `status`, `category`, `due_date`, `created_at`, `updated_at`, `completed_at`, `completion_notes`, `attachments`) VALUES
 ('9cc572f5-8d9d-432e-a2ec-d81a0f63e1da', 'rabin', 'تست کامل و برسی نرم افزار CRM', 'همکار گرامی لطفا نرم افزار رو برسی کنید', NULL, NULL, NULL, '9f6b90b9-0723-4261-82c3-cd54e21d3995', 'ceo-001', 'high', 'completed', 'follow_up', '0000-00-00 00:00:00', '2025-10-01 16:23:41', '2025-10-01 18:33:20', '2025-10-01 18:33:20', NULL, NULL),
-('dcc6a51d-bd54-49f8-aeb0-b17af2545376', 'rabin', 'احمدرضا آوندی تستی', 'تستی', NULL, NULL, NULL, '9f6b90b9-0723-4261-82c3-cd54e21d3995', 'ceo-001', 'medium', 'pending', 'follow_up', '0000-00-00 00:00:00', '2025-10-11 17:56:02', '2025-10-11 17:56:02', NULL, NULL, NULL),
+('dcc6a51d-bd54-49f8-aeb0-b17af2545376', 'rabin', 'احمدرضا آوندی تستی', 'تستی', NULL, NULL, NULL, '9f6b90b9-0723-4261-82c3-cd54e21d3995', 'ceo-001', 'medium', 'pending', 'follow_up', '0000-00-00 00:00:00', '2025-10-11 17:56:02', '2025-10-24 16:39:00', NULL, NULL, NULL),
 ('73a8be37-d57e-4ed5-ae09-6530f71deabd', 'rabin', 'وظیفه تستی 1760468765361', 'توضیحات وظیفه', NULL, NULL, NULL, 'ceo-001', 'ceo-001', 'medium', 'pending', 'follow_up', '2025-12-30 20:30:00', '2025-10-14 19:06:05', '2025-10-14 19:06:05', NULL, NULL, NULL),
-('d666ecfe-239f-43ee-afda-e631f7a7120c', 'rabin', 'وظیفه تستی 1760468772503', 'توضیحات وظیفه', NULL, NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', 'd497a492-f183-4452-86c1-961e5a0e3e22', 'medium', 'pending', 'follow_up', '2025-12-30 20:30:00', '2025-10-14 19:06:12', '2025-10-14 19:06:12', NULL, NULL, NULL);
+('d666ecfe-239f-43ee-afda-e631f7a7120c', 'rabin', 'وظیفه تستی 1760468772503', 'توضیحات وظیفه', NULL, NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', 'd497a492-f183-4452-86c1-961e5a0e3e22', 'medium', 'pending', 'follow_up', '2025-12-30 20:30:00', '2025-10-14 19:06:12', '2025-10-14 19:06:12', NULL, NULL, NULL),
+('demo-task-1', 'demo', 'پیگیری مشتری دمو', 'پیگیری وضعیت قرارداد و دریافت بازخورد', NULL, NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '', 'high', 'pending', 'follow_up', NULL, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, NULL),
+('demo-task-2', 'demo', 'آماده‌سازی پروپوزال', 'تهیه پیشنهاد قیمت برای مشتری جدید', NULL, NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '', 'medium', 'in_progress', 'follow_up', NULL, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2920,13 +2953,11 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `full_name`, `name`, `email`, `password`, `role`, `department`, `position`, `status`, `avatar`, `avatar_url`, `phone`, `team`, `last_active`, `last_login`, `created_at`, `updated_at`, `created_by`, `tenant_key`) VALUES
 ('ceo-001', 'Robintejarat@gmail.com', 'مهندس کریمی', 'مهندس کریمی', 'Robintejarat@gmail.com', '$2b$10$/r0.PUBZw.x5nhGodAsuM.nEMoCVLMuzXFwEMj.VnsoixS780ZUhi', 'ceo', NULL, NULL, 'active', '/uploads/avatars/ceo-001-1755615503750.png', NULL, '', NULL, '2025-07-20 04:57:32', '2025-10-18 15:55:25', '2025-07-20 04:57:32', '2025-10-18 15:55:25', NULL, 'rabin'),
-('362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'rameshk.kosar@gmail.com', 'کوثر رامشک', 'کوثر رامشک', 'rameshk.kosar@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'agent', NULL, NULL, 'active', NULL, NULL, '09172087848', NULL, '2025-09-08 06:54:26', '2025-09-08 07:34:19', '2025-09-08 06:54:26', '2025-10-14 18:56:10', 'e820e817-eed0-40c0-9916-d23599e7e2ef', 'rabin'),
-('a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'alirezasahafi77@gmail.com', 'علیرضا صحافی', 'علیرضا صحافی', 'alirezasahafi77@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '09332107233', NULL, '2025-09-08 06:53:13', '2025-09-13 05:59:44', '2025-09-08 06:53:13', '2025-10-14 18:56:10', 'e820e817-eed0-40c0-9916-d23599e7e2ef', 'rabin'),
-('e820e817-eed0-40c0-9916-d23599e7e2ef', 'shamsaieensiye72@gmail.com', 'مهندس شمسایی', 'مهندس شمسایی', 'shamsaieensiye72@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'ceo', NULL, NULL, 'active', NULL, NULL, '09175456003', NULL, '2025-09-06 12:10:56', '2025-09-09 07:40:57', '2025-09-06 12:10:56', '2025-10-14 18:56:10', 'ceo-001', 'rabin'),
+('362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'rameshk.kosar@gmail.com', 'کوثر رامشک', 'کوثر رامشک', 'rameshk.kosar@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'agent', NULL, NULL, 'active', NULL, NULL, '09172087848', NULL, '2025-09-08 06:54:26', '2025-09-08 07:34:19', '2025-09-08 06:54:26', '2025-10-24 16:15:03', NULL, 'rabin'),
+('a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'alirezasahafi77@gmail.com', 'علیرضا صحافی', 'علیرضا صحافی', 'alirezasahafi77@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '09332107233', NULL, '2025-09-08 06:53:13', '2025-09-13 05:59:44', '2025-09-08 06:53:13', '2025-10-24 16:15:03', NULL, 'rabin'),
 ('9f6b90b9-0723-4261-82c3-cd54e21d3995', 'ahmadreza.avandi@gmail.com', 'احمدرضا آوندی', 'احمدرضا آوندی', 'ahmadreza.avandi@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'agent', NULL, NULL, 'active', NULL, NULL, '09921386634', NULL, '2025-10-01 16:14:02', '2025-10-13 19:42:52', '2025-10-01 16:14:02', '2025-10-14 18:56:10', 'ceo-001', 'rabin'),
-('fedb499b-23a8-4af7-9b9d-587724a0b4c7', NULL, NULL, 'مدیر تست', 'admin@test.com', '$2b$10$qu3hZpNbE1HhZEEEq5OUOeUn1tNtoRogGpDzSC/5hwWEtyURxfDrq', 'ceo', NULL, NULL, 'active', NULL, NULL, NULL, NULL, '2025-10-13 17:39:19', NULL, '2025-10-13 17:39:19', '2025-10-13 17:39:19', NULL, 'testcompany'),
 ('d497a492-f183-4452-86c1-961e5a0e3e22', NULL, NULL, 'مدیر سامین', 'admin@samin.com', '$2a$10$Mx.JpKc4q762x/0dL91GbeZbNsOkTK4ykiTW/eYWcQoFogG1QTfOG', 'ceo', NULL, NULL, 'active', NULL, NULL, NULL, NULL, '2025-10-13 17:53:59', NULL, '2025-10-13 17:53:59', '2025-10-14 18:57:27', NULL, 'samin'),
-('3593cd16-ab7b-11f0-81d2-581122e4f0be', NULL, NULL, 'مهندس عزیزی', 'azizi@gmail.com', '$2a$10$5TWK4vy1xVtRd4U8DRz56u9T3j.bivp/58Ri1zmTkEDyCl.CzRyne', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '123456', NULL, '2025-10-17 17:03:31', NULL, '2025-10-17 17:03:31', '2025-10-17 17:03:31', NULL, 'rabin');
+('effaaff2-57b1-493e-8d47-83217067cf3e', NULL, NULL, 'demo', 'demo@gmail.com', '$2b$10$taZXeeeyAPXA8lokt47mye.1aAcSYxP0mu0xkvF8sFsb4en3m9ghK', 'ceo', NULL, NULL, 'active', NULL, NULL, NULL, NULL, '2025-10-24 17:17:59', NULL, '2025-10-24 17:17:59', '2025-10-24 17:17:59', NULL, 'demo');
 
 -- --------------------------------------------------------
 
@@ -3309,7 +3340,22 @@ INSERT INTO `user_module_permissions` (`id`, `user_id`, `module_id`, `granted`, 
 ('e9dcf6a9-7737-4c0b-a764-1d4f519c819b', 'd497a492-f183-4452-86c1-961e5a0e3e22', 'mod-019', 1, '2025-10-17 10:02:14', '2025-10-17 10:02:14'),
 ('9bb95eee-f0f0-4b62-971f-96152a2700da', 'd497a492-f183-4452-86c1-961e5a0e3e22', 'mod-020', 1, '2025-10-17 10:02:14', '2025-10-17 10:02:14'),
 ('b14eddfd-785b-4d06-b51b-0f01c1766740', 'd497a492-f183-4452-86c1-961e5a0e3e22', 'mod-022', 1, '2025-10-17 10:02:14', '2025-10-17 10:02:14'),
-('7a0bb3d4-0da3-453e-8301-37d43e70f339', 'd497a492-f183-4452-86c1-961e5a0e3e22', 'mod-023', 1, '2025-10-17 10:02:14', '2025-10-17 10:02:14');
+('7a0bb3d4-0da3-453e-8301-37d43e70f339', 'd497a492-f183-4452-86c1-961e5a0e3e22', 'mod-023', 1, '2025-10-17 10:02:14', '2025-10-17 10:02:14'),
+('e4a8ce4c-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-001', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4a99edf-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-002', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4a9ef51-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-003', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4aa5992-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-004', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4aaca5d-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-005', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4ab2985-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-006', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4ab8fa3-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-007', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4abdefd-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-008', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4ac324c-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-009', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4acce5a-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-010', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4ad1343-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-011', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4ad5b67-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-012', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4adf099-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-013', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4ae2ff9-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-014', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45'),
+('e4ae863f-b0fe-11f0-b87f-581122e4f0be', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'demo-015', 1, '2025-10-24 17:28:45', '2025-10-24 17:28:45');
 
 -- --------------------------------------------------------
 

@@ -16,21 +16,18 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
-  Menu,
-  X,
+
   Building2,
   Activity,
   Calendar,
   Briefcase,
   Target,
   FileText,
-  Brain,
   Package,
   User,
   Mail,
   Monitor,
   CheckCircle,
-  Mic2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -75,11 +72,9 @@ const iconMap: { [key: string]: React.ComponentType<any> } = {
   'Building2': Building2,
   'TrendingUp': TrendingUp,
   'FileText': FileText,
-  'Brain': Brain,
   'Package': Package,
   'Mail': Mail,
   'Monitor': Monitor,
-  'Mic2': Mic2,
 };
 
 // نقشه نام‌های نمایشی روت‌ها
@@ -95,13 +90,10 @@ const routeDisplayNames: { [key: string]: string } = {
   '/dashboard/feedback': 'بازخوردها',
   '/dashboard/reports': 'گزارش‌ها',
   '/dashboard/daily-reports': 'گزارش‌های روزانه',
-  '/dashboard/insights/reports-analysis': 'تحلیل گزارشات',
-  '/dashboard/insights/feedback-analysis': 'تحلیل بازخوردها',
-  '/dashboard/insights/sales-analysis': 'تحلیل فروش',
-  '/dashboard/insights/audio-analysis': 'تحلیل صوتی',
+
   '/dashboard/calendar': 'تقویم',
   '/dashboard/profile': 'پروفایل',
-  '/dashboard/settings': 'تنظیمات سیستم',
+
   '/dashboard/system-monitoring': 'مانیتورینگ سیستم',
   '/dashboard/products': 'محصولات',
   '/dashboard/documents': 'مدیریت اسناد',
@@ -121,7 +113,7 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
+
 
   // ...existing code...
 
@@ -199,16 +191,6 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
                 icon: Activity,
               },
               {
-                title: 'مدیریت وظایف',
-                href: `/${tenantKey}/dashboard/tasks`,
-                icon: CheckCircle,
-              },
-              {
-                title: 'گزارش‌گیری',
-                href: `/${tenantKey}/dashboard/reports`,
-                icon: BarChart3,
-              },
-              {
                 title: 'مدیریت کاربران',
                 href: `/${tenantKey}/dashboard/coworkers`,
                 icon: Users,
@@ -230,11 +212,7 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
             href: `/${tenantKey}/dashboard/sales`,
             icon: TrendingUp,
             children: [
-              {
-                title: 'معاملات',
-                href: `/${tenantKey}/dashboard/deals`,
-                icon: TrendingUp,
-              }
+
             ]
           },
           {
@@ -252,11 +230,7 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
                 href: `/${tenantKey}/dashboard/contacts`,
                 icon: Contact,
               },
-              {
-                title: 'بازخوردها',
-                href: `/${tenantKey}/dashboard/feedback`,
-                icon: MessageCircle,
-              }
+
             ]
           },
           {
@@ -278,6 +252,21 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
                 title: 'تقویم',
                 href: `/${tenantKey}/dashboard/calendar`,
                 icon: Calendar,
+              },
+              {
+                title: 'مدیریت اسناد',
+                href: `/${tenantKey}/dashboard/documents`,
+                icon: FileText,
+              },
+              {
+                title: 'گزارش‌گیری',
+                href: `/${tenantKey}/dashboard/reports`,
+                icon: BarChart3,
+              },
+              {
+                title: 'مدیریت وظایف',
+                href: `/${tenantKey}/dashboard/tasks`,
+                icon: CheckCircle,
               }
             ]
           },
@@ -291,38 +280,8 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
             href: `/${tenantKey}/dashboard/customer-club`,
             icon: Users,
           },
-          {
-            title: 'تحلیل صوتی',
-            href: `/${tenantKey}/dashboard/insights/audio-analysis`,
-            icon: Mic2,
-          },
-          {
-            title: 'هوش مصنوعی و تحلیل',
-            href: `/${tenantKey}/dashboard/insights`,
-            icon: BarChart3,
-            children: [
-              {
-                title: 'تحلیل گزارشات',
-                href: `/${tenantKey}/dashboard/insights/reports-analysis`,
-                icon: BarChart3,
-              },
-              {
-                title: 'تحلیل بازخوردها',
-                href: `/${tenantKey}/dashboard/insights/feedback-analysis`,
-                icon: MessageCircle,
-              },
-              {
-                title: 'تحلیل فروش',
-                href: `/${tenantKey}/dashboard/insights/sales-analysis`,
-                icon: TrendingUp,
-              }
-            ]
-          },
-          {
-            title: 'محصولات',
-            href: `/${tenantKey}/dashboard/products`,
-            icon: Package,
-          },
+
+
           {
             title: 'پروفایل',
             href: `/${tenantKey}/dashboard/profile`,
@@ -392,15 +351,9 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
       ['coworkers', 'activities', 'tasks', 'calendar'].includes(m.name)
     );
 
-    // AI & Analytics modules
-    const aiAnalyticsModules = filteredModules.filter(m =>
-      ['reports-analysis', 'feedback-analysis', 'sales-analysis', 'audio-analysis'].includes(m.name)
-    );
 
-    // Reports modules
-    const reportsModules = filteredModules.filter(m =>
-      ['reports', 'daily-reports'].includes(m.name)
-    );
+
+
 
     // Add dashboard first if exists
     const dashboardModule = filteredModules.find(m => m.name === 'dashboard');
@@ -419,14 +372,26 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
         title: 'مدیریت فروش',
         href: buildTenantRoute('/dashboard/sales'),
         icon: TrendingUp,
-        children: salesModules.map(module => {
-          processedModules.add(module.name);
-          return {
-            title: routeDisplayNames[module.route] || module.display_name,
-            href: buildTenantRoute(module.route),
-            icon: iconMap[module.icon] || TrendingUp,
-          };
-        }),
+        children: [
+          ...salesModules.map(module => {
+            processedModules.add(module.name);
+            return {
+              title: routeDisplayNames[module.route] || module.display_name,
+              href: buildTenantRoute(module.route),
+              icon: iconMap[module.icon] || TrendingUp,
+            };
+          }),
+          {
+            title: 'محصولات',
+            href: buildTenantRoute('/dashboard/products'),
+            icon: Package,
+          },
+          {
+            title: 'فروش‌ها',
+            href: buildTenantRoute('/dashboard/sales'),
+            icon: TrendingUp,
+          }
+        ],
       });
     }
 
@@ -453,61 +418,53 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
         title: 'مدیریت همکاران',
         href: buildTenantRoute('/dashboard/coworkers'),
         icon: Activity,
-        children: teamModules.map(module => {
-          processedModules.add(module.name);
-          return {
-            title: routeDisplayNames[module.route] || module.display_name,
-            href: buildTenantRoute(module.route),
-            icon: iconMap[module.icon] || Activity,
-          };
-        }),
+        children: [
+          ...teamModules.map(module => {
+            processedModules.add(module.name);
+            return {
+              title: routeDisplayNames[module.route] || module.display_name,
+              href: buildTenantRoute(module.route),
+              icon: iconMap[module.icon] || Activity,
+            };
+          }),
+          {
+            title: 'مدیریت اسناد',
+            href: buildTenantRoute('/dashboard/documents'),
+            icon: FileText,
+          },
+          {
+            title: 'گزارش‌گیری',
+            href: buildTenantRoute('/dashboard/reports'),
+            icon: BarChart3,
+          },
+          {
+            title: 'مدیریت وظایف',
+            href: buildTenantRoute('/dashboard/tasks'),
+            icon: CheckCircle,
+          }
+        ],
       });
     }
 
-    // Add Reports mega menu
-    if (reportsModules.length > 0) {
-      navItems.push({
-        title: 'گزارش‌ها',
-        href: buildTenantRoute('/dashboard/reports'),
-        icon: BarChart3,
-        children: reportsModules.map(module => {
-          processedModules.add(module.name);
-          return {
-            title: routeDisplayNames[module.route] || module.display_name,
-            href: buildTenantRoute(module.route),
-            icon: iconMap[module.icon] || BarChart3,
-          };
-        }),
-      });
-    }
+    // Add System Monitoring
+    navItems.push({
+      title: 'مانیتورینگ سیستم',
+      href: buildTenantRoute('/dashboard/system-monitoring'),
+      icon: Monitor,
+    });
 
-    // Add AI & Analytics mega menu
-    if (aiAnalyticsModules.length > 0) {
-      navItems.push({
-        title: 'هوش مصنوعی و تحلیل',
-        href: buildTenantRoute('/dashboard/insights'),
-        icon: Brain,
-        children: aiAnalyticsModules.map(module => {
-          processedModules.add(module.name);
-          return {
-            title: routeDisplayNames[module.route] || module.display_name,
-            href: buildTenantRoute(module.route),
-            icon: iconMap[module.icon] || BarChart3,
-          };
-        }),
-      });
-    }
+    // Add Chat as standalone item
+    navItems.push({
+      title: 'چت',
+      href: buildTenantRoute('/dashboard/chat'),
+      icon: MessageCircle,
+    });
 
-    // Add all remaining modules that weren't grouped
-    filteredModules.forEach(module => {
-      if (!processedModules.has(module.name)) {
-        navItems.push({
-          title: routeDisplayNames[module.route] || module.display_name,
-          href: buildTenantRoute(module.route),
-          icon: iconMap[module.icon] || LayoutDashboard,
-        });
-        processedModules.add(module.name);
-      }
+    // Add Customer Club with Email Management
+    navItems.push({
+      title: 'باشگاه مشتریان',
+      href: buildTenantRoute('/dashboard/customer-club'),
+      icon: Users,
     });
 
     console.log('✅ Final nav items:', navItems);

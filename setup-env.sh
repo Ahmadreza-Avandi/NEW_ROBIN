@@ -55,6 +55,69 @@ NEXTAUTH_SECRET=$(openssl rand -base64 48 | tr -d "=+/" 2>/dev/null || echo "you
 
 echo "✅ رمزهای امن تولید شدند"
 
+# درخواست کلید API و مدل OpenRouter
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🤖 تنظیمات هوش مصنوعی (OpenRouter)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# درخواست کلید API
+echo "🔑 لطفاً کلید API خود را از OpenRouter وارد کنید:"
+echo "   (برای دریافت کلید به https://openrouter.ai مراجعه کنید)"
+echo ""
+read -p "OpenRouter API Key: " OPENROUTER_API_KEY
+
+# بررسی خالی نبودن کلید
+while [ -z "$OPENROUTER_API_KEY" ]; do
+    echo "❌ کلید API نمی‌تواند خالی باشد!"
+    read -p "OpenRouter API Key: " OPENROUTER_API_KEY
+done
+
+echo ""
+echo "📋 مدل‌های پیشنهادی:"
+echo "   1. google/gemini-2.0-flash-exp:free (سریع، رایگان، بدون تگ فکری)"
+echo "   2. meta-llama/llama-3.2-3b-instruct:free (سریع و کوچک)"
+echo "   3. anthropic/claude-3-haiku (پولی ولی عالی)"
+echo "   4. z-ai/glm-4.5-air:free (پیش‌فرض)"
+echo "   5. مدل دلخواه خود را وارد کنید"
+echo ""
+read -p "انتخاب کنید (1-5) یا نام مدل را وارد کنید: " MODEL_CHOICE
+
+# تنظیم مدل بر اساس انتخاب
+case $MODEL_CHOICE in
+    1)
+        OPENROUTER_MODEL="google/gemini-2.0-flash-exp:free"
+        ;;
+    2)
+        OPENROUTER_MODEL="meta-llama/llama-3.2-3b-instruct:free"
+        ;;
+    3)
+        OPENROUTER_MODEL="anthropic/claude-3-haiku"
+        ;;
+    4|"")
+        OPENROUTER_MODEL="z-ai/glm-4.5-air:free"
+        ;;
+    5)
+        echo ""
+        read -p "نام مدل دلخواه خود را وارد کنید: " CUSTOM_MODEL
+        while [ -z "$CUSTOM_MODEL" ]; do
+            echo "❌ نام مدل نمی‌تواند خالی باشد!"
+            read -p "نام مدل دلخواه خود را وارد کنید: " CUSTOM_MODEL
+        done
+        OPENROUTER_MODEL="$CUSTOM_MODEL"
+        ;;
+    *)
+        # اگر مستقیماً نام مدل وارد شده
+        OPENROUTER_MODEL="$MODEL_CHOICE"
+        ;;
+esac
+
+echo ""
+echo "✅ تنظیمات هوش مصنوعی:"
+echo "   🔑 API Key: ${OPENROUTER_API_KEY:0:20}..."
+echo "   🤖 Model: $OPENROUTER_MODEL"
+
 # تنظیم متغیرهای بر اساس محیط
 if [ "$ENVIRONMENT" = "server" ]; then
     NODE_ENV="production"
@@ -149,10 +212,16 @@ UPLOAD_DIR=./uploads
 MAX_FILE_SIZE=10485760
 
 # ===========================================
+# 🤖 AI Configuration (OpenRouter)
+# ===========================================
+OPENROUTER_API_KEY=__OPENROUTER_API_KEY__
+OPENROUTER_MODEL=__OPENROUTER_MODEL__
+
+# ===========================================
 # 🎤 Rabin Voice Assistant Configuration
 # ===========================================
-RABIN_VOICE_OPENROUTER_API_KEY=your_openrouter_api_key_here
-RABIN_VOICE_OPENROUTER_MODEL=anthropic/claude-3-haiku
+RABIN_VOICE_OPENROUTER_API_KEY=__OPENROUTER_API_KEY__
+RABIN_VOICE_OPENROUTER_MODEL=__OPENROUTER_MODEL__
 RABIN_VOICE_TTS_API_URL=https://api.ahmadreza-avandi.ir/text-to-speech
 RABIN_VOICE_LOG_LEVEL=INFO
 
@@ -178,6 +247,8 @@ sed -i "s|__DATABASE_PASSWORD__|$DB_PASSWORD|g" .env
 sed -i "s|__JWT_SECRET__|$JWT_SECRET|g" .env
 sed -i "s|__NEXTAUTH_SECRET__|$NEXTAUTH_SECRET|g" .env
 sed -i "s|__NEXTAUTH_URL__|$NEXTAUTH_URL|g" .env
+sed -i "s|__OPENROUTER_API_KEY__|$OPENROUTER_API_KEY|g" .env
+sed -i "s|__OPENROUTER_MODEL__|$OPENROUTER_MODEL|g" .env
 
 echo "✅ فایل .env ایجاد شد"
 
@@ -262,6 +333,8 @@ REQUIRED_VARS=(
     "JWT_SECRET"
     "NEXTAUTH_SECRET"
     "NEXTAUTH_URL"
+    "OPENROUTER_API_KEY"
+    "OPENROUTER_MODEL"
 )
 
 MISSING_VARS=0
@@ -289,6 +362,8 @@ echo "🗄️ Database Host: $DATABASE_HOST"
 echo "👤 Database User: $DB_USER"
 echo "🔑 Database Password: $DB_PASSWORD"
 echo "🌐 App URL: $APP_URL"
+echo "🤖 AI Model: $OPENROUTER_MODEL"
+echo "🔑 AI API Key: ${OPENROUTER_API_KEY:0:20}..."
 echo ""
 
 # نتیجه نهایی
@@ -299,7 +374,6 @@ if [ $MISSING_VARS -eq 0 ]; then
     echo ""
     echo "⚠️  توجه: متغیرهای زیر را باید دستی تنظیم کنید:"
     echo "   - SMTP_USER و SMTP_PASS (برای ارسال ایمیل)"
-    echo "   - RABIN_VOICE_OPENROUTER_API_KEY (برای دستیار صوتی)"
     echo "   - GOOGLE_CLIENT_ID و GOOGLE_CLIENT_SECRET (اختیاری)"
     echo ""
     echo "📝 برای ویرایش: nano .env"

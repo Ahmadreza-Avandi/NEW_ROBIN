@@ -21,8 +21,13 @@ export async function getTenantConnection(tenantKey: string): Promise<mysql.Pool
 
   // در حال حاضر همه تنانت‌ها از یک دیتابیس استفاده می‌کنند
   // در آینده می‌توان از جدول tenants اطلاعات دیتابیس هر تنانت را خواند
+  
+  // تشخیص هوشمند محیط اجرا
+  const isDocker = process.env.DOCKER_ENV === 'true' || process.env.NODE_ENV === 'production';
+  const defaultHost = isDocker ? 'mysql' : 'localhost';
+  
   const dbConfig = {
-    host: process.env.DATABASE_HOST || process.env.DB_HOST || (process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost'),
+    host: process.env.DATABASE_HOST || process.env.DB_HOST || defaultHost,
     user: process.env.DATABASE_USER || process.env.DB_USER || 'crm_user',
     password: process.env.DATABASE_PASSWORD || process.env.DB_PASSWORD || '1234',
     database: process.env.DATABASE_NAME || process.env.DB_NAME || 'crm_system',

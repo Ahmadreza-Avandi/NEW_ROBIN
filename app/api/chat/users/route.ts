@@ -13,7 +13,10 @@ export async function GET(req: NextRequest) {
             }, { status: 401 });
         }
 
-        // Get all active users except current user
+        // Get tenant key from headers
+        const tenantKey = req.headers.get('X-Tenant-Key');
+        
+        // Get all active users except current user (same tenant only)
         const users = await executeQuery(`
             SELECT 
                 u.id,
@@ -33,8 +36,9 @@ export async function GET(req: NextRequest) {
             FROM users u
             WHERE u.id != ?
             AND u.status = 'active'
+            ${tenantKey ? 'AND u.tenant_key = ?' : ''}
             ORDER BY u.name ASC, u.username ASC
-        `, [user.id, user.id]);
+        `, tenantKey ? [user.id, user.id, tenantKey] : [user.id, user.id]);
 
         return NextResponse.json({
             success: true,

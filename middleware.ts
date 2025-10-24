@@ -46,40 +46,46 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // For dashboard routes, check authentication and permissions
-  if (pathname.startsWith('/dashboard')) {
-    const token = request.cookies.get('auth-token')?.value;
+  // For tenant dashboard routes, check authentication and permissions
+  const tenantDashboardMatch = pathname.match(/^\/([^\/]+)\/dashboard/);
+  if (pathname.startsWith('/dashboard') || tenantDashboardMatch) {
+    const tenantKey = tenantDashboardMatch ? tenantDashboardMatch[1] : null;
+    const token = request.cookies.get('tenant_token')?.value || 
+                  request.cookies.get('auth-token')?.value;
 
     if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      const redirectUrl = tenantKey ? `/${tenantKey}/login` : '/login';
+      return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
 
     // Verify token
     try {
       const decoded = decodeJWT(token);
       if (!decoded) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        const redirectUrl = tenantKey ? `/${tenantKey}/login` : '/login';
+        return NextResponse.redirect(new URL(redirectUrl, request.url));
       }
 
       // Check permissions for specific routes (except basic ones)
-      const publicRoutes = ['/dashboard', '/dashboard/profile'];
-      const adminRoutes = ['/dashboard/coworkers', '/dashboard/settings', '/dashboard/system-monitoring'];
-      const managerRoutes = ['/dashboard/reports', '/dashboard/daily-reports', '/dashboard/insights'];
-      const documentsRoutes = ['/dashboard/documents'];
+      const dashboardPath = tenantKey ? `/${tenantKey}/dashboard` : '/dashboard';
+      const publicRoutes = [`${dashboardPath}`, `${dashboardPath}/profile`];
+      const adminRoutes = [`${dashboardPath}/coworkers`, `${dashboardPath}/settings`, `${dashboardPath}/system-monitoring`];
+      const managerRoutes = [`${dashboardPath}/reports`, `${dashboardPath}/daily-reports`, `${dashboardPath}/insights`];
+      const documentsRoutes = [`${dashboardPath}/documents`];
       
       const userRole = decoded.role;
       
       // Admin routes - فقط مدیر عامل و مدیر فروش
       if (adminRoutes.some(route => pathname.startsWith(route))) {
         if (userRole !== 'ceo' && userRole !== 'sales_manager') {
-          return NextResponse.redirect(new URL('/dashboard?error=access_denied', request.url));
+          return NextResponse.redirect(new URL(`${dashboardPath}?error=access_denied`, request.url));
         }
       }
       
       // Manager routes - مدیران و بالاتر
       if (managerRoutes.some(route => pathname.startsWith(route))) {
         if (userRole !== 'ceo' && userRole !== 'sales_manager') {
-          return NextResponse.redirect(new URL('/dashboard?error=access_denied', request.url));
+          return NextResponse.redirect(new URL(`${dashboardPath}?error=access_denied`, request.url));
         }
       }
       
@@ -98,6 +104,16 @@ export async function middleware(request: NextRequest) {
     !pathname.startsWith('/api/feedback/form/') &&
     !pathname.startsWith('/api/feedback/submit') &&
     !pathname.startsWith('/api/health')) {
+    
+    // Extract tenant key from referer header for tenant API calls
+    const referer = request.headers.get('referer');
+    let tenantKeyFromReferer = null;
+    if (referer) {
+      const refererMatch = referer.match(/\/([^\/]+)\/dashboard/);
+      if (refererMatch) {
+        tenantKeyFromReferer = refererMatch[1];
+      }
+    }
     // Development bypass for specific voice-analysis endpoints when allowed
     const allowDev = process.env.NODE_ENV !== 'production' || process.env.ALLOW_DEV_FALLBACK === '1';
     if (allowDev && (
@@ -110,6 +126,7 @@ export async function middleware(request: NextRequest) {
     }
 
     const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
+      request.cookies.get('tenant_token')?.value ||
       request.cookies.get('auth-token')?.value;
 
     if (!token) {
@@ -133,6 +150,7 @@ export async function middleware(request: NextRequest) {
       const userId = (decoded as any).id || (decoded as any).userId;
       const role = (decoded as any).role || '';
       const email = (decoded as any).email || '';
+      const tenantKey = (decoded as any).tenantKey || tenantKeyFromReferer;
 
       if (userId) {
         requestHeaders.set('x-user-id', String(userId));
@@ -142,6 +160,9 @@ export async function middleware(request: NextRequest) {
       }
       if (email) {
         requestHeaders.set('x-user-email', String(email));
+      }
+      if (tenantKey) {
+        requestHeaders.set('X-Tenant-Key', String(tenantKey));
       }
 
       return NextResponse.next({

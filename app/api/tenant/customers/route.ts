@@ -15,7 +15,8 @@ async function handleGetCustomers(request: NextRequest, session: any) {
     try {
       // دریافت لیست مشتریان (فقط داده‌های این tenant)
       const [customers] = await connection.query(
-        'SELECT * FROM customers ORDER BY created_at DESC LIMIT 100'
+        'SELECT * FROM customers WHERE tenant_key = ? ORDER BY created_at DESC LIMIT 100',
+        [tenantKey]
       ) as any[];
 
       return NextResponse.json({

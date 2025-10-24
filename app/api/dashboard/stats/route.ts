@@ -7,6 +7,14 @@ export async function GET(req: NextRequest) {
   try {
     const userRole = req.headers.get('x-user-role');
     const userId = req.headers.get('x-user-id');
+    const tenantKey = req.headers.get('X-Tenant-Key');
+
+    if (!tenantKey) {
+      return NextResponse.json(
+        { success: false, message: 'Tenant not found' },
+        { status: 400 }
+      );
+    }
 
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || 'month'; // month, quarter, year
@@ -34,7 +42,7 @@ export async function GET(req: NextRequest) {
         COUNT(CASE WHEN status = 'active' THEN 1 END) as active_customers,
         COUNT(CASE WHEN status = 'prospect' THEN 1 END) as prospects
       FROM customers 
-      WHERE 1=1 ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND assigned_to = '${userId}'`}
+      WHERE tenant_key = '${tenantKey}' ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND assigned_to = '${userId}'`}
     `);
 
     const [dealStats] = await executeQuery(`
@@ -46,7 +54,7 @@ export async function GET(req: NextRequest) {
         SUM(CASE WHEN ps.code = 'closed_won' THEN total_value ELSE 0 END) as won_value
       FROM deals d
       LEFT JOIN pipeline_stages ps ON d.stage_id = ps.id
-      WHERE 1=1 ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND d.assigned_to = '${userId}'`}
+      WHERE d.tenant_key = '${tenantKey}' ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND d.assigned_to = '${userId}'`}
       ${dateFilter}
     `);
 
@@ -57,7 +65,7 @@ export async function GET(req: NextRequest) {
         COUNT(CASE WHEN status = 'in_progress' THEN 1 END) as in_progress_tickets,
         AVG(CASE WHEN resolution_time IS NOT NULL THEN resolution_time END) as avg_resolution_time
       FROM tickets
-      WHERE 1=1 ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND assigned_to = '${userId}'`}
+      WHERE tenant_key = '${tenantKey}' ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND assigned_to = '${userId}'`}
       ${dateFilter}
     `);
 
@@ -68,7 +76,7 @@ export async function GET(req: NextRequest) {
         COUNT(CASE WHEN type = 'complaint' THEN 1 END) as complaints,
         COUNT(CASE WHEN type = 'praise' THEN 1 END) as praise
       FROM feedback
-      WHERE 1=1 ${dateFilter}
+      WHERE tenant_key = '${tenantKey}' ${dateFilter}
     `);
 
     // Get sales trend data for charts
@@ -80,6 +88,7 @@ export async function GET(req: NextRequest) {
       FROM deals d
       LEFT JOIN pipeline_stages ps ON d.stage_id = ps.id
       WHERE ps.code = 'closed_won'
+      AND d.tenant_key = '${tenantKey}'
       AND actual_close_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
       ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND d.assigned_to = '${userId}'`}
       GROUP BY DATE_FORMAT(actual_close_date, '%Y-%m')
@@ -100,8 +109,8 @@ export async function GET(req: NextRequest) {
       FROM activities a
       LEFT JOIN users u ON a.performed_by = u.id
       LEFT JOIN customers c ON a.customer_id = c.id
-      WHERE 1=1 ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND a.performed_by = '${userId}'`}
-      ORDER BY a.start_time DESC
+      WHERE a.tenant_key = '${tenantKey}' ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND a.performed_by = '${userId}'`}
+      ORDER BY a.created_at DESC
       LIMIT 10
     `);
 
@@ -115,9 +124,9 @@ export async function GET(req: NextRequest) {
         SUM(d.total_value) as total_value,
         AVG(d.probability) as avg_probability
       FROM pipeline_stages ps
-      LEFT JOIN deals d ON ps.id = d.stage_id
-      ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND d.assigned_to = '${userId}'`}
+      LEFT JOIN deals d ON ps.id = d.stage_id AND d.tenant_key = '${tenantKey}'
       WHERE ps.is_active = true
+      ${hasPermission(userRole || '', ['ceo', 'مدیر']) ? '' : `AND d.assigned_to = '${userId}'`}
       GROUP BY ps.id, ps.name, ps.code, ps.stage_order
       ORDER BY ps.stage_order
     `);

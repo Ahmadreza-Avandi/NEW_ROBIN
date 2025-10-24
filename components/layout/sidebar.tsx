@@ -16,21 +16,18 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
-  Menu,
-  X,
+
   Building2,
   Activity,
   Calendar,
   Briefcase,
   Target,
   FileText,
-  Brain,
   Package,
   User,
   Mail,
   Monitor,
   CheckCircle,
-  Mic2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -75,11 +72,9 @@ const iconMap: { [key: string]: React.ComponentType<any> } = {
   'Building2': Building2,
   'TrendingUp': TrendingUp,
   'FileText': FileText,
-  'Brain': Brain,
   'Package': Package,
   'Mail': Mail,
   'Monitor': Monitor,
-  'Mic2': Mic2,
 };
 
 // نقشه نام‌های نمایشی روت‌ها
@@ -95,13 +90,10 @@ const routeDisplayNames: { [key: string]: string } = {
   '/dashboard/feedback': 'بازخوردها',
   '/dashboard/reports': 'گزارش‌ها',
   '/dashboard/daily-reports': 'گزارش‌های روزانه',
-  '/dashboard/insights/reports-analysis': 'تحلیل گزارشات',
-  '/dashboard/insights/feedback-analysis': 'تحلیل بازخوردها',
-  '/dashboard/insights/sales-analysis': 'تحلیل فروش',
-  '/dashboard/insights/audio-analysis': 'تحلیل صوتی',
+
   '/dashboard/calendar': 'تقویم',
   '/dashboard/profile': 'پروفایل',
-  '/dashboard/settings': 'تنظیمات سیستم',
+
   '/dashboard/system-monitoring': 'مانیتورینگ سیستم',
   '/dashboard/products': 'محصولات',
   '/dashboard/documents': 'مدیریت اسناد',
@@ -121,7 +113,7 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
+
 
   // ...existing code...
 
@@ -176,16 +168,6 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
                 icon: Activity,
               },
               {
-                title: 'مدیریت وظایف',
-                href: '/dashboard/tasks',
-                icon: CheckCircle,
-              },
-              {
-                title: 'گزارش‌گیری',
-                href: '/dashboard/reports',
-                icon: BarChart3,
-              },
-              {
                 title: 'مدیریت کاربران',
                 href: '/dashboard/coworkers',
                 icon: Users,
@@ -207,9 +189,15 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
             href: '/dashboard/sales',
             icon: TrendingUp,
             children: [
+
               {
-                title: 'معاملات',
-                href: '/dashboard/deals',
+                title: 'محصولات',
+                href: '/dashboard/products',
+                icon: Package,
+              },
+              {
+                title: 'فروش‌ها',
+                href: '/dashboard/sales',
                 icon: TrendingUp,
               }
             ]
@@ -229,11 +217,7 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
                 href: '/dashboard/contacts',
                 icon: Contact,
               },
-              {
-                title: 'بازخوردها',
-                href: '/dashboard/feedback',
-                icon: MessageCircle,
-              }
+
             ]
           },
           {
@@ -255,6 +239,21 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
                 title: 'تقویم',
                 href: '/dashboard/calendar',
                 icon: Calendar,
+              },
+              {
+                title: 'مدیریت اسناد',
+                href: '/dashboard/documents',
+                icon: FileText,
+              },
+              {
+                title: 'گزارش‌گیری',
+                href: '/dashboard/reports',
+                icon: BarChart3,
+              },
+              {
+                title: 'مدیریت وظایف',
+                href: '/dashboard/tasks',
+                icon: CheckCircle,
               }
             ]
           },
@@ -268,38 +267,8 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
             href: '/dashboard/customer-club',
             icon: Users,
           },
-          {
-            title: 'تحلیل صوتی',
-            href: '/dashboard/insights/audio-analysis',
-            icon: Mic2,
-          },
-          {
-            title: 'هوش مصنوعی و تحلیل',
-            href: '/dashboard/insights',
-            icon: BarChart3,
-            children: [
-              {
-                title: 'تحلیل گزارشات',
-                href: '/dashboard/insights/reports-analysis',
-                icon: BarChart3,
-              },
-              {
-                title: 'تحلیل بازخوردها',
-                href: '/dashboard/insights/feedback-analysis',
-                icon: MessageCircle,
-              },
-              {
-                title: 'تحلیل فروش',
-                href: '/dashboard/insights/sales-analysis',
-                icon: TrendingUp,
-              }
-            ]
-          },
-          {
-            title: 'محصولات',
-            href: '/dashboard/products',
-            icon: Package,
-          },
+
+
           {
             title: 'پروفایل',
             href: '/dashboard/profile',
@@ -351,17 +320,11 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
       ['coworkers', 'activities', 'tasks', 'calendar'].includes(m.name)
     );
 
-    // AI & Analytics modules
-    const aiAnalyticsModules = filteredModules.filter(m =>
-      ['reports_analysis'].includes(m.name)
-    );
 
 
 
-    // Products modules
-    const productModules = filteredModules.filter(m =>
-      ['products'].includes(m.name)
-    );
+
+
 
 
 
@@ -375,12 +338,7 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
       });
     }
 
-    // Add System Monitoring
-    navItems.push({
-      title: 'مانیتورینگ سیستم',
-      href: '/dashboard/system-monitoring',
-      icon: Monitor,
-    });
+
 
 
 
@@ -426,18 +384,18 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
       });
     }
 
+    // Add System Monitoring
+    navItems.push({
+      title: 'مانیتورینگ سیستم',
+      href: '/dashboard/system-monitoring',
+      icon: Monitor,
+    });
+
     // Add Chat as standalone item
     navItems.push({
       title: 'چت',
       href: '/dashboard/chat',
       icon: MessageCircle,
-    });
-
-    // Add Reports as standalone item for managers
-    navItems.push({
-      title: 'گزارش‌های روزانه',
-      href: '/dashboard/reports',
-      icon: FileText,
     });
 
     // Add Customer Club with Email Management
@@ -447,51 +405,14 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
       icon: Users,
     });
 
-    // Add Document Management
-    navItems.push({
-      title: 'مدیریت اسناد',
-      href: '/dashboard/documents',
-      icon: FileText,
-    });
 
 
 
 
-    // Add AI & Analytics mega menu
-    if (aiAnalyticsModules.length > 0) {
-      navItems.push({
-        title: 'هوش مصنوعی و تحلیل',
-        href: '/dashboard/insights',
-        icon: BarChart3,
-        children: [
-          ...aiAnalyticsModules.map(module => ({
-            title: routeDisplayNames[module.route] || module.display_name,
-            href: module.route,
-            icon: iconMap[module.icon] || BarChart3,
-          })),
-          {
-            title: 'تحلیل بازخوردها',
-            href: '/dashboard/insights/feedback-analysis',
-            icon: MessageCircle,
-          },
-          {
-            title: 'تحلیل فروش',
-            href: '/dashboard/insights/sales-analysis',
-            icon: TrendingUp,
-          }
-        ],
-      });
-    }
 
-    // Add Products group
-    const productsModule = productModules.find(m => m.name === 'products');
-    if (productsModule) {
-      navItems.push({
-        title: 'محصولات',
-        href: '/dashboard/products',
-        icon: Package,
-      });
-    }
+
+
+
 
     return navItems;
   };
