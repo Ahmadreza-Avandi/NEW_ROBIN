@@ -403,17 +403,82 @@ else
     ls -la database/ | grep -i sql || echo "   هیچ فایل SQL یافت نشد"
 fi
 
-# کپی saas_master.sql
+# کپی saas_master.sql - بررسی چندین مکان ممکن
 SAAS_DB_FOUND=false
 if [ -f "database/saas_master.sql" ]; then
-    echo "📋 کپی فایل saas_master.sql..."
+    echo "📋 کپی فایل database/saas_master.sql..."
     cp database/saas_master.sql database/02-saas_master.sql
     SAAS_DB_FOUND=true
-    echo "✅ فایل saas_master.sql کپی شد"
+    echo "✅ فایل saas_master.sql از پوشه database کپی شد"
+elif [ -f "saas_master.sql" ]; then
+    echo "📋 کپی فایل saas_master.sql از root..."
+    cp saas_master.sql database/02-saas_master.sql
+    SAAS_DB_FOUND=true
+    echo "✅ فایل saas_master.sql از root کپی شد"
 else
     echo "❌ فایل saas_master.sql یافت نشد!"
     echo "🔍 فایل‌های موجود در database:"
     ls -la database/ | grep -i saas || echo "   هیچ فایل SaaS یافت نشد"
+    echo "🔍 فایل‌های موجود در root:"
+    ls -la *.sql 2>/dev/null | grep -i saas || echo "   هیچ فایل SaaS در root یافت نشد"
+fi
+
+# اگر فایل saas_master پیدا نشد، سعی کن از فایل‌های موجود استفاده کنی
+if [ "$SAAS_DB_FOUND" = false ]; then
+    echo "🔍 جستجوی فایل‌های SaaS در همه مکان‌ها..."
+    SAAS_FILE=$(find . -name "*saas*" -name "*.sql" 2>/dev/null | head -1)
+    if [ -n "$SAAS_FILE" ]; then
+        echo "📋 فایل SaaS پیدا شد: $SAAS_FILE"
+        cp "$SAAS_FILE" database/02-saas_master.sql
+        SAAS_DB_FOUND=true
+        echo "✅ فایل SaaS کپی شد"
+    else
+        echo "⚠️  هیچ فایل SaaS یافت نشد - ایجاد فایل خالی..."
+        # ایجاد فایل saas_master خالی با ساختار پایه
+        cat > database/02-saas_master.sql << 'EOF'
+USE `saas_master`;
+
+-- جداول پایه SaaS Master
+CREATE TABLE IF NOT EXISTS `super_admins` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `full_name` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ایجاد Super Admin پیش‌فرض
+INSERT INTO `super_admins` (`username`, `email`, `password`, `full_name`, `is_active`) VALUES
+('Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '$2a$10$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye', 'احمدرضا اوندی', 1)
+ON DUPLICATE KEY UPDATE `is_active` = 1;
+
+CREATE TABLE IF NOT EXISTS `tenants` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `tenant_key` varchar(50) NOT NULL,
+  `company_name` varchar(255) NOT NULL,
+  `admin_email` varchar(255) NOT NULL,
+  `subscription_status` enum('active','expired','suspended','trial') DEFAULT 'trial',
+  `subscription_plan` enum('basic','professional','enterprise','custom') DEFAULT 'basic',
+  `subscription_start` date DEFAULT NULL,
+  `subscription_end` date DEFAULT NULL,
+  `max_users` int(11) DEFAULT 5,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tenant_key` (`tenant_key`),
+  UNIQUE KEY `admin_email` (`admin_email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+EOF
+        SAAS_DB_FOUND=true
+        echo "✅ فایل saas_master پایه ایجاد شد"
+    fi
 fi
 
 # اضافه کردن USE statements به فایل‌ها
@@ -1127,19 +1192,89 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
     fi
     
     # اگر saas_master خالی است، تلاش برای ایمپورت مجدد
-    if [ "$SAAS_TABLE_COUNT" -le 1 ] && [ -f "database/02-saas_master.sql" ]; then
+    if [ "$SAAS_TABLE_COUNT" -le 1 ]; then
         echo "🔧 ایمپورت مجدد saas_master..."
-        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} < database/02-saas_master.sql 2>/dev/null || true
+        
+        # اطمینان از وجود دیتابیس
+        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
+        CREATE DATABASE IF NOT EXISTS \`saas_master\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        " 2>/dev/null || true
+        
+        # ایمپورت فایل اگر موجود باشد
+        if [ -f "database/02-saas_master.sql" ]; then
+            echo "📥 ایمپورت از database/02-saas_master.sql..."
+            docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} saas_master < database/02-saas_master.sql 2>/dev/null || true
+        elif [ -f "database/saas_master.sql" ]; then
+            echo "📥 ایمپورت مستقیم از database/saas_master.sql..."
+            docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} saas_master < database/saas_master.sql 2>/dev/null || true
+        else
+            echo "⚠️  فایل saas_master یافت نشد - ایجاد ساختار پایه..."
+            docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
+            USE saas_master;
+            
+            CREATE TABLE IF NOT EXISTS \`super_admins\` (
+              \`id\` int(11) NOT NULL AUTO_INCREMENT,
+              \`username\` varchar(50) NOT NULL,
+              \`email\` varchar(255) NOT NULL,
+              \`password\` varchar(255) NOT NULL,
+              \`full_name\` varchar(255) DEFAULT NULL,
+              \`is_active\` tinyint(1) DEFAULT 1,
+              \`created_at\` timestamp NOT NULL DEFAULT current_timestamp(),
+              \`updated_at\` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+              PRIMARY KEY (\`id\`),
+              UNIQUE KEY \`username\` (\`username\`),
+              UNIQUE KEY \`email\` (\`email\`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            
+            INSERT INTO \`super_admins\` (\`username\`, \`email\`, \`password\`, \`full_name\`, \`is_active\`) VALUES
+            ('Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '\$2a\$10\$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye', 'احمدرضا اوندی', 1)
+            ON DUPLICATE KEY UPDATE \`is_active\` = 1;
+            
+            CREATE TABLE IF NOT EXISTS \`tenants\` (
+              \`id\` int(11) NOT NULL AUTO_INCREMENT,
+              \`tenant_key\` varchar(50) NOT NULL,
+              \`company_name\` varchar(255) NOT NULL,
+              \`admin_email\` varchar(255) NOT NULL,
+              \`subscription_status\` enum('active','expired','suspended','trial') DEFAULT 'trial',
+              \`subscription_plan\` enum('basic','professional','enterprise','custom') DEFAULT 'basic',
+              \`subscription_start\` date DEFAULT NULL,
+              \`subscription_end\` date DEFAULT NULL,
+              \`max_users\` int(11) DEFAULT 5,
+              \`is_active\` tinyint(1) DEFAULT 1,
+              \`created_at\` timestamp NOT NULL DEFAULT current_timestamp(),
+              \`updated_at\` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+              PRIMARY KEY (\`id\`),
+              UNIQUE KEY \`tenant_key\` (\`tenant_key\`),
+              UNIQUE KEY \`admin_email\` (\`admin_email\`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            " 2>/dev/null || true
+        fi
+        
         sleep 5
         
         # بررسی مجدد
         NEW_SAAS_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
         if [ "$NEW_SAAS_COUNT" -gt 1 ]; then
             echo "✅ saas_master با موفقیت ایمپورت شد - جداول: $((NEW_SAAS_COUNT - 1))"
+            
+            # بررسی جدول super_admins
+            ADMIN_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SELECT COUNT(*) FROM super_admins;" 2>/dev/null | tail -1)
+            echo "   👑 Super Admins: $ADMIN_COUNT"
         else
             echo "❌ ایمپورت saas_master ناموفق"
         fi
     fi
+    
+    # اطمینان از دسترسی کاربر crm_user به saas_master
+    echo ""
+    echo "🔧 اطمینان از دسترسی کاربر crm_user به saas_master..."
+    docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
+    GRANT ALL PRIVILEGES ON \`saas_master\`.* TO 'crm_user'@'%';
+    GRANT ALL PRIVILEGES ON \`saas_master\`.* TO 'crm_user'@'localhost';
+    GRANT ALL PRIVILEGES ON \`saas_master\`.* TO 'crm_user'@'127.0.0.1';
+    GRANT ALL PRIVILEGES ON \`saas_master\`.* TO 'crm_user'@'172.%.%.%';
+    FLUSH PRIVILEGES;
+    " 2>/dev/null || true
     
     # بررسی کاربران ادمین
     echo "👑 بررسی کاربران ادمین..."
@@ -1160,8 +1295,17 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         if [ "$SUPER_ADMIN_COUNT" = "1" ]; then
             echo "✅ Super Admin (احمدرضا اوندی) موجود است"
         else
-            echo "⚠️  Super Admin یافت نشد"
+            echo "⚠️  Super Admin یافت نشد - ایجاد Super Admin..."
+            docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
+            USE saas_master;
+            INSERT INTO \`super_admins\` (\`username\`, \`email\`, \`password\`, \`full_name\`, \`is_active\`) VALUES
+            ('Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '\$2a\$10\$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye', 'احمدرضا اوندی', 1)
+            ON DUPLICATE KEY UPDATE \`is_active\` = 1;
+            " 2>/dev/null || true
+            echo "✅ Super Admin ایجاد شد"
         fi
+    else
+        echo "⚠️  نمی‌توان به جدول super_admins دسترسی پیدا کرد"
     fi
     
 else
@@ -1638,8 +1782,15 @@ fi
 
 if [ "$FINAL_SAAS_COUNT" -gt 1 ]; then
     echo "✅ saas_master: $((FINAL_SAAS_COUNT - 1)) جدول"
+    
+    # بررسی جداول مهم saas_master
+    if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SELECT COUNT(*) FROM super_admins;" >/dev/null 2>&1; then
+        FINAL_ADMIN_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SELECT COUNT(*) FROM super_admins;" 2>/dev/null | tail -1)
+        echo "   👑 Super Admins: $FINAL_ADMIN_COUNT"
+    fi
 else
     echo "❌ saas_master: خالی یا مشکل دارد"
+    echo "🔧 برای اصلاح: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p1234 saas_master < database/saas_master.sql"
 fi
 
 # تست نهایی کاربر
@@ -1665,6 +1816,8 @@ echo "   • بک‌آپ saas_master: docker-compose -f $COMPOSE_FILE exec mysql
 echo "   • تست اتصال دیتابیس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"SELECT 1;\""
 echo "   • مشاهده جداول crm_system: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"USE crm_system; SHOW TABLES;\""
 echo "   • مشاهده جداول saas_master: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"USE saas_master; SHOW TABLES;\""
+echo "   • بررسی Super Admins: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"USE saas_master; SELECT * FROM super_admins;\""
+echo "   • اصلاح saas_master: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p1234 saas_master < database/saas_master.sql"
 echo "   • ایمپورت مجدد دیتابیس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p1234 < database/01-crm_system.sql"
 echo "   • رفع مشکل redirect: sed -i 's|https://|http://|g' .env && docker-compose -f $COMPOSE_FILE restart nextjs"
 echo "   • تست دامنه: curl -I http://$DOMAIN"

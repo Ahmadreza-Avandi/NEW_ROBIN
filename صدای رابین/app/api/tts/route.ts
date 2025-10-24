@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     console.log('📏 Text length:', processedText.length);
 
     // استفاده از API جدید
-    const ttsUrl = 'http://api.ahmadreza-avandi.ir/text-to-speech';
+    const ttsUrl = 'https://api.ahmadreza-avandi.ir/text-to-speech';
     console.log('🌐 Sending request to TTS API:', ttsUrl);
 
     const requestBody = {
