@@ -331,6 +331,10 @@ echo "   📁 public/uploads/{documents,avatars,chat}"
 # آماده‌سازی فایل‌های دیتابیس
 echo "🗄️ آماده‌سازی فایل‌های دیتابیس..."
 
+# پاک کردن فایل‌های قدیمی دیتابیس
+echo "🧹 پاک کردن فایل‌های قدیمی دیتابیس..."
+rm -f database/0*.sql 2>/dev/null || true
+
 # ایجاد فایل init اصلی برای ایجاد دیتابیس‌ها و کاربر
 echo "📝 ایجاد فایل init دیتابیس..."
 cat > database/00-init-databases.sql << 'EOF'
@@ -344,12 +348,13 @@ CREATE DATABASE IF NOT EXISTS `crm_system` CHARACTER SET utf8mb4 COLLATE utf8mb4
 -- Create SaaS Master Database  
 CREATE DATABASE IF NOT EXISTS `saas_master` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Create user and grant privileges
+-- Create user and grant privileges (compatible with lib/database.ts)
 DROP USER IF EXISTS 'crm_user'@'%';
 DROP USER IF EXISTS 'crm_user'@'localhost';
 DROP USER IF EXISTS 'crm_user'@'127.0.0.1';
 DROP USER IF EXISTS 'crm_user'@'172.%.%.%';
 
+-- Create user with password '1234' (matching lib/database.ts default)
 CREATE USER 'crm_user'@'%' IDENTIFIED BY '1234';
 CREATE USER 'crm_user'@'localhost' IDENTIFIED BY '1234';
 CREATE USER 'crm_user'@'127.0.0.1' IDENTIFIED BY '1234';
@@ -375,37 +380,59 @@ EOF
 # کپی فایل‌های دیتابیس اصلی
 echo "📋 کپی فایل‌های دیتابیس..."
 
-# کپی crm_system.sql
-if [ -f "دیتاییس تغیر کرده.sql" ]; then
-    echo "📋 استفاده از فایل دیتابیس جدید..."
-    cp "دیتاییس تغیر کرده.sql" database/01-crm_system.sql
-    echo "✅ فایل دیتابیس جدید کپی شد"
+# کپی crm_system.sql - بررسی چندین مکان ممکن
+CRM_DB_FOUND=false
+if [ -f "database/crm_system.sql" ]; then
+    echo "📋 کپی فایل database/crm_system.sql..."
+    cp database/crm_system.sql database/01-crm_system.sql
+    CRM_DB_FOUND=true
+    echo "✅ فایل crm_system.sql از پوشه database کپی شد"
 elif [ -f "crm_system.sql" ]; then
-    echo "📋 کپی فایل crm_system.sql..."
+    echo "📋 کپی فایل crm_system.sql از root..."
     cp crm_system.sql database/01-crm_system.sql
-    echo "✅ فایل crm_system.sql کپی شد"
+    CRM_DB_FOUND=true
+    echo "✅ فایل crm_system.sql از root کپی شد"
+elif [ -f "دیتابیس.sql" ]; then
+    echo "📋 استفاده از فایل دیتابیس.sql..."
+    cp "دیتابیس.sql" database/01-crm_system.sql
+    CRM_DB_FOUND=true
+    echo "✅ فایل دیتابیس.sql کپی شد"
 else
-    echo "⚠️  فایل crm_system.sql یافت نشد!"
+    echo "❌ فایل crm_system.sql یافت نشد!"
+    echo "� فضایل‌های موجود در database:"
+    ls -la database/ | grep -i sql || echo "   هیچ فایل SQL یافت نشد"
 fi
 
 # کپی saas_master.sql
+SAAS_DB_FOUND=false
 if [ -f "database/saas_master.sql" ]; then
     echo "📋 کپی فایل saas_master.sql..."
     cp database/saas_master.sql database/02-saas_master.sql
+    SAAS_DB_FOUND=true
     echo "✅ فایل saas_master.sql کپی شد"
 else
-    echo "⚠️  فایل saas_master.sql یافت نشد!"
+    echo "❌ فایل saas_master.sql یافت نشد!"
+    echo "🔍 فایل‌های موجود در database:"
+    ls -la database/ | grep -i saas || echo "   هیچ فایل SaaS یافت نشد"
 fi
 
 # اضافه کردن USE statements به فایل‌ها
-if [ -f "database/01-crm_system.sql" ]; then
+if [ -f "database/01-crm_system.sql" ] && [ "$CRM_DB_FOUND" = true ]; then
     echo "🔧 اضافه کردن USE statement به crm_system.sql..."
+    # حذف USE statements قدیمی اگر وجود دارد
+    sed -i '/^USE /d' database/01-crm_system.sql
+    # اضافه کردن USE statement جدید
     sed -i '1i USE `crm_system`;' database/01-crm_system.sql
+    echo "✅ USE statement به crm_system.sql اضافه شد"
 fi
 
-if [ -f "database/02-saas_master.sql" ]; then
+if [ -f "database/02-saas_master.sql" ] && [ "$SAAS_DB_FOUND" = true ]; then
     echo "🔧 اضافه کردن USE statement به saas_master.sql..."
+    # حذف USE statements قدیمی اگر وجود دارد
+    sed -i '/^USE /d' database/02-saas_master.sql
+    # اضافه کردن USE statement جدید
     sed -i '1i USE `saas_master`;' database/02-saas_master.sql
+    echo "✅ USE statement به saas_master.sql اضافه شد"
 fi
 
 # ایجاد فایل .gitkeep برای migrations
@@ -442,11 +469,27 @@ UPDATE super_admins SET
 WHERE username = 'Ahmadreza.avandi' AND email = 'ahmadrezaavandi@gmail.com';
 EOF
 
+# خلاصه فایل‌های آماده شده
 echo "✅ فایل‌های دیتابیس آماده شدند:"
 echo "   📄 00-init-databases.sql - ایجاد دیتابیس‌ها و کاربر"
-echo "   📄 01-crm_system.sql - جداول CRM"
-echo "   📄 02-saas_master.sql - جداول SaaS"
+if [ "$CRM_DB_FOUND" = true ]; then
+    echo "   📄 01-crm_system.sql - جداول CRM ✅"
+else
+    echo "   📄 01-crm_system.sql - جداول CRM ❌ (یافت نشد)"
+fi
+if [ "$SAAS_DB_FOUND" = true ]; then
+    echo "   📄 02-saas_master.sql - جداول SaaS ✅"
+else
+    echo "   📄 02-saas_master.sql - جداول SaaS ❌ (یافت نشد)"
+fi
 echo "   📄 03-admin-users.sql - کاربران ادمین"
+
+# نمایش اندازه فایل‌ها برای اطمینان
+echo ""
+echo "📊 اندازه فایل‌های دیتابیس:"
+ls -lh database/0*.sql 2>/dev/null | while read -r line; do
+    echo "   $line"
+done
 
 # ═══════════════════════════════════════════════════════════════
 # ⚙️ مرحله 4: تنظیم فایل .env
@@ -953,47 +996,177 @@ echo "🧪 تست سرویس‌ها..."
 
 # تست دیتابیس
 echo "🗄️ تست اتصال دیتابیس..."
+
+# انتظار اضافی برای آماده شدن دیتابیس
+echo "⏳ انتظار برای آماده شدن کامل دیتابیس..."
+sleep 15
+
+# تست اتصال root
 if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "SELECT VERSION();" >/dev/null 2>&1; then
     echo "✅ دیتابیس MariaDB در حال اجراست"
     
-    # بررسی وجود دیتابیس crm_system
-    if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE crm_system; SHOW TABLES;" >/dev/null 2>&1; then
-        echo "✅ دیتابیس crm_system آماده است"
+    # بررسی وجود دیتابیس‌ها
+    echo "🔍 بررسی دیتابیس‌ها..."
+    DATABASES=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "SHOW DATABASES;" 2>/dev/null | grep -E "(crm_system|saas_master)" || echo "")
+    
+    if echo "$DATABASES" | grep -q "crm_system"; then
+        echo "✅ دیتابیس crm_system موجود است"
         
-        # شمارش جداول
-        TABLE_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
-        echo "📊 تعداد جداول: $((TABLE_COUNT - 1))"
+        # شمارش جداول crm_system
+        CRM_TABLE_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
+        if [ "$CRM_TABLE_COUNT" -gt 1 ]; then
+            echo "✅ دیتابیس crm_system آماده است - تعداد جداول: $((CRM_TABLE_COUNT - 1))"
+        else
+            echo "⚠️  دیتابیس crm_system خالی است - جداول ایمپورت نشده"
+        fi
     else
-        echo "⚠️  دیتابیس crm_system ممکن است هنوز آماده نباشد"
+        echo "❌ دیتابیس crm_system موجود نیست!"
     fi
     
-    # تست اتصال با کاربر عادی (برای phpMyAdmin)
-    echo "🔐 تست اتصال با کاربر ${DATABASE_USER}..."
-    if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u ${DATABASE_USER} -p${DATABASE_PASSWORD} -e "SELECT 1;" >/dev/null 2>&1; then
-        echo "✅ کاربر ${DATABASE_USER} می‌تواند به دیتابیس متصل شود"
+    if echo "$DATABASES" | grep -q "saas_master"; then
+        echo "✅ دیتابیس saas_master موجود است"
+        
+        # شمارش جداول saas_master
+        SAAS_TABLE_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
+        if [ "$SAAS_TABLE_COUNT" -gt 1 ]; then
+            echo "✅ دیتابیس saas_master آماده است - تعداد جداول: $((SAAS_TABLE_COUNT - 1))"
+        else
+            echo "⚠️  دیتابیس saas_master خالی است - جداول ایمپورت نشده"
+        fi
+    else
+        echo "❌ دیتابیس saas_master موجود نیست!"
+    fi
+    
+    # تست اتصال با کاربر crm_user (مطابق lib/database.ts)
+    echo "🔐 تست اتصال با کاربر crm_user..."
+    if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "SELECT 1;" >/dev/null 2>&1; then
+        echo "✅ کاربر crm_user می‌تواند به دیتابیس متصل شود"
         
         # بررسی دسترسی به crm_system
-        if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u ${DATABASE_USER} -p${DATABASE_PASSWORD} -e "USE crm_system; SELECT 1;" >/dev/null 2>&1; then
-            echo "✅ کاربر ${DATABASE_USER} به crm_system دسترسی دارد"
+        if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE crm_system; SELECT 1;" >/dev/null 2>&1; then
+            echo "✅ کاربر crm_user به crm_system دسترسی دارد"
+            
+            # تست یک جدول مهم
+            if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE crm_system; SELECT COUNT(*) FROM users;" >/dev/null 2>&1; then
+                USER_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE crm_system; SELECT COUNT(*) FROM users;" 2>/dev/null | tail -1)
+                echo "✅ جدول users آماده است - تعداد کاربران: $USER_COUNT"
+            else
+                echo "⚠️  جدول users مشکل دارد یا موجود نیست"
+            fi
         else
-            echo "❌ کاربر ${DATABASE_USER} به crm_system دسترسی ندارد!"
+            echo "❌ کاربر crm_user به crm_system دسترسی ندارد!"
         fi
         
         # بررسی دسترسی به saas_master
-        if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u ${DATABASE_USER} -p${DATABASE_PASSWORD} -e "USE saas_master; SELECT 1;" >/dev/null 2>&1; then
-            echo "✅ کاربر ${DATABASE_USER} به saas_master دسترسی دارد"
+        if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SELECT 1;" >/dev/null 2>&1; then
+            echo "✅ کاربر crm_user به saas_master دسترسی دارد"
+            
+            # تست جدول super_admins
+            if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SELECT COUNT(*) FROM super_admins;" >/dev/null 2>&1; then
+                ADMIN_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SELECT COUNT(*) FROM super_admins;" 2>/dev/null | tail -1)
+                echo "✅ جدول super_admins آماده است - تعداد ادمین‌ها: $ADMIN_COUNT"
+            else
+                echo "⚠️  جدول super_admins مشکل دارد یا موجود نیست"
+            fi
         else
-            echo "⚠️  کاربر ${DATABASE_USER} به saas_master دسترسی ندارد"
+            echo "⚠️  کاربر crm_user به saas_master دسترسی ندارد"
         fi
     else
-        echo "❌ کاربر ${DATABASE_USER} نمی‌تواند به دیتابیس متصل شود!"
+        echo "❌ کاربر crm_user نمی‌تواند به دیتابیس متصل شود!"
         echo "🔧 تلاش برای اصلاح دسترسی‌ها..."
         
-        # اجرای مجدد grant privileges
-        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < database/01-grant-privileges.sql 2>/dev/null || true
+        # اجرای مجدد init script
+        if [ -f "database/00-init-databases.sql" ]; then
+            echo "🔧 اجرای مجدد init script..."
+            docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < database/00-init-databases.sql 2>/dev/null || true
+            sleep 5
+            
+            # تست مجدد
+            if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "SELECT 1;" >/dev/null 2>&1; then
+                echo "✅ کاربر crm_user پس از اصلاح کار می‌کند"
+            else
+                echo "❌ کاربر crm_user هنوز مشکل دارد"
+                
+                # تلاش برای ایجاد دستی کاربر
+                echo "🔧 تلاش برای ایجاد دستی کاربر..."
+                docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "
+                    DROP USER IF EXISTS 'crm_user'@'%';
+                    CREATE USER 'crm_user'@'%' IDENTIFIED BY '1234';
+                    GRANT ALL PRIVILEGES ON *.* TO 'crm_user'@'%';
+                    FLUSH PRIVILEGES;
+                " 2>/dev/null || true
+                
+                # تست نهایی
+                if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "SELECT 1;" >/dev/null 2>&1; then
+                    echo "✅ کاربر crm_user پس از ایجاد دستی کار می‌کند"
+                else
+                    echo "❌ کاربر crm_user هنوز مشکل دارد - نیاز به بررسی دستی"
+                fi
+            fi
+        fi
     fi
+    
+    # بررسی و اصلاح دیتابیس‌های خالی
+    echo ""
+    echo "🔧 بررسی و اصلاح دیتابیس‌های خالی..."
+    
+    # اگر crm_system خالی است، تلاش برای ایمپورت مجدد
+    if [ "$CRM_TABLE_COUNT" -le 1 ] && [ -f "database/01-crm_system.sql" ]; then
+        echo "🔧 ایمپورت مجدد crm_system..."
+        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < database/01-crm_system.sql 2>/dev/null || true
+        sleep 5
+        
+        # بررسی مجدد
+        NEW_CRM_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
+        if [ "$NEW_CRM_COUNT" -gt 1 ]; then
+            echo "✅ crm_system با موفقیت ایمپورت شد - جداول: $((NEW_CRM_COUNT - 1))"
+        else
+            echo "❌ ایمپورت crm_system ناموفق"
+        fi
+    fi
+    
+    # اگر saas_master خالی است، تلاش برای ایمپورت مجدد
+    if [ "$SAAS_TABLE_COUNT" -le 1 ] && [ -f "database/02-saas_master.sql" ]; then
+        echo "🔧 ایمپورت مجدد saas_master..."
+        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < database/02-saas_master.sql 2>/dev/null || true
+        sleep 5
+        
+        # بررسی مجدد
+        NEW_SAAS_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
+        if [ "$NEW_SAAS_COUNT" -gt 1 ]; then
+            echo "✅ saas_master با موفقیت ایمپورت شد - جداول: $((NEW_SAAS_COUNT - 1))"
+        else
+            echo "❌ ایمپورت saas_master ناموفق"
+        fi
+    fi
+    
+    # بررسی کاربران ادمین
+    echo "👑 بررسی کاربران ادمین..."
+    
+    # بررسی CEO در crm_system
+    if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE crm_system; SELECT COUNT(*) FROM users WHERE email='Robintejarat@gmail.com';" >/dev/null 2>&1; then
+        CEO_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE crm_system; SELECT COUNT(*) FROM users WHERE email='Robintejarat@gmail.com';" 2>/dev/null | tail -1)
+        if [ "$CEO_COUNT" = "1" ]; then
+            echo "✅ کاربر CEO (مهندس کریمی) موجود است"
+        else
+            echo "⚠️  کاربر CEO یافت نشد"
+        fi
+    fi
+    
+    # بررسی Super Admin در saas_master
+    if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SELECT COUNT(*) FROM super_admins WHERE username='Ahmadreza.avandi';" >/dev/null 2>&1; then
+        SUPER_ADMIN_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "USE saas_master; SELECT COUNT(*) FROM super_admins WHERE username='Ahmadreza.avandi';" 2>/dev/null | tail -1)
+        if [ "$SUPER_ADMIN_COUNT" = "1" ]; then
+            echo "✅ Super Admin (احمدرضا اوندی) موجود است"
+        else
+            echo "⚠️  Super Admin یافت نشد"
+        fi
+    fi
+    
 else
-    echo "⚠️  دیتابیس ممکن است هنوز آماده نباشد"
+    echo "❌ دیتابیس در حال اجرا نیست یا مشکل دارد!"
+    echo "🔍 بررسی لاگ MySQL:"
+    docker-compose -f $COMPOSE_FILE logs mysql | tail -10
 fi
 
 # تست NextJS
@@ -1235,15 +1408,32 @@ echo "📋 لاگ‌های اخیر:"
 docker-compose -f $COMPOSE_FILE logs --tail=20
 
 # ═══════════════════════════════════════════════════════════════
-# 🔧 مرحله 11: تست اتصال دیتابیس
+# 🔧 مرحله 11: تست و اصلاح دیتابیس
 # ═══════════════════════════════════════════════════════════════
 
 echo ""
-echo "🔧 مرحله 11: تست اتصال دیتابیس..."
+echo "🔧 مرحله 11: تست و اصلاح دیتابیس..."
 
 # انتظار اضافی برای آماده شدن دیتابیس
 echo "⏳ انتظار برای آماده شدن کامل دیتابیس..."
 sleep 30
+
+# بررسی وضعیت کانتینر MySQL
+echo "🔍 بررسی وضعیت کانتینر MySQL..."
+MYSQL_CONTAINER=$(docker ps --format '{{.Names}}' | grep -E "(mysql|mariadb)" | head -1)
+if [ -n "$MYSQL_CONTAINER" ]; then
+    echo "✅ کانتینر MySQL: $MYSQL_CONTAINER"
+    MYSQL_STATUS=$(docker inspect --format='{{.State.Status}}' $MYSQL_CONTAINER 2>/dev/null)
+    echo "📊 وضعیت: $MYSQL_STATUS"
+    
+    # بررسی لاگ‌های اخیر MySQL
+    echo "📋 لاگ‌های اخیر MySQL:"
+    docker logs $MYSQL_CONTAINER --tail 10 2>/dev/null | grep -E "(ready|error|warning)" || echo "   لاگ خاصی یافت نشد"
+else
+    echo "❌ کانتینر MySQL یافت نشد!"
+    echo "🔍 کانتینرهای موجود:"
+    docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+fi
 
 # تست اتصال دیتابیس با کاربر crm_user
 echo "🔌 تست اتصال دیتابیس..."
@@ -1432,6 +1622,33 @@ echo "   رمز عبور: [رمز موجود در دیتابیس]"
 echo "   لینک: http://$DOMAIN/secret-zone-789/login"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+echo "�️ خلارصه وضعیت دیتابیس:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# خلاصه نهایی دیتابیس
+FINAL_CRM_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
+FINAL_SAAS_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
+
+if [ "$FINAL_CRM_COUNT" -gt 1 ]; then
+    echo "✅ crm_system: $((FINAL_CRM_COUNT - 1)) جدول"
+else
+    echo "❌ crm_system: خالی یا مشکل دارد"
+fi
+
+if [ "$FINAL_SAAS_COUNT" -gt 1 ]; then
+    echo "✅ saas_master: $((FINAL_SAAS_COUNT - 1)) جدول"
+else
+    echo "❌ saas_master: خالی یا مشکل دارد"
+fi
+
+# تست نهایی کاربر
+if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u crm_user -p1234 -e "SELECT 1;" >/dev/null 2>&1; then
+    echo "✅ کاربر crm_user: آماده"
+else
+    echo "❌ کاربر crm_user: مشکل دارد"
+fi
+
+echo ""
 echo "📋 دستورات مفید:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "   • مشاهده لاگ‌ها: docker-compose -f $COMPOSE_FILE logs -f"
@@ -1442,7 +1659,12 @@ echo "   • توقف: docker-compose -f $COMPOSE_FILE down"
 echo "   • بررسی وضعیت: docker-compose -f $COMPOSE_FILE ps"
 echo "   • دیپلوی معمولی: ./deploy-server.sh"
 echo "   • دیپلوی با پاکسازی کامل: ./deploy-server.sh --clean"
-echo "   • بک‌آپ دیتابیس: docker-compose -f $COMPOSE_FILE exec mysql mariadb-dump -u root -p\${DATABASE_PASSWORD}_ROOT crm_system > backup.sql"
+echo "   • بک‌آپ crm_system: docker-compose -f $COMPOSE_FILE exec mysql mariadb-dump -u root -p\${DATABASE_PASSWORD}_ROOT crm_system > backup_crm.sql"
+echo "   • بک‌آپ saas_master: docker-compose -f $COMPOSE_FILE exec mysql mariadb-dump -u root -p\${DATABASE_PASSWORD}_ROOT saas_master > backup_saas.sql"
+echo "   • تست اتصال دیتابیس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"SELECT 1;\""
+echo "   • مشاهده جداول crm_system: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"USE crm_system; SHOW TABLES;\""
+echo "   • مشاهده جداول saas_master: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"USE saas_master; SHOW TABLES;\""
+echo "   • ایمپورت مجدد دیتابیس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p\${DATABASE_PASSWORD}_ROOT < database/01-crm_system.sql"
 echo "   • رفع مشکل redirect: sed -i 's|https://|http://|g' .env && docker-compose -f $COMPOSE_FILE restart nextjs"
 echo "   • تست دامنه: curl -I http://$DOMAIN"
 echo "   • رفع مشکل آپلود: ./fix-upload-issue.sh"
