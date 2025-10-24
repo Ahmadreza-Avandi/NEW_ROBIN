@@ -1001,19 +1001,20 @@ echo "🗄️ تست اتصال دیتابیس..."
 echo "⏳ انتظار برای آماده شدن کامل دیتابیس..."
 sleep 15
 
-# تست اتصال root
-if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "SELECT VERSION();" >/dev/null 2>&1; then
+# تست اتصال root (رمز عبور root همیشه 1234 است طبق docker-compose)
+ROOT_PASSWORD="1234"
+if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "SELECT VERSION();" >/dev/null 2>&1; then
     echo "✅ دیتابیس MariaDB در حال اجراست"
     
     # بررسی وجود دیتابیس‌ها
     echo "🔍 بررسی دیتابیس‌ها..."
-    DATABASES=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "SHOW DATABASES;" 2>/dev/null | grep -E "(crm_system|saas_master)" || echo "")
+    DATABASES=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "SHOW DATABASES;" 2>/dev/null | grep -E "(crm_system|saas_master)" || echo "")
     
     if echo "$DATABASES" | grep -q "crm_system"; then
         echo "✅ دیتابیس crm_system موجود است"
         
         # شمارش جداول crm_system
-        CRM_TABLE_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
+        CRM_TABLE_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
         if [ "$CRM_TABLE_COUNT" -gt 1 ]; then
             echo "✅ دیتابیس crm_system آماده است - تعداد جداول: $((CRM_TABLE_COUNT - 1))"
         else
@@ -1027,7 +1028,7 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PA
         echo "✅ دیتابیس saas_master موجود است"
         
         # شمارش جداول saas_master
-        SAAS_TABLE_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
+        SAAS_TABLE_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
         if [ "$SAAS_TABLE_COUNT" -gt 1 ]; then
             echo "✅ دیتابیس saas_master آماده است - تعداد جداول: $((SAAS_TABLE_COUNT - 1))"
         else
@@ -1078,7 +1079,7 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PA
         # اجرای مجدد init script
         if [ -f "database/00-init-databases.sql" ]; then
             echo "🔧 اجرای مجدد init script..."
-            docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < database/00-init-databases.sql 2>/dev/null || true
+            docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} < database/00-init-databases.sql 2>/dev/null || true
             sleep 5
             
             # تست مجدد
@@ -1089,7 +1090,7 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PA
                 
                 # تلاش برای ایجاد دستی کاربر
                 echo "🔧 تلاش برای ایجاد دستی کاربر..."
-                docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "
+                docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
                     DROP USER IF EXISTS 'crm_user'@'%';
                     CREATE USER 'crm_user'@'%' IDENTIFIED BY '1234';
                     GRANT ALL PRIVILEGES ON *.* TO 'crm_user'@'%';
@@ -1113,11 +1114,11 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PA
     # اگر crm_system خالی است، تلاش برای ایمپورت مجدد
     if [ "$CRM_TABLE_COUNT" -le 1 ] && [ -f "database/01-crm_system.sql" ]; then
         echo "🔧 ایمپورت مجدد crm_system..."
-        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < database/01-crm_system.sql 2>/dev/null || true
+        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} < database/01-crm_system.sql 2>/dev/null || true
         sleep 5
         
         # بررسی مجدد
-        NEW_CRM_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
+        NEW_CRM_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
         if [ "$NEW_CRM_COUNT" -gt 1 ]; then
             echo "✅ crm_system با موفقیت ایمپورت شد - جداول: $((NEW_CRM_COUNT - 1))"
         else
@@ -1128,11 +1129,11 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PA
     # اگر saas_master خالی است، تلاش برای ایمپورت مجدد
     if [ "$SAAS_TABLE_COUNT" -le 1 ] && [ -f "database/02-saas_master.sql" ]; then
         echo "🔧 ایمپورت مجدد saas_master..."
-        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < database/02-saas_master.sql 2>/dev/null || true
+        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} < database/02-saas_master.sql 2>/dev/null || true
         sleep 5
         
         # بررسی مجدد
-        NEW_SAAS_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
+        NEW_SAAS_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
         if [ "$NEW_SAAS_COUNT" -gt 1 ]; then
             echo "✅ saas_master با موفقیت ایمپورت شد - جداول: $((NEW_SAAS_COUNT - 1))"
         else
@@ -1626,8 +1627,8 @@ echo "�️ خلارصه وضعیت دیتابیس:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # خلاصه نهایی دیتابیس
-FINAL_CRM_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
-FINAL_SAAS_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
+FINAL_CRM_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
+FINAL_SAAS_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
 
 if [ "$FINAL_CRM_COUNT" -gt 1 ]; then
     echo "✅ crm_system: $((FINAL_CRM_COUNT - 1)) جدول"
@@ -1659,12 +1660,12 @@ echo "   • توقف: docker-compose -f $COMPOSE_FILE down"
 echo "   • بررسی وضعیت: docker-compose -f $COMPOSE_FILE ps"
 echo "   • دیپلوی معمولی: ./deploy-server.sh"
 echo "   • دیپلوی با پاکسازی کامل: ./deploy-server.sh --clean"
-echo "   • بک‌آپ crm_system: docker-compose -f $COMPOSE_FILE exec mysql mariadb-dump -u root -p\${DATABASE_PASSWORD}_ROOT crm_system > backup_crm.sql"
-echo "   • بک‌آپ saas_master: docker-compose -f $COMPOSE_FILE exec mysql mariadb-dump -u root -p\${DATABASE_PASSWORD}_ROOT saas_master > backup_saas.sql"
+echo "   • بک‌آپ crm_system: docker-compose -f $COMPOSE_FILE exec mysql mariadb-dump -u root -p1234 crm_system > backup_crm.sql"
+echo "   • بک‌آپ saas_master: docker-compose -f $COMPOSE_FILE exec mysql mariadb-dump -u root -p1234 saas_master > backup_saas.sql"
 echo "   • تست اتصال دیتابیس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"SELECT 1;\""
 echo "   • مشاهده جداول crm_system: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"USE crm_system; SHOW TABLES;\""
 echo "   • مشاهده جداول saas_master: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u crm_user -p1234 -e \"USE saas_master; SHOW TABLES;\""
-echo "   • ایمپورت مجدد دیتابیس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p\${DATABASE_PASSWORD}_ROOT < database/01-crm_system.sql"
+echo "   • ایمپورت مجدد دیتابیس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p1234 < database/01-crm_system.sql"
 echo "   • رفع مشکل redirect: sed -i 's|https://|http://|g' .env && docker-compose -f $COMPOSE_FILE restart nextjs"
 echo "   • تست دامنه: curl -I http://$DOMAIN"
 echo "   • رفع مشکل آپلود: ./fix-upload-issue.sh"

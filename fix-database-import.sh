@@ -46,10 +46,11 @@ else
     exit 1
 fi
 
-# تست اتصال root
+# تست اتصال root (رمز عبور root همیشه 1234 است طبق docker-compose)
+ROOT_PASSWORD="1234"
 echo ""
 echo "🔐 تست اتصال root..."
-if ! docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "SELECT VERSION();" >/dev/null 2>&1; then
+if ! docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "SELECT VERSION();" >/dev/null 2>&1; then
     echo "❌ اتصال root ناموفق!"
     echo "🔍 لاگ MySQL:"
     docker logs $MYSQL_CONTAINER --tail 10
@@ -62,14 +63,14 @@ echo ""
 echo "🗄️ بررسی و ایجاد دیتابیس‌ها..."
 
 # ایجاد دیتابیس‌ها
-docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "
+docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
 CREATE DATABASE IF NOT EXISTS \`crm_system\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS \`saas_master\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 "
 
 # ایجاد کاربر crm_user
 echo "👤 ایجاد کاربر crm_user..."
-docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT -e "
+docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
 DROP USER IF EXISTS 'crm_user'@'%';
 DROP USER IF EXISTS 'crm_user'@'localhost';
 DROP USER IF EXISTS 'crm_user'@'127.0.0.1';
@@ -114,7 +115,7 @@ if [ -f "database/crm_system.sql" ]; then
     echo "USE \`crm_system\`;" > /tmp/crm_import.sql
     cat database/crm_system.sql >> /tmp/crm_import.sql
     docker cp /tmp/crm_import.sql $MYSQL_CONTAINER:/tmp/crm_import.sql
-    docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < /tmp/crm_import.sql
+    docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} < /tmp/crm_import.sql
     rm -f /tmp/crm_import.sql
     CRM_IMPORTED=true
     echo "✅ crm_system ایمپورت شد"
@@ -123,7 +124,7 @@ elif [ -f "crm_system.sql" ]; then
     echo "USE \`crm_system\`;" > /tmp/crm_import.sql
     cat crm_system.sql >> /tmp/crm_import.sql
     docker cp /tmp/crm_import.sql $MYSQL_CONTAINER:/tmp/crm_import.sql
-    docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < /tmp/crm_import.sql
+    docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} < /tmp/crm_import.sql
     rm -f /tmp/crm_import.sql
     CRM_IMPORTED=true
     echo "✅ crm_system ایمپورت شد"
@@ -132,7 +133,7 @@ elif [ -f "دیتابیس.sql" ]; then
     echo "USE \`crm_system\`;" > /tmp/crm_import.sql
     cat "دیتابیس.sql" >> /tmp/crm_import.sql
     docker cp /tmp/crm_import.sql $MYSQL_CONTAINER:/tmp/crm_import.sql
-    docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < /tmp/crm_import.sql
+    docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} < /tmp/crm_import.sql
     rm -f /tmp/crm_import.sql
     CRM_IMPORTED=true
     echo "✅ crm_system ایمپورت شد"
@@ -147,7 +148,7 @@ if [ -f "database/saas_master.sql" ]; then
     echo "USE \`saas_master\`;" > /tmp/saas_import.sql
     cat database/saas_master.sql >> /tmp/saas_import.sql
     docker cp /tmp/saas_import.sql $MYSQL_CONTAINER:/tmp/saas_import.sql
-    docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${DATABASE_PASSWORD}_ROOT < /tmp/saas_import.sql
+    docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} < /tmp/saas_import.sql
     rm -f /tmp/saas_import.sql
     SAAS_IMPORTED=true
     echo "✅ saas_master ایمپورت شد"
