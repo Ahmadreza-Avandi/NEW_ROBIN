@@ -27,10 +27,10 @@ export async function getTenantConnection(tenantKey: string): Promise<mysql.Pool
   const defaultHost = isDocker ? 'mysql' : 'localhost';
   
   const dbConfig = {
-    host: process.env.DATABASE_HOST || process.env.DB_HOST || defaultHost,
-    user: process.env.DATABASE_USER || process.env.DB_USER || 'crm_user',
-    password: process.env.DATABASE_PASSWORD || process.env.DB_PASSWORD || '1234',
-    database: process.env.DATABASE_NAME || process.env.DB_NAME || 'crm_system',
+    host: process.env.DB_HOST || process.env.DATABASE_HOST || defaultHost,
+    user: process.env.DB_USER || process.env.DATABASE_USER || 'crm_user',
+    password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '1234',
+    database: process.env.DB_NAME || process.env.DATABASE_NAME || 'crm_system',
     timezone: '+00:00',
     charset: 'utf8mb4',
     connectTimeout: 10000,

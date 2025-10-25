@@ -65,7 +65,7 @@ export default function NewProductPage() {
           title: "موفقیت",
           description: "محصول جدید با موفقیت اضافه شد",
         });
-        router.push('/dashboard/products');
+        router.push(`/${tenantKey}/dashboard/products`);
       } else {
         setError(data.message || 'خطا در ایجاد محصول');
       }
@@ -78,7 +78,7 @@ export default function NewProductPage() {
   };
 
   const handleCancel = () => {
-    router.push('/dashboard/products');
+    router.push(`/${tenantKey}/dashboard/products`);
   };
 
   return (

@@ -24,6 +24,28 @@ function decodeJWT(token: string) {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  // Redirect /dashboard routes without tenant to not-found
+  if (pathname.startsWith('/dashboard') && !pathname.match(/^\/[^\/]+\/dashboard/)) {
+    // Try to get tenant from cookie
+    const tenantToken = request.cookies.get('tenant_token')?.value;
+    
+    if (tenantToken) {
+      try {
+        const decoded = decodeJWT(tenantToken);
+        if (decoded && decoded.tenantKey) {
+          // Redirect to tenant-specific dashboard
+          const newPath = `/${decoded.tenantKey}${pathname}`;
+          return NextResponse.redirect(new URL(newPath, request.url));
+        }
+      } catch (error) {
+        // Token invalid, show not-found
+      }
+    }
+    
+    // No valid tenant, show not-found page
+    return NextResponse.rewrite(new URL('/dashboard/not-found', request.url));
+  }
+
   // Skip middleware for these paths
   if (
     pathname.startsWith('/_next') ||

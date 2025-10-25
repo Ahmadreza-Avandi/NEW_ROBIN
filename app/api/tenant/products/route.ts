@@ -74,16 +74,15 @@ export async function POST(request: NextRequest) {
       description,
       sku,
       category,
-      unit_price,
-      cost,
-      stock_quantity,
-      reorder_level,
-      supplier_id,
-      tax_rate,
-      discount_rate
+      price,
+      unit_price, // برای سازگاری با نسخه قدیمی
+      currency,
+      status
     } = body;
 
-    if (!name || !unit_price) {
+    const productPrice = price || unit_price;
+
+    if (!name || !productPrice) {
       return NextResponse.json(
         { success: false, message: 'نام محصول و قیمت الزامی است' },
         { status: 400 }
@@ -94,6 +93,8 @@ export async function POST(request: NextRequest) {
     const conn = await pool.getConnection();
 
     try {
+      const userId = session.userId || session.id;
+      
       const [result] = await conn.query(
         `INSERT INTO products (
           id,
@@ -102,31 +103,23 @@ export async function POST(request: NextRequest) {
           description,
           sku,
           category,
-          unit_price,
-          cost,
-          stock_quantity,
-          reorder_level,
-          supplier_id,
-          tax_rate,
-          discount_rate,
+          price,
+          currency,
+          status,
           created_by,
           created_at,
           updated_at
-        ) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        ) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [
           tenantKey,
           name,
           description || null,
           sku || null,
           category || null,
-          unit_price,
-          cost || null,
-          stock_quantity || 0,
-          reorder_level || 0,
-          supplier_id || null,
-          tax_rate || 0,
-          discount_rate || 0,
-          session.user?.id || 'unknown'
+          productPrice,
+          currency || 'IRR',
+          status || 'active',
+          userId
         ]
       ) as any;
 

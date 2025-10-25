@@ -6,7 +6,7 @@ async function handleGetCustomers(request: NextRequest, session: any) {
   let connection;
 
   try {
-    const tenantKey = session.tenant_key;
+    const tenantKey = session.tenantKey || session.tenant_key;
 
     // اتصال به دیتابیس tenant
     const pool = await getTenantConnection(tenantKey);
@@ -38,7 +38,7 @@ async function handleGetCustomers(request: NextRequest, session: any) {
 
 async function handleCreateCustomer(request: NextRequest, session: any) {
   try {
-    const tenantKey = session.tenant_key;
+    const tenantKey = session.tenantKey || session.tenant_key;
     const body = await request.json();
 
     const {

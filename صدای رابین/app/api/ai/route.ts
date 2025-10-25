@@ -46,7 +46,7 @@ const AI_CONFIG = {
 // تابع فراخوانی OpenRouter API با retry mechanism
 async function callOpenRouter(messages: any[], retryCount = 0): Promise<string> {
   const maxRetries = 3;
-  
+
   try {
     console.log('🤖 Calling OpenRouter API... (attempt', retryCount + 1, 'of', maxRetries + 1, ')');
     console.log('🔑 Using API Key:', AI_CONFIG.OPENROUTER_API_KEY.substring(0, 20) + '...');
@@ -79,14 +79,14 @@ async function callOpenRouter(messages: any[], retryCount = 0): Promise<string> 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ OpenRouter error response:', errorText);
-        
+
         // Retry on 5xx errors
         if (response.status >= 500 && retryCount < maxRetries) {
           console.log(`⏳ Retrying after ${(retryCount + 1) * 2} seconds...`);
           await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
           return callOpenRouter(messages, retryCount + 1);
         }
-        
+
         throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
       }
 
@@ -98,12 +98,12 @@ async function callOpenRouter(messages: any[], retryCount = 0): Promise<string> 
       }
 
       let content = data.choices[0].message.content;
-      
+
       // حذف تگ‌های فکری و محتوای داخل آنها
       // برخی مدل‌ها مثل qwen از <think> استفاده می‌کنند
       content = content.replace(/<think>[\s\S]*?<\/think>/gi, '');
       content = content.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
-      
+
       // حذف متن‌های انگلیسی که توضیح فرآیند فکری هستند
       // اگر پاسخ شامل جملات انگلیسی طولانی باشه، احتمالاً فکر داخلی مدله
       const lines = content.split('\n');
@@ -116,29 +116,29 @@ async function callOpenRouter(messages: any[], retryCount = 0): Promise<string> 
         const persianChars = (trimmed.match(/[\u0600-\u06FF]/g) || []).length;
         const totalChars = trimmed.length;
         const persianRatio = persianChars / totalChars;
-        
+
         // اگر خط شامل کلمات فکری باشه و فارسی کمی داشته باشه، حذفش کن
         if (hasThinkingKeywords && persianRatio < 0.3) {
           return false;
         }
-        
+
         return true;
       });
-      
+
       content = persianLines.join('\n').trim();
-      
+
       // اگر پاسخ خالی شد، از پاسخ اصلی استفاده کن
       if (!content) {
         content = data.choices[0].message.content;
       }
-      
+
       console.log('🧹 Cleaned response length:', content.length);
-      
+
       return content;
-      
+
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
-      
+
       // Handle timeout
       if (fetchError.name === 'AbortError') {
         console.error('❌ Request timeout');
@@ -149,7 +149,7 @@ async function callOpenRouter(messages: any[], retryCount = 0): Promise<string> 
         }
         throw new Error('زمان انتظار برای پاسخ هوش مصنوعی به پایان رسید');
       }
-      
+
       // Handle network errors
       if (fetchError.message.includes('fetch failed') || fetchError.code === 'ENOTFOUND' || fetchError.code === 'ECONNREFUSED') {
         console.error('❌ Network error:', fetchError.message);
@@ -160,20 +160,20 @@ async function callOpenRouter(messages: any[], retryCount = 0): Promise<string> 
         }
         throw new Error('خطا در اتصال به سرور هوش مصنوعی. لطفاً اتصال اینترنت خود را بررسی کنید.');
       }
-      
+
       throw fetchError;
     }
-    
+
   } catch (error: any) {
     console.error('❌ OpenRouter API Error:', error.message);
     console.error('❌ Error details:', error);
-    
+
     // Return a fallback response instead of throwing
     if (retryCount >= maxRetries) {
       console.log('⚠️ Max retries reached, returning fallback response');
       return 'متأسفم، در حال حاضر نمی‌توانم به سرور هوش مصنوعی متصل شوم. لطفاً بعداً دوباره تلاش کنید.';
     }
-    
+
     throw new Error('خطا در برقراری ارتباط با هوش مصنوعی: ' + error.message);
   }
 }
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const dbConnected = await testConnection();
-      
+
       if (dbConnected) {
         console.log('✅ Database connected, processing keywords...');
 

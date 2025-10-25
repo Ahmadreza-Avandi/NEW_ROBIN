@@ -8,9 +8,9 @@ import mysql from 'mysql2/promise';
  */
 
 const masterDbConfig = {
-  host: process.env.DATABASE_HOST || process.env.DB_HOST || (process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost'),
-  user: process.env.DATABASE_USER || process.env.DB_USER || 'crm_user',
-  password: process.env.DATABASE_PASSWORD || process.env.DB_PASSWORD || '1234',
+  host: process.env.DB_HOST || process.env.DATABASE_HOST || (process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost'),
+  user: process.env.DB_USER || process.env.DATABASE_USER || 'crm_user',
+  password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '1234',
   database: process.env.SAAS_DATABASE_NAME || 'saas_master',
   timezone: '+00:00',
   charset: 'utf8mb4',
