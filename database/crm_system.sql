@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 24, 2025 at 08:43 PM
+-- Generation Time: Oct 27, 2025 at 04:00 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -74,7 +74,9 @@ INSERT INTO `activities` (`id`, `tenant_key`, `customer_id`, `deal_id`, `type`, 
 ('demo-activity-1', 'demo', 'demo-customer-1', NULL, 'call', 'تماس با شرکت دمو تجارت', 'بررسی نیازهای مشتری و ارائه پیشنهاد اولیه برای همکاری', '2025-10-24 21:02:32', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-24 17:32:32', '2025-10-24 17:32:32'),
 ('demo-activity-2', 'demo', 'demo-customer-2', NULL, 'meeting', 'جلسه حضوری با مدیرعامل', 'جلسه رسمی برای بررسی جزئیات قرارداد و شرایط همکاری', '2025-10-24 21:02:32', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-24 17:32:32', '2025-10-24 17:32:32'),
 ('demo-activity-3', 'demo', 'demo-customer-1', NULL, 'email', 'ارسال پیشنهاد قیمت', 'ارسال پروپوزال کامل شامل قیمت‌ها و شرایط پرداخت', '2025-10-24 21:02:32', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-24 17:32:32', '2025-10-24 17:32:32'),
-('demo-activity-4', 'demo', 'demo-customer-2', NULL, 'follow_up', 'پیگیری پاسخ مشتری', 'پیگیری وضعیت بررسی پیشنهاد و دریافت بازخورد', '2025-10-24 21:02:32', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-24 17:32:32', '2025-10-24 17:32:32');
+('demo-activity-4', 'demo', 'demo-customer-2', NULL, 'follow_up', 'پیگیری پاسخ مشتری', 'پیگیری وضعیت بررسی پیشنهاد و دریافت بازخورد', '2025-10-24 21:02:32', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-24 17:32:32', '2025-10-24 17:32:32'),
+('db780e48-b1c3-11f0-9386-581122e4f0be', 'demo', 'demo-customer-1', NULL, 'call', 'تماس تست 1761411520464', 'این یک تماس تستی است', '2025-10-25 16:58:40', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-25 16:58:40', '2025-10-25 16:58:40'),
+('623b1ff2-b1c4-11f0-9386-581122e4f0be', 'demo', 'd95fadfc-b1c3-11f0-9386-581122e4f0be', NULL, 'call', 'تماس تست 1761411746683', 'این یک تماس تستی است', '2025-10-25 17:02:26', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'completed', NULL, NULL, '2025-10-25 17:02:26', '2025-10-25 17:02:26');
 
 -- --------------------------------------------------------
 
@@ -404,7 +406,9 @@ INSERT INTO `contacts` (`id`, `tenant_key`, `company_id`, `first_name`, `last_na
 ('cnt-mgqxni65', 'rabin', NULL, 'علی', 'احمدی', 'مدیر ارشد فروش', NULL, 'contact1760468771980@example.com', '09123456789', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'active', 0, 'other', NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', 'd497a492-f183-4452-86c1-961e5a0e3e22', '2025-10-14 15:36:12', '2025-10-14 15:36:12'),
 ('83e47e42-ab69-11f0-81d2-581122e4f0be', 'rabin', NULL, 'نهطش', 'یشسیش', 'یشیص', NULL, 'شصی@شیش.سی', '232', '32', NULL, NULL, NULL, NULL, 'ایران', NULL, NULL, NULL, NULL, NULL, NULL, 'active', 0, 'other', NULL, NULL, 'unknown', '2025-10-17 14:56:52', '2025-10-17 14:56:52'),
 ('3ffdfe2d-ac36-11f0-87d1-581122e4f0be', 'rabin', NULL, 'شیش', 'شصی', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ایران', NULL, NULL, NULL, NULL, NULL, NULL, 'active', 0, 'other', NULL, NULL, 'unknown', '2025-10-18 15:22:25', '2025-10-18 15:22:25'),
-('cnt-mh51x92t', 'rabin', NULL, 'sad', 'awd', '23', '', '', '32', '32', '', '', '', '', 'ایران', NULL, NULL, '', NULL, NULL, NULL, 'active', 0, 'other', NULL, 'ceo-001', 'ceo-001', '2025-10-24 12:44:31', '2025-10-24 12:44:31');
+('cnt-mh51x92t', 'rabin', NULL, 'sad', 'awd', '23', '', '', '32', '32', '', '', '', '', 'ایران', NULL, NULL, '', NULL, NULL, NULL, 'active', 0, 'other', NULL, 'ceo-001', 'ceo-001', '2025-10-24 12:44:31', '2025-10-24 12:44:31'),
+('demo-contact-1', 'demo', 'demo-customer-1', 'محمد', 'رضایی', 'مدیر IT', NULL, 'mohammad.rezaei@demo-company.com', '02133445566', NULL, NULL, NULL, NULL, NULL, 'ایران', NULL, NULL, NULL, NULL, NULL, NULL, 'active', 1, NULL, NULL, NULL, '', '2025-10-25 16:34:49', '2025-10-25 16:34:49'),
+('demo-contact-2', 'demo', 'demo-customer-2', 'فاطمه', 'احمدی', 'مدیر خرید', NULL, 'fateme.ahmadi@demo.com', '09123456789', NULL, NULL, NULL, NULL, NULL, 'ایران', NULL, NULL, NULL, NULL, NULL, NULL, 'active', 1, NULL, NULL, NULL, '', '2025-10-25 16:34:49', '2025-10-25 16:34:49');
 
 -- --------------------------------------------------------
 
@@ -1089,7 +1093,9 @@ INSERT INTO `customers` (`id`, `tenant_key`, `first_name`, `last_name`, `company
 ('bb19a347-ab65-11f0-81d2-581122e4f0be', 'rabin', NULL, NULL, NULL, 'مشتری جدید', NULL, NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-17 14:29:46', '2025-10-17 14:29:46', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
 ('8ad1e954-402b-4d9d-a593-74be80543b5f', 'rabin', NULL, NULL, NULL, 'dawdadaw', NULL, NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'individual', 'medium', 'ceo-001', 0, NULL, NULL, 0.00, '2025-10-24 16:13:52', '2025-10-24 16:13:52', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
 ('demo-customer-1', 'demo', NULL, NULL, NULL, 'شرکت دمو تجارت', 'info@demo-company.com', '02133445566', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'active', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
-('demo-customer-2', 'demo', NULL, NULL, NULL, 'مشتری دمو دوم', 'customer2@demo.com', '09123456789', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead');
+('demo-customer-2', 'demo', NULL, NULL, NULL, 'مشتری دمو دوم', 'customer2@demo.com', '09123456789', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
+('d95fadfc-b1c3-11f0-9386-581122e4f0be', 'demo', NULL, NULL, NULL, 'شرکت تست 1761411516749', 'test1761411516749@demo.com', '09123456789', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-25 16:58:37', '2025-10-25 16:58:37', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
+('607f38a4-b1c4-11f0-9386-581122e4f0be', 'demo', NULL, NULL, NULL, 'شرکت تست 1761411743815', 'test1761411743815@demo.com', '09123456789', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-10-25 17:02:23', '2025-10-25 17:02:23', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead');
 
 -- --------------------------------------------------------
 
@@ -2379,6 +2385,8 @@ INSERT INTO `products` (`id`, `tenant_key`, `name`, `description`, `category`, `
 ('4fdfbc89-b356-4402-8af0-09739f410f6a', 'rabin', 'محصول به‌روز شده 1760468771579', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468771356', NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', '2025-10-14 19:06:11', '2025-10-14 19:06:11'),
 ('5f8a39a3-8509-46c2-bf55-6619d0d64599', 'rabin', 'محصول به‌روز شده 1760468364549', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468364220', NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', '2025-10-14 18:59:24', '2025-10-14 18:59:24'),
 ('6448ebcd-1e10-4507-9df5-d5cece7093f4', 'rabin', 'awda', 'wada', 'awda', 2321.00, 'IRR', 'active', NULL, NULL, NULL, 'ceo-001', '2025-10-24 16:36:31', '2025-10-24 16:36:31'),
+('64842fcb-b1c4-11f0-9386-581122e4f0be', 'demo', 'محصول تست 1761411750422', 'این یک محصول تستی است', 'software', 1000000.00, 'IRR', 'active', NULL, NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '2025-10-25 17:02:30', '2025-10-25 17:02:30'),
+('99bf74b2-0a8c-415f-bed0-e0dcb8c81a2f', 'rabin', 'دمو جدید', '34ص', 'دمو', 2000000.00, 'IRR', 'active', '242', NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '2025-10-25 17:53:52', '2025-10-25 17:53:52'),
 ('9e36dfa8-be00-4a8f-8201-0000c9f21e50', 'rabin', 'محصول به‌روز شده 1760468764423', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468764298', NULL, NULL, 'ceo-001', '2025-10-14 19:06:04', '2025-10-14 19:06:04'),
 ('adc9ada6-451d-470d-b776-b9f5701531fc', 'rabin', 'محصول به‌روز شده 1760468052482', 'توضیحات محصول', 'software', 1000000.00, 'IRR', 'active', 'SKU-1760468049743', NULL, NULL, 'ceo-001', '2025-10-14 18:54:09', '2025-10-14 18:54:12'),
 ('ba4143ee-c5f6-49fa-afb2-1ce01ac9fe86', 'rabin', 'نرم افزار CRM', 'نرم افزار جامع CRM , CEM', 'نرم افزار', 3000000.00, 'IRR', 'active', '1386', NULL, NULL, 'ceo-001', '2025-10-11 16:50:05', '2025-10-11 16:50:05'),
@@ -2545,7 +2553,8 @@ INSERT INTO `sales` (`id`, `title`, `tenant_key`, `deal_id`, `customer_id`, `cus
 ('289fbd44-a3a6-499c-be12-51f0f2cd5e00', 'فروش به مشتری به‌روز شده 1760468764180 - 2025/10/14', 'rabin', NULL, 'bb4af0df-a466-46e6-9e99-3cc4e40a8b6e', 'مشتری به‌روز شده 1760468764180', 1000000.00, 'IRR', 'pending', NULL, '2025-10-14 15:36:04', NULL, NULL, NULL, NULL, 'ceo-001', 'مهندس کریمی', '2025-10-14 15:36:04', '2025-10-17 15:32:16'),
 ('083f1ed3-23a8-4506-81b2-ba96c0453f9e', 'فروش به مشتری به‌روز شده 1760468764180 - 2025/10/14', 'rabin', NULL, 'bb4af0df-a466-46e6-9e99-3cc4e40a8b6e', 'مشتری به‌روز شده 1760468764180', 1000000.00, 'IRR', 'pending', NULL, '2025-10-14 15:36:11', NULL, NULL, NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', 'مدیر سامین', '2025-10-14 15:36:11', '2025-10-17 15:32:16'),
 ('e299742e-ac35-11f0-87d1-581122e4f0be', NULL, 'rabin', NULL, '65d3f604-a7cc-430a-bb15-83fb1208f3cb', 'آذردخت محمودی', 10000000.00, 'IRR', 'paid', 'نقد', '2025-10-18 15:19:48', NULL, NULL, '..', '23453', 'unknown', 'ناشناس', '2025-10-18 15:19:48', '2025-10-18 15:19:48'),
-('5b6bfde3-b0f4-11f0-b87f-581122e4f0be', NULL, 'rabin', NULL, '65d3f604-a7cc-430a-bb15-83fb1208f3cb', 'آذردخت محمودی', 2344443.00, 'IRR', 'pending', NULL, '2025-10-24 16:13:20', NULL, NULL, 'qe', NULL, 'unknown', 'ناشناس', '2025-10-24 16:13:20', '2025-10-24 16:13:20');
+('5b6bfde3-b0f4-11f0-b87f-581122e4f0be', NULL, 'rabin', NULL, '65d3f604-a7cc-430a-bb15-83fb1208f3cb', 'آذردخت محمودی', 2344443.00, 'IRR', 'pending', NULL, '2025-10-24 16:13:20', NULL, NULL, 'qe', NULL, 'unknown', 'ناشناس', '2025-10-24 16:13:20', '2025-10-24 16:13:20'),
+('1d9d6e30-b1cd-11f0-9386-581122e4f0be', NULL, 'demo', NULL, 'demo-customer-1', 'شرکت دمو تجارت', 34443.00, 'IRR', 'paid', 'کارت به کارت', '2025-10-25 18:04:57', NULL, NULL, '2', '2322', 'unknown', 'ناشناس', '2025-10-25 18:04:57', '2025-10-25 18:04:57');
 
 -- --------------------------------------------------------
 
@@ -2795,8 +2804,9 @@ INSERT INTO `tasks` (`id`, `tenant_key`, `title`, `description`, `customer_id`, 
 ('dcc6a51d-bd54-49f8-aeb0-b17af2545376', 'rabin', 'احمدرضا آوندی تستی', 'تستی', NULL, NULL, NULL, '9f6b90b9-0723-4261-82c3-cd54e21d3995', 'ceo-001', 'medium', 'pending', 'follow_up', '0000-00-00 00:00:00', '2025-10-11 17:56:02', '2025-10-24 16:39:00', NULL, NULL, NULL),
 ('73a8be37-d57e-4ed5-ae09-6530f71deabd', 'rabin', 'وظیفه تستی 1760468765361', 'توضیحات وظیفه', NULL, NULL, NULL, 'ceo-001', 'ceo-001', 'medium', 'pending', 'follow_up', '2025-12-30 20:30:00', '2025-10-14 19:06:05', '2025-10-14 19:06:05', NULL, NULL, NULL),
 ('d666ecfe-239f-43ee-afda-e631f7a7120c', 'rabin', 'وظیفه تستی 1760468772503', 'توضیحات وظیفه', NULL, NULL, NULL, 'd497a492-f183-4452-86c1-961e5a0e3e22', 'd497a492-f183-4452-86c1-961e5a0e3e22', 'medium', 'pending', 'follow_up', '2025-12-30 20:30:00', '2025-10-14 19:06:12', '2025-10-14 19:06:12', NULL, NULL, NULL),
-('demo-task-1', 'demo', 'پیگیری مشتری دمو', 'پیگیری وضعیت قرارداد و دریافت بازخورد', NULL, NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '', 'high', 'pending', 'follow_up', NULL, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, NULL),
-('demo-task-2', 'demo', 'آماده‌سازی پروپوزال', 'تهیه پیشنهاد قیمت برای مشتری جدید', NULL, NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '', 'medium', 'in_progress', 'follow_up', NULL, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, NULL);
+('demo-task-1', 'demo', 'پیگیری مشتری دمو', 'پیگیری وضعیت قرارداد و دریافت بازخورد', NULL, NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '', 'high', 'completed', 'follow_up', NULL, '2025-10-24 17:29:55', '2025-10-25 18:09:40', NULL, NULL, NULL),
+('demo-task-2', 'demo', 'آماده‌سازی پروپوزال', 'تهیه پیشنهاد قیمت برای مشتری جدید', NULL, NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', '', 'medium', 'in_progress', 'follow_up', NULL, '2025-10-24 17:29:55', '2025-10-24 17:29:55', NULL, NULL, NULL),
+('4210d3d4-b1ce-11f0-9386-581122e4f0be', 'demo', 'وظیفه تست 1761415985781', 'این یک وظیفه تستی است', NULL, NULL, NULL, 'effaaff2-57b1-493e-8d47-83217067cf3e', 'effaaff2-57b1-493e-8d47-83217067cf3e', 'high', 'completed', 'follow_up', '2025-11-01 14:43:05', '2025-10-25 18:13:07', '2025-10-25 18:13:09', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2957,7 +2967,8 @@ INSERT INTO `users` (`id`, `username`, `full_name`, `name`, `email`, `password`,
 ('a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'alirezasahafi77@gmail.com', 'علیرضا صحافی', 'علیرضا صحافی', 'alirezasahafi77@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '09332107233', NULL, '2025-09-08 06:53:13', '2025-09-13 05:59:44', '2025-09-08 06:53:13', '2025-10-24 16:15:03', NULL, 'rabin'),
 ('9f6b90b9-0723-4261-82c3-cd54e21d3995', 'ahmadreza.avandi@gmail.com', 'احمدرضا آوندی', 'احمدرضا آوندی', 'ahmadreza.avandi@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'agent', NULL, NULL, 'active', NULL, NULL, '09921386634', NULL, '2025-10-01 16:14:02', '2025-10-13 19:42:52', '2025-10-01 16:14:02', '2025-10-14 18:56:10', 'ceo-001', 'rabin'),
 ('d497a492-f183-4452-86c1-961e5a0e3e22', NULL, NULL, 'مدیر سامین', 'admin@samin.com', '$2a$10$Mx.JpKc4q762x/0dL91GbeZbNsOkTK4ykiTW/eYWcQoFogG1QTfOG', 'ceo', NULL, NULL, 'active', NULL, NULL, NULL, NULL, '2025-10-13 17:53:59', NULL, '2025-10-13 17:53:59', '2025-10-14 18:57:27', NULL, 'samin'),
-('effaaff2-57b1-493e-8d47-83217067cf3e', NULL, NULL, 'demo', 'demo@gmail.com', '$2b$10$taZXeeeyAPXA8lokt47mye.1aAcSYxP0mu0xkvF8sFsb4en3m9ghK', 'ceo', NULL, NULL, 'active', NULL, NULL, NULL, NULL, '2025-10-24 17:17:59', NULL, '2025-10-24 17:17:59', '2025-10-24 17:17:59', NULL, 'demo');
+('effaaff2-57b1-493e-8d47-83217067cf3e', NULL, NULL, 'demo', 'demo@gmail.com', '$2b$10$taZXeeeyAPXA8lokt47mye.1aAcSYxP0mu0xkvF8sFsb4en3m9ghK', 'ceo', NULL, NULL, 'active', NULL, NULL, NULL, NULL, '2025-10-24 17:17:59', NULL, '2025-10-24 17:17:59', '2025-10-24 17:17:59', NULL, 'demo'),
+('7481ac8e-b1be-11f0-9386-581122e4f0be', NULL, NULL, 'علی احمدی', 'ali.ahmadi@demo.com', '$2a$10$fgRqCB.D/Ejbbl614MKHjuyx0oTMauk6F/HL.hw7b1P0R9.YlaQzC', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '09123456789', NULL, '2025-10-25 16:20:00', NULL, '2025-10-25 16:20:00', '2025-10-25 16:20:00', NULL, 'demo');
 
 -- --------------------------------------------------------
 

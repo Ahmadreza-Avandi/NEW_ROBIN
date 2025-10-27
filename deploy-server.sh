@@ -605,6 +605,27 @@ echo "🛑 مرحله 5: متوقف کردن سرویس‌های قدیمی..."
 docker-compose -f $COMPOSE_FILE down 2>/dev/null || true
 docker-compose down 2>/dev/null || true
 
+# بررسی اینکه آیا دیتابیس خالی است یا نه
+echo "🔍 بررسی وضعیت دیتابیس..."
+DB_NEEDS_INIT=false
+
+# اگر volume وجود نداره، حتماً نیاز به init داریم
+if ! docker volume ls | grep -q "mysql_data"; then
+    echo "📦 Volume دیتابیس وجود ندارد - نیاز به init"
+    DB_NEEDS_INIT=true
+else
+    echo "📦 Volume دیتابیس موجود است"
+    
+    # اگر --clean استفاده شده، volume رو پاک کن
+    if [ "$FORCE_CLEAN" = true ]; then
+        echo "🧹 حذف volume دیتابیس برای rebuild کامل..."
+        docker volume rm rabin-last_mysql_data 2>/dev/null || true
+        docker volume rm mysql_data 2>/dev/null || true
+        DB_NEEDS_INIT=true
+        echo "✅ Volume دیتابیس حذف شد"
+    fi
+fi
+
 # پاکسازی Docker cache و images
 if [ "$FORCE_CLEAN" = true ]; then
     echo "🧹 پاکسازی کامل Docker cache و images..."
@@ -898,6 +919,30 @@ fi
 echo ""
 echo "🔨 مرحله 7: Build و راه‌اندازی سرویس‌ها..."
 
+# اطمینان از وجود فایل‌های SQL قبل از build
+echo "� بررسی نهcایی فایل‌های SQL..."
+if [ ! -f "database/00-init-databases.sql" ]; then
+    echo "❌ فایل 00-init-databases.sql یافت نشد!"
+    exit 1
+fi
+
+if [ ! -f "database/01-crm_system.sql" ]; then
+    echo "❌ فایل 01-crm_system.sql یافت نشد!"
+    echo "🔍 فایل‌های موجود در database/:"
+    ls -la database/*.sql 2>/dev/null || echo "   هیچ فایل SQL یافت نشد"
+    exit 1
+fi
+
+if [ ! -f "database/02-saas_master.sql" ]; then
+    echo "⚠️  فایل 02-saas_master.sql یافت نشد - ادامه با ساختار پایه"
+fi
+
+if [ ! -f "database/03-admin-users.sql" ]; then
+    echo "⚠️  فایل 03-admin-users.sql یافت نشد - ادامه بدون آن"
+fi
+
+echo "✅ فایل‌های SQL آماده هستند"
+
 # تنظیم docker-compose برای استفاده از nginx config فعال
 echo "🔧 تنظیم docker-compose..."
 cp $COMPOSE_FILE docker-compose.deploy.yml
@@ -1179,7 +1224,14 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
     # اگر crm_system خالی است، تلاش برای ایمپورت مجدد
     if [ "$CRM_TABLE_COUNT" -le 1 ] && [ -f "database/01-crm_system.sql" ]; then
         echo "🔧 ایمپورت مجدد crm_system..."
-        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} < database/01-crm_system.sql 2>/dev/null || true
+        echo "📋 کپی فایل به کانتینر..."
+        
+        # کپی فایل به کانتینر
+        docker cp database/01-crm_system.sql $(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/crm_import.sql
+        
+        # ایمپورت با روش مطمئن
+        echo "⏳ در حال ایمپورت... (ممکن است چند دقیقه طول بکشد)"
+        docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} crm_system < /tmp/crm_import.sql" 2>&1 | grep -v "Warning" || true
         sleep 5
         
         # بررسی مجدد
@@ -1187,7 +1239,9 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         if [ "$NEW_CRM_COUNT" -gt 1 ]; then
             echo "✅ crm_system با موفقیت ایمپورت شد - جداول: $((NEW_CRM_COUNT - 1))"
         else
-            echo "❌ ایمپورت crm_system ناموفق"
+            echo "❌ ایمپورت crm_system ناموفق - لطفاً دستی ایمپورت کنید"
+            echo "   دستور: docker cp database/01-crm_system.sql \$(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/import.sql"
+            echo "   سپس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p1234 crm_system < /tmp/import.sql"
         fi
     fi
     
@@ -1203,10 +1257,17 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         # ایمپورت فایل اگر موجود باشد
         if [ -f "database/02-saas_master.sql" ]; then
             echo "📥 ایمپورت از database/02-saas_master.sql..."
-            docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} saas_master < database/02-saas_master.sql 2>/dev/null || true
+            echo "📋 کپی فایل به کانتینر..."
+            
+            # کپی فایل به کانتینر
+            docker cp database/02-saas_master.sql $(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/saas_import.sql
+            
+            # ایمپورت با روش مطمئن
+            docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
         elif [ -f "database/saas_master.sql" ]; then
             echo "📥 ایمپورت مستقیم از database/saas_master.sql..."
-            docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} saas_master < database/saas_master.sql 2>/dev/null || true
+            docker cp database/saas_master.sql $(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/saas_import.sql
+            docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
         else
             echo "⚠️  فایل saas_master یافت نشد - ایجاد ساختار پایه..."
             docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
@@ -1919,3 +1980,29 @@ else
 fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# ═════
+══════════════════════════════════════════════════════════
+# 📋 راهنمای رفع مشکل دیتابیس خالی
+# ═══════════════════════════════════════════════════════════════
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "⚠️  اگر دیتابیس‌ها خالی هستند:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "🔄 راه اول: دیپلوی مجدد با --clean (توصیه می‌شود)"
+echo "   ./deploy-server.sh --clean"
+echo ""
+echo "📥 راه دوم: ایمپورت دستی (سریع‌تر)"
+echo "   # کپی فایل‌ها به کانتینر"
+echo "   docker cp database/01-crm_system.sql \$(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/crm.sql"
+echo "   docker cp database/02-saas_master.sql \$(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/saas.sql"
+echo ""
+echo "   # ایمپورت"
+echo "   docker-compose -f $COMPOSE_FILE exec mysql sh -c 'mariadb -u root -p1234 crm_system < /tmp/crm.sql'"
+echo "   docker-compose -f $COMPOSE_FILE exec mysql sh -c 'mariadb -u root -p1234 saas_master < /tmp/saas.sql'"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "✅ دیپلوی کامل شد!"
