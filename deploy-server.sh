@@ -399,8 +399,15 @@ elif [ -f "دیتابیس.sql" ]; then
     echo "✅ فایل دیتابیس.sql کپی شد"
 else
     echo "❌ فایل crm_system.sql یافت نشد!"
-    echo "� فضایل‌های موجود در database:"
+    echo "🔍 فایل‌های موجود در database:"
     ls -la database/ | grep -i sql || echo "   هیچ فایل SQL یافت نشد"
+    echo "🔍 جستجوی فایل‌های SQL در پروژه:"
+    find . -name "*crm*" -name "*.sql" -o -name "*دیتابیس*" -name "*.sql" | head -5
+    echo ""
+    echo "💡 راه‌حل‌ها:"
+    echo "   1. فایل crm_system.sql را در پوشه database قرار دهید"
+    echo "   2. یا فایل دیتابیس.sql را در root پروژه قرار دهید"
+    echo "   3. یا از اسکریپت fix-database-import.sh استفاده کنید"
 fi
 
 # کپی saas_master.sql - بررسی چندین مکان ممکن
@@ -1226,22 +1233,31 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         echo "🔧 ایمپورت مجدد crm_system..."
         echo "📋 کپی فایل به کانتینر..."
         
+        # اطمینان از وجود دیتابیس
+        docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "CREATE DATABASE IF NOT EXISTS \`crm_system\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
+        
         # کپی فایل به کانتینر
-        docker cp database/01-crm_system.sql $(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/crm_import.sql
-        
-        # ایمپورت با روش مطمئن
-        echo "⏳ در حال ایمپورت... (ممکن است چند دقیقه طول بکشد)"
-        docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} crm_system < /tmp/crm_import.sql" 2>&1 | grep -v "Warning" || true
-        sleep 5
-        
-        # بررسی مجدد
-        NEW_CRM_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
-        if [ "$NEW_CRM_COUNT" -gt 1 ]; then
-            echo "✅ crm_system با موفقیت ایمپورت شد - جداول: $((NEW_CRM_COUNT - 1))"
+        MYSQL_CONTAINER=$(docker-compose -f $COMPOSE_FILE ps -q mysql)
+        if [ -n "$MYSQL_CONTAINER" ]; then
+            docker cp database/01-crm_system.sql $MYSQL_CONTAINER:/tmp/crm_import.sql
+            
+            # ایمپورت با روش مطمئن
+            echo "⏳ در حال ایمپورت... (ممکن است چند دقیقه طول بکشد)"
+            docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} crm_system < /tmp/crm_import.sql" 2>&1 | grep -v "Warning" || true
+            sleep 5
+            
+            # بررسی مجدد
+            NEW_CRM_COUNT=$(docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
+            if [ "$NEW_CRM_COUNT" -gt 1 ]; then
+                echo "✅ crm_system با موفقیت ایمپورت شد - جداول: $((NEW_CRM_COUNT - 1))"
+            else
+                echo "❌ ایمپورت crm_system ناموفق - احتمالاً نیاز به rebuild کامل دارید"
+                echo "💡 راه‌حل: ./deploy-server.sh --clean"
+                echo "   یا دستی: docker cp database/01-crm_system.sql \$(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/import.sql"
+                echo "   سپس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p1234 crm_system < /tmp/import.sql"
+            fi
         else
-            echo "❌ ایمپورت crm_system ناموفق - لطفاً دستی ایمپورت کنید"
-            echo "   دستور: docker cp database/01-crm_system.sql \$(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/import.sql"
-            echo "   سپس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p1234 crm_system < /tmp/import.sql"
+            echo "❌ کانتینر MySQL یافت نشد!"
         fi
     fi
     
@@ -1255,19 +1271,21 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         " 2>/dev/null || true
         
         # ایمپورت فایل اگر موجود باشد
-        if [ -f "database/02-saas_master.sql" ]; then
-            echo "📥 ایمپورت از database/02-saas_master.sql..."
-            echo "📋 کپی فایل به کانتینر..."
-            
-            # کپی فایل به کانتینر
-            docker cp database/02-saas_master.sql $(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/saas_import.sql
-            
-            # ایمپورت با روش مطمئن
-            docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
-        elif [ -f "database/saas_master.sql" ]; then
-            echo "📥 ایمپورت مستقیم از database/saas_master.sql..."
-            docker cp database/saas_master.sql $(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/saas_import.sql
-            docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
+        MYSQL_CONTAINER=$(docker-compose -f $COMPOSE_FILE ps -q mysql)
+        if [ -n "$MYSQL_CONTAINER" ]; then
+            if [ -f "database/02-saas_master.sql" ]; then
+                echo "📥 ایمپورت از database/02-saas_master.sql..."
+                echo "📋 کپی فایل به کانتینر..."
+                
+                # کپی فایل به کانتینر
+                docker cp database/02-saas_master.sql $MYSQL_CONTAINER:/tmp/saas_import.sql
+                
+                # ایمپورت با روش مطمئن
+                docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
+            elif [ -f "database/saas_master.sql" ]; then
+                echo "📥 ایمپورت مستقیم از database/saas_master.sql..."
+                docker cp database/saas_master.sql $MYSQL_CONTAINER:/tmp/saas_import.sql
+                docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
         else
             echo "⚠️  فایل saas_master یافت نشد - ایجاد ساختار پایه..."
             docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
