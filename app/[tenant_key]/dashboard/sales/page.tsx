@@ -178,25 +178,30 @@ export default function SalesPage() {
     }
 
     return (
-        <div className="space-y-6 animate-fade-in-up">
+        <div className="space-y-6 animate-fade-in-up p-6 bg-gradient-to-br from-gray-50 via-orange-50/30 to-red-50/30 dark:from-gray-900 dark:via-orange-900/10 dark:to-red-900/10 min-h-screen">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold font-vazir bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                        مدیریت فروش
-                    </h1>
-                    <p className="text-muted-foreground font-vazir mt-2">مدیریت کامل فرآیند فروش و معاملات</p>
+            <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-4 space-x-reverse">
+                    <div className="bg-gradient-to-br from-orange-500 to-red-600 p-4 rounded-xl shadow-lg">
+                        <TrendingUp className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold font-vazir bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent">
+                            مدیریت فروش
+                        </h1>
+                        <p className="text-gray-600 dark:text-gray-400 font-vazir mt-1">مدیریت کامل فرآیند فروش و معاملات</p>
+                    </div>
                 </div>
                 <div className="flex space-x-2 space-x-reverse">
-                    <Button variant="outline" onClick={loadSales} disabled={loading} className="font-vazir">
+                    <Button variant="outline" onClick={loadSales} disabled={loading} className="font-vazir shadow hover:shadow-lg transition-all">
                         <RefreshCw className={`h-4 w-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
                         بروزرسانی
                     </Button>
                     <Button
                         onClick={() => window.location.href = `/${tenantKey}/dashboard/sales/new`}
-                        className="bg-gradient-to-r from-primary via-secondary to-accent hover:from-primary/90 hover:via-secondary/90 hover:to-accent/90 font-vazir"
+                        className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-vazir shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-6 text-lg"
                     >
-                        <Plus className="h-4 w-4 ml-2" />
+                        <Plus className="h-5 w-5 ml-2" />
                         افزودن فروش
                     </Button>
                 </div>
@@ -204,47 +209,56 @@ export default function SalesPage() {
 
             {/* آمار کلی */}
             <div className="grid gap-4 md:grid-cols-4">
-                <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium font-vazir">کل فروش‌ها</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-orange-500 to-red-600 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-medium font-vazir text-white/90">کل فروش‌ها</CardTitle>
+                        <TrendingUp className="h-5 w-5 text-white/80" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold font-vazir">{sales.length.toLocaleString('fa-IR')}</div>
+                    <CardContent className="relative z-10">
+                        <div className="text-3xl font-bold font-vazir">{sales.length.toLocaleString('fa-IR')}</div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-secondary/20 hover:border-secondary/40 transition-all duration-300">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium font-vazir">در انتظار پرداخت</CardTitle>
-                        <Calendar className="h-4 w-4 text-yellow-500" />
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-yellow-500 to-orange-500 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-medium font-vazir text-white/90">در انتظار پرداخت</CardTitle>
+                        <Calendar className="h-5 w-5 text-white/80" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-yellow-600 font-vazir">
                             {pendingSales.length.toLocaleString('fa-IR')}
                         </div>
                     </CardContent>
+                    <CardContent className="relative z-10">
+                        <div className="text-3xl font-bold font-vazir">
+                            {pendingSales.length.toLocaleString('fa-IR')}
+                        </div>
+                    </CardContent>
                 </Card>
 
-                <Card className="border-accent/20 hover:border-accent/40 transition-all duration-300">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium font-vazir">پرداخت شده</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-green-500" />
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-medium font-vazir text-white/90">پرداخت شده</CardTitle>
+                        <TrendingUp className="h-5 w-5 text-white/80" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600 font-vazir">
+                    <CardContent className="relative z-10">
+                        <div className="text-3xl font-bold font-vazir">
                             {paidSales.length.toLocaleString('fa-IR')}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium font-vazir">ارزش کل</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-pink-500 to-rose-600 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-medium font-vazir text-white/90">ارزش کل</CardTitle>
+                        <DollarSign className="h-5 w-5 text-white/80" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold font-vazir">
+                    <CardContent className="relative z-10">
+                        <div className="text-3xl font-bold font-vazir">
                             {formatPrice(totalSalesValue, 'IRR')}
                         </div>
                     </CardContent>

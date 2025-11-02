@@ -318,25 +318,30 @@ export default function ActivitiesPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up p-6 bg-gradient-to-br from-gray-50 via-green-50/30 to-blue-50/30 dark:from-gray-900 dark:via-green-900/10 dark:to-blue-900/10 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-vazir bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            مدیریت فعالیت‌ها
-          </h1>
-          <p className="text-muted-foreground font-vazir mt-2">پیگیری و ثبت تمام تعاملات با مشتریان</p>
+      <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-4 space-x-reverse">
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-4 rounded-xl shadow-lg">
+            <ActivityIcon className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold font-vazir bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              مدیریت فعالیت‌ها
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 font-vazir mt-1">پیگیری و ثبت تمام تعاملات با مشتریان</p>
+          </div>
         </div>
         <div className="flex space-x-2 space-x-reverse">
-          <Button variant="outline" onClick={loadActivities} disabled={loading} className="font-vazir">
+          <Button variant="outline" onClick={loadActivities} disabled={loading} className="font-vazir shadow hover:shadow-lg transition-all">
             <RefreshCw className={`h-4 w-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
             بروزرسانی
           </Button>
           <Button
             onClick={() => setShowAddForm(true)}
-            className="bg-gradient-to-r from-primary via-secondary to-accent hover:from-primary/90 hover:via-secondary/90 hover:to-accent/90 font-vazir"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-vazir shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-6 text-lg"
           >
-            <Plus className="h-4 w-4 ml-2" />
+            <Plus className="h-5 w-5 ml-2" />
             فعالیت جدید
           </Button>
         </div>
@@ -344,47 +349,51 @@ export default function ActivitiesPage() {
 
       {/* آمار کلی */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-vazir">کل فعالیت‌ها</CardTitle>
-            <ActivityIcon className="h-4 w-4 text-muted-foreground" />
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium font-vazir text-white/90">کل فعالیت‌ها</CardTitle>
+            <ActivityIcon className="h-5 w-5 text-white/80" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold font-vazir">{activities.length.toLocaleString('fa-IR')}</div>
+          <CardContent className="relative z-10">
+            <div className="text-3xl font-bold font-vazir">{activities.length.toLocaleString('fa-IR')}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-secondary/20 hover:border-secondary/40 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-vazir">تماس‌ها</CardTitle>
-            <Phone className="h-4 w-4 text-blue-500" />
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium font-vazir text-white/90">تماس‌ها</CardTitle>
+            <Phone className="h-5 w-5 text-white/80" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600 font-vazir">
+          <CardContent className="relative z-10">
+            <div className="text-3xl font-bold font-vazir">
               {activities.filter(a => a.type === 'call').length.toLocaleString('fa-IR')}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-accent/20 hover:border-accent/40 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-vazir">جلسات</CardTitle>
-            <Calendar className="h-4 w-4 text-green-500" />
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium font-vazir text-white/90">جلسات</CardTitle>
+            <Calendar className="h-5 w-5 text-white/80" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600 font-vazir">
+          <CardContent className="relative z-10">
+            <div className="text-3xl font-bold font-vazir">
               {activities.filter(a => a.type === 'meeting').length.toLocaleString('fa-IR')}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-vazir">نیاز به پیگیری</CardTitle>
-            <AlertCircle className="h-4 w-4 text-yellow-500" />
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-yellow-500 to-orange-500 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium font-vazir text-white/90">نیاز به پیگیری</CardTitle>
+            <AlertCircle className="h-5 w-5 text-white/80" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600 font-vazir">
+          <CardContent className="relative z-10">
+            <div className="text-3xl font-bold font-vazir">
               {activities.filter(a => a.outcome === 'follow_up_needed').length.toLocaleString('fa-IR')}
             </div>
           </CardContent>

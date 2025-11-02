@@ -134,9 +134,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, title, description, assigned_to, status, priority, due_date } = body;
+    const { id, taskId, title, description, assigned_to, status, priority, due_date, completion_notes } = body;
 
-    if (!id) {
+    // پشتیبانی از هر دو id و taskId
+    const taskIdentifier = id || taskId;
+
+    if (!taskIdentifier) {
       return NextResponse.json(
         { success: false, message: 'شناسه وظیفه الزامی است' },
         { status: 400 }
@@ -165,6 +168,11 @@ export async function PUT(request: NextRequest) {
       if (status !== undefined) {
         updates.push('status = ?');
         values.push(status);
+        
+        // اگر وضعیت completed شد، تاریخ تکمیل رو ست کن
+        if (status === 'completed') {
+          updates.push('completed_at = NOW()');
+        }
       }
       if (priority !== undefined) {
         updates.push('priority = ?');
@@ -174,9 +182,13 @@ export async function PUT(request: NextRequest) {
         updates.push('due_date = ?');
         values.push(due_date);
       }
+      if (completion_notes !== undefined) {
+        updates.push('completion_notes = ?');
+        values.push(completion_notes);
+      }
 
       updates.push('updated_at = NOW()');
-      values.push(id, tenantKey);
+      values.push(taskIdentifier, tenantKey);
 
       await conn.query(
         `UPDATE tasks SET ${updates.join(', ')} WHERE id = ? AND tenant_key = ?`,

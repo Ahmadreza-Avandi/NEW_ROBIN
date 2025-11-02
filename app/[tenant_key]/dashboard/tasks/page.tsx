@@ -177,9 +177,11 @@ export default function TasksPage() {
         }
     };
 
-    const fetchTasks = async () => {
+    const fetchTasks = async (showLoading = true) => {
         try {
-            setLoading(true);
+            if (showLoading) {
+                setLoading(true);
+            }
             const token = getAuthToken();
             const response = await fetch('/api/tenant/tasks', {
                 headers: {
@@ -190,7 +192,7 @@ export default function TasksPage() {
             const data = await response.json();
 
             if (data.success) {
-                setTasks(data.data);
+                setTasks(data.data || []);
             } else {
                 toast({
                     title: "خطا",
@@ -206,7 +208,9 @@ export default function TasksPage() {
                 variant: "destructive",
             });
         } finally {
-            setLoading(false);
+            if (showLoading) {
+                setLoading(false);
+            }
         }
     };
 
@@ -294,6 +298,7 @@ export default function TasksPage() {
     const handleTaskStatusChange = async (taskId: string, status: string, notes?: string) => {
         try {
             const token = getAuthToken();
+            
             const response = await fetch('/api/tenant/tasks', {
                 method: 'PUT',
                 headers: {
@@ -311,13 +316,33 @@ export default function TasksPage() {
             const data = await response.json();
 
             if (data.success) {
+                // آپدیت فوری state
+                setTasks(prevTasks => 
+                    prevTasks.map(task => 
+                        task.id === taskId 
+                            ? { 
+                                ...task, 
+                                status, 
+                                completion_notes: notes,
+                                completed_at: status === 'completed' ? new Date().toISOString() : task.completed_at
+                              }
+                            : task
+                    )
+                );
+                
                 toast({
                     title: "موفقیت",
-                    description: data.message,
+                    description: status === 'completed' ? '✅ وظیفه تکمیل شد' : 
+                                status === 'in_progress' ? '▶️ وظیفه شروع شد' : 
+                                '⏸️ وظیفه متوقف شد',
                 });
-                fetchTasks();
+                
+                // رفرش لیست از سرور (بدون نمایش loading)
+                await fetchTasks(false);
+                
                 setShowCompleteDialog(false);
                 setCompletionNotes('');
+                setSelectedTask(null);
             } else {
                 toast({
                     title: "خطا",
@@ -326,7 +351,7 @@ export default function TasksPage() {
                 });
             }
         } catch (error) {
-            console.error('Error updating task:', error);
+            console.error('❌ خطا در تغییر وضعیت:', error);
             toast({
                 title: "خطا",
                 description: "خطا در به‌روزرسانی وظیفه",
@@ -469,6 +494,7 @@ export default function TasksPage() {
                 return task.status === 'in_progress';
             case 'completed':
                 return task.status === 'completed';
+            case 'all':
             default:
                 return true;
         }
@@ -494,20 +520,28 @@ export default function TasksPage() {
     }
 
     return (
-        <div className="space-y-6 animate-fade-in-up">
-            {/* هدر */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold font-vazir bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                        مدیریت وظایف
-                    </h1>
-                    <p className="text-muted-foreground font-vazir mt-2">مدیریت و پیگیری وظایف تیم</p>
+        <div className="space-y-6 animate-fade-in-up p-6 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 min-h-screen">
+            {/* هدر با طراحی جدید */}
+            <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-4 space-x-reverse">
+                    <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-4 rounded-xl shadow-lg">
+                        <CheckCircle2 className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold font-vazir bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            مدیریت وظایف
+                        </h1>
+                        <p className="text-gray-600 dark:text-gray-400 font-vazir mt-1 flex items-center">
+                            <Clock className="h-4 w-4 ml-1" />
+                            مدیریت و پیگیری وظایف تیم
+                        </p>
+                    </div>
                 </div>
                 {isManager() && (
                     <Dialog open={showAddTask} onOpenChange={setShowAddTask}>
                         <DialogTrigger asChild>
-                            <Button className="bg-gradient-to-r from-primary via-secondary to-accent hover:from-primary/90 hover:via-secondary/90 hover:to-accent/90 font-vazir">
-                                <Plus className="h-4 w-4 ml-2" />
+                            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-vazir shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-6 text-lg">
+                                <Plus className="h-5 w-5 ml-2" />
                                 وظیفه جدید
                             </Button>
                         </DialogTrigger>
@@ -756,114 +790,187 @@ export default function TasksPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* آمار سریع */}
+            {/* آمار سریع با طراحی جدید */}
             <div className="grid gap-4 md:grid-cols-5">
-                <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium font-vazir">کل وظایف</CardTitle>
-                        <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-medium font-vazir text-white/90">کل وظایف</CardTitle>
+                        <CheckCircle2 className="h-5 w-5 text-white/80" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold font-vazir">{taskStats.total.toLocaleString('fa-IR')}</div>
+                    <CardContent className="relative z-10">
+                        <div className="text-3xl font-bold font-vazir">{taskStats.total.toLocaleString('fa-IR')}</div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-teal-200 hover:border-teal-400 transition-all duration-300">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium font-vazir">در انتظار</CardTitle>
-                        <Clock className="h-4 w-4 text-teal-500" />
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-teal-500 to-teal-600 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-medium font-vazir text-white/90">در انتظار</CardTitle>
+                        <Clock className="h-5 w-5 text-white/80" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-teal-600 font-vazir">
+                    <CardContent className="relative z-10">
+                        <div className="text-3xl font-bold font-vazir">
                             {taskStats.pending.toLocaleString('fa-IR')}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-yellow-200 hover:border-yellow-400 transition-all duration-300">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium font-vazir">در حال انجام</CardTitle>
-                        <Clock className="h-4 w-4 text-yellow-500" />
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-yellow-500 to-orange-500 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-medium font-vazir text-white/90">در حال انجام</CardTitle>
+                        <Clock className="h-5 w-5 text-white/80" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-yellow-600 font-vazir">
+                    <CardContent className="relative z-10">
+                        <div className="text-3xl font-bold font-vazir">
                             {taskStats.in_progress.toLocaleString('fa-IR')}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-green-200 hover:border-green-400 transition-all duration-300">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium font-vazir">تکمیل شده</CardTitle>
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-medium font-vazir text-white/90">تکمیل شده</CardTitle>
+                        <CheckCircle2 className="h-5 w-5 text-white/80" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-600 font-vazir">
+                    <CardContent className="relative z-10">
+                        <div className="text-3xl font-bold font-vazir">
                             {taskStats.completed.toLocaleString('fa-IR')}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-red-200 hover:border-red-400 transition-all duration-300">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium font-vazir">ضروری</CardTitle>
-                        <AlertCircle className="h-4 w-4 text-red-500" />
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-red-500 to-pink-600 text-white overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                        <CardTitle className="text-sm font-medium font-vazir text-white/90">ضروری</CardTitle>
+                        <AlertCircle className="h-5 w-5 text-white/80" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-red-600 font-vazir">
+                    <CardContent className="relative z-10">
+                        <div className="text-3xl font-bold font-vazir">
                             {taskStats.high_priority.toLocaleString('fa-IR')}
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* تب‌های فیلتر */}
+            {/* تب‌های فیلتر با طراحی جدید */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="all" className="font-vazir">همه</TabsTrigger>
-                    <TabsTrigger value="pending" className="font-vazir">در انتظار</TabsTrigger>
-                    <TabsTrigger value="in_progress" className="font-vazir">در حال انجام</TabsTrigger>
-                    <TabsTrigger value="completed" className="font-vazir">تکمیل شده</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4 h-auto p-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border-0">
+                    <TabsTrigger 
+                        value="all" 
+                        className="font-vazir data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-300"
+                    >
+                        <div className="flex flex-col items-center py-3">
+                            <CheckCircle2 className="h-5 w-5 mb-1" />
+                            <span className="font-semibold">همه</span>
+                            <span className="text-xs mt-1 font-bold">{taskStats.total}</span>
+                        </div>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                        value="pending" 
+                        className="font-vazir data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-300"
+                    >
+                        <div className="flex flex-col items-center py-3">
+                            <Clock className="h-5 w-5 mb-1" />
+                            <span className="font-semibold">در انتظار</span>
+                            <span className="text-xs mt-1 font-bold">{taskStats.pending}</span>
+                        </div>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                        value="in_progress" 
+                        className="font-vazir data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-300"
+                    >
+                        <div className="flex flex-col items-center py-3">
+                            <Clock className="h-5 w-5 mb-1" />
+                            <span className="font-semibold">در حال انجام</span>
+                            <span className="text-xs mt-1 font-bold">{taskStats.in_progress}</span>
+                        </div>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                        value="completed" 
+                        className="font-vazir data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-300"
+                    >
+                        <div className="flex flex-col items-center py-3">
+                            <CheckCircle2 className="h-5 w-5 mb-1" />
+                            <span className="font-semibold">تکمیل شده</span>
+                            <span className="text-xs mt-1 font-bold">{taskStats.completed}</span>
+                        </div>
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value={activeTab} className="mt-6">
-                    <Card>
-                        <CardHeader>
+                    <Card className="border-0 shadow-xl bg-white dark:bg-gray-800">
+                        <CardHeader className={`rounded-t-xl ${
+                            activeTab === 'all' ? 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-b-4 border-blue-500' :
+                            activeTab === 'pending' ? 'bg-gradient-to-r from-teal-500/10 to-teal-600/10 border-b-4 border-teal-500' :
+                            activeTab === 'in_progress' ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-b-4 border-yellow-500' :
+                            'bg-gradient-to-r from-green-500/10 to-emerald-600/10 border-b-4 border-green-500'
+                        }`}>
                             <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center space-x-2 space-x-reverse font-vazir">
-                                    <CheckCircle2 className="h-5 w-5" />
-                                    <span>لیست وظایف</span>
+                                <CardTitle className="flex items-center space-x-3 space-x-reverse font-vazir">
+                                    <div className={`p-2 rounded-lg ${
+                                        activeTab === 'all' ? 'bg-blue-500' :
+                                        activeTab === 'pending' ? 'bg-teal-500' :
+                                        activeTab === 'in_progress' ? 'bg-yellow-500' :
+                                        'bg-green-500'
+                                    }`}>
+                                        <CheckCircle2 className="h-5 w-5 text-white" />
+                                    </div>
+                                    <span className="text-xl">
+                                        {activeTab === 'all' && 'همه وظایف'}
+                                        {activeTab === 'pending' && 'وظایف در انتظار'}
+                                        {activeTab === 'in_progress' && 'وظایف در حال انجام'}
+                                        {activeTab === 'completed' && 'وظایف تکمیل شده'}
+                                    </span>
+                                    <Badge className={`mr-2 font-vazir text-white ${
+                                        activeTab === 'all' ? 'bg-blue-600' :
+                                        activeTab === 'pending' ? 'bg-teal-600' :
+                                        activeTab === 'in_progress' ? 'bg-yellow-600' :
+                                        'bg-green-600'
+                                    }`}>
+                                        {filteredTasks.length} وظیفه
+                                    </Badge>
                                 </CardTitle>
-                                <Button variant="outline" size="sm" className="font-vazir">
-                                    <Filter className="h-4 w-4 ml-2" />
-                                    فیلتر
-                                </Button>
                             </div>
                         </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
+                        <CardContent className="pt-6">
+                            <div className="space-y-3">
                                 {filteredTasks.length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <CheckCircle2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                        <p className="text-muted-foreground font-vazir">هیچ وظیفه‌ای یافت نشد</p>
+                                    <div className="text-center py-12">
+                                        <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                                            <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
+                                        </div>
+                                        <h3 className="text-lg font-medium font-vazir mb-2">هیچ وظیفه‌ای یافت نشد</h3>
+                                        <p className="text-sm text-muted-foreground font-vazir">
+                                            {activeTab === 'pending' && 'هیچ وظیفه‌ای در انتظار نیست'}
+                                            {activeTab === 'in_progress' && 'هیچ وظیفه‌ای در حال انجام نیست'}
+                                            {activeTab === 'completed' && 'هیچ وظیفه‌ای تکمیل نشده است'}
+                                            {activeTab === 'all' && 'وظیفه جدیدی ایجاد کنید'}
+                                        </p>
                                     </div>
                                 ) : (
                                     filteredTasks.map(task => (
                                         <div
                                             key={task.id}
-                                            className={`flex items-start space-x-4 space-x-reverse p-4 border rounded-lg transition-all duration-300 ${task.status === 'completed'
-                                                ? 'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-900/20'
-                                                : 'border-border/50 hover:border-primary/30'
-                                                }`}
+                                            className={`flex items-start space-x-4 space-x-reverse p-5 border-2 rounded-xl transition-all duration-300 hover:shadow-lg ${
+                                                task.status === 'completed'
+                                                    ? 'border-green-300 bg-gradient-to-br from-green-50 to-green-100/50 dark:border-green-700 dark:from-green-900/20 dark:to-green-800/10'
+                                                    : task.status === 'in_progress'
+                                                    ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-yellow-100/50 dark:border-yellow-700 dark:from-yellow-900/20 dark:to-yellow-800/10'
+                                                    : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:border-primary/40 dark:border-gray-700 dark:from-gray-900 dark:to-gray-800'
+                                            }`}
                                         >
                                             <Checkbox
                                                 checked={task.status === 'completed'}
-                                                onCheckedChange={(checked) => {
+                                                onCheckedChange={async (checked) => {
                                                     if (checked) {
                                                         setSelectedTask(task);
                                                         setShowCompleteDialog(true);
                                                     } else {
-                                                        handleTaskStatusChange(task.id, 'pending');
+                                                        await handleTaskStatusChange(task.id, 'pending');
                                                     }
                                                 }}
                                                 className="mt-1"
@@ -923,17 +1030,45 @@ export default function TasksPage() {
                                                         </Button>
                                                         {task.status !== 'completed' && (
                                                             <>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => handleTaskStatusChange(
-                                                                        task.id,
-                                                                        task.status === 'in_progress' ? 'pending' : 'in_progress'
-                                                                    )}
-                                                                    className="font-vazir"
-                                                                >
-                                                                    {task.status === 'in_progress' ? 'توقف' : 'شروع'}
-                                                                </Button>
+                                                                {task.status === 'in_progress' ? (
+                                                                    <>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={async () => {
+                                                                                await handleTaskStatusChange(task.id, 'pending');
+                                                                            }}
+                                                                            className="font-vazir border-orange-300 text-orange-600 hover:bg-orange-50"
+                                                                        >
+                                                                            <Clock className="h-4 w-4 ml-1" />
+                                                                            توقف
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="default"
+                                                                            size="sm"
+                                                                            onClick={() => {
+                                                                                setSelectedTask(task);
+                                                                                setShowCompleteDialog(true);
+                                                                            }}
+                                                                            className="font-vazir bg-green-600 hover:bg-green-700"
+                                                                        >
+                                                                            <CheckCircle2 className="h-4 w-4 ml-1" />
+                                                                            تکمیل
+                                                                        </Button>
+                                                                    </>
+                                                                ) : (
+                                                                    <Button
+                                                                        variant="default"
+                                                                        size="sm"
+                                                                        onClick={async () => {
+                                                                            await handleTaskStatusChange(task.id, 'in_progress');
+                                                                        }}
+                                                                        className="font-vazir bg-blue-600 hover:bg-blue-700"
+                                                                    >
+                                                                        <CheckCircle2 className="h-4 w-4 ml-1" />
+                                                                        شروع
+                                                                    </Button>
+                                                                )}
                                                                 <input
                                                                     type="file"
                                                                     id={`file-${task.id}`}
