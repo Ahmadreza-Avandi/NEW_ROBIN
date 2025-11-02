@@ -2,6 +2,7 @@
 
 # 🔐 اسکریپت دریافت گواهی SSL برای School-Proj
 # دامنه: sch.ahmadreza-avandi.ir
+# این اسکریپت با nginx موجود (CRM) کار می‌کند
 
 # رنگ‌ها برای خروجی
 RED='\033[0;31m'
@@ -35,7 +36,7 @@ print_header() {
 }
 
 DOMAIN="sch.ahmadreza-avandi.ir"
-EMAIL="admin@ahmadreza-avandi.ir"  # ایمیل خود را وارد کنید
+EMAIL="admin@ahmadreza-avandi.ir"
 
 print_header "🔐 دریافت گواهی SSL برای $DOMAIN"
 
@@ -50,111 +51,181 @@ fi
 print_info "بررسی نصب Certbot..."
 if ! command -v certbot &> /dev/null; then
     print_warning "Certbot نصب نیست. در حال نصب..."
-    apt-get update
-    apt-get install -y certbot python3-certbot-nginx
+    apt-get update -qq
+    apt-get install -y certbot > /dev/null 2>&1
     print_success "Certbot نصب شد"
 else
     print_success "Certbot نصب شده است"
 fi
 
-# بررسی نصب Nginx
-print_info "بررسی نصب Nginx..."
-if ! command -v nginx &> /dev/null; then
-    print_warning "Nginx نصب نیست. در حال نصب..."
-    apt-get update
-    apt-get install -y nginx
-    systemctl start nginx
-    systemctl enable nginx
-    print_success "Nginx نصب و راه‌اندازی شد"
-else
-    print_success "Nginx نصب شده است"
-fi
-
 # بررسی وجود گواهی قبلی
 if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-    print_warning "گواهی SSL برای $DOMAIN قبلاً دریافت شده است"
+    print_success "گواهی SSL برای $DOMAIN قبلاً دریافت شده است"
+    print_info "مسیر گواهی: /etc/letsencrypt/live/$DOMAIN/"
+    
+    # نمایش تاریخ انقضا
+    EXPIRY_DATE=$(openssl x509 -enddate -noout -in /etc/letsencrypt/live/$DOMAIN/fullchain.pem | cut -d= -f2)
+    print_info "تاریخ انقضا: $EXPIRY_DATE"
+    
+    echo ""
     read -p "آیا می‌خواهید گواهی را تمدید کنید؟ (y/n) " -n 1 -r
-    echo
+    echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_info "در حال تمدید گواهی..."
-        certbot renew --nginx
-        print_success "گواهی تمدید شد"
+        certbot renew --force-renewal
+        if [ $? -eq 0 ]; then
+            print_success "گواهی تمدید شد"
+        else
+            print_error "تمدید گواهی با خطا مواجه شد"
+        fi
     fi
+    
+    print_success "گواهی SSL آماده است!"
+    print_info "حالا می‌توانید deploy.sh را اجرا کنید"
     exit 0
 fi
 
 # بررسی DNS
 print_info "بررسی DNS برای $DOMAIN..."
-if ! host $DOMAIN > /dev/null 2>&1; then
+DOMAIN_IP=$(host $DOMAIN 2>/dev/null | grep "has address" | awk '{print $4}' | head -n1)
+
+if [ -z "$DOMAIN_IP" ]; then
     print_error "دامنه $DOMAIN به IP سرور متصل نیست!"
     print_info "لطفاً ابتدا DNS را تنظیم کنید"
     exit 1
 fi
 
-SERVER_IP=$(curl -s ifconfig.me)
-DOMAIN_IP=$(host $DOMAIN | grep "has address" | awk '{print $4}' | head -n1)
-
-print_info "IP سرور: $SERVER_IP"
 print_info "IP دامنه: $DOMAIN_IP"
 
-if [ "$SERVER_IP" != "$DOMAIN_IP" ]; then
-    print_warning "IP دامنه با IP سرور مطابقت ندارد!"
-    read -p "آیا می‌خواهید ادامه دهید؟ (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
+# بررسی وجود nginx (host یا container)
+print_header "بررسی وضعیت Nginx"
+
+NGINX_IN_CONTAINER=false
+NGINX_ON_HOST=false
+
+# بررسی nginx در container
+if docker ps 2>/dev/null | grep -q "nginx"; then
+    print_info "Nginx در حال اجرا در Docker container"
+    NGINX_IN_CONTAINER=true
 fi
 
-# ایجاد کانفیگ موقت Nginx برای Certbot
-print_info "ایجاد کانفیگ موقت Nginx..."
-cat > /etc/nginx/sites-available/school-proj-temp << EOF
+# بررسی nginx روی host
+if systemctl is-active --quiet nginx 2>/dev/null; then
+    print_info "Nginx در حال اجرا روی host"
+    NGINX_ON_HOST=true
+fi
+
+# بررسی پورت 80
+print_info "بررسی پورت 80..."
+if netstat -tuln 2>/dev/null | grep -q ":80 "; then
+    print_warning "پورت 80 در حال استفاده است"
+    PORT_80_IN_USE=true
+else
+    print_success "پورت 80 آزاد است"
+    PORT_80_IN_USE=false
+fi
+
+# انتخاب روش دریافت گواهی
+print_header "دریافت گواهی SSL"
+
+if [ "$PORT_80_IN_USE" = true ]; then
+    print_info "روش: استفاده از webroot (پورت 80 در حال استفاده است)"
+    
+    # ایجاد دایرکتوری webroot
+    mkdir -p /var/www/certbot
+    chmod 755 /var/www/certbot
+    
+    # اضافه کردن کانفیگ موقت برای certbot
+    print_info "اضافه کردن کانفیگ موقت به nginx..."
+    
+    cat > /etc/nginx/sites-available/school-ssl-temp << 'EOF'
 server {
     listen 80;
-    server_name $DOMAIN;
+    server_name sch.ahmadreza-avandi.ir;
     
     location /.well-known/acme-challenge/ {
-        root /var/www/html;
+        root /var/www/certbot;
+        try_files $uri =404;
     }
     
     location / {
-        return 200 'OK';
+        return 200 'SSL Setup';
         add_header Content-Type text/plain;
     }
 }
 EOF
-
-# فعال‌سازی کانفیگ موقت
-ln -sf /etc/nginx/sites-available/school-proj-temp /etc/nginx/sites-enabled/school-proj-temp
-
-# تست و reload Nginx
-print_info "تست کانفیگ Nginx..."
-if nginx -t; then
-    systemctl reload nginx
-    print_success "Nginx reload شد"
-else
-    print_error "کانفیگ Nginx خطا دارد!"
-    exit 1
-fi
-
-# دریافت گواهی SSL
-print_header "دریافت گواهی SSL"
-print_info "در حال دریافت گواهی از Let's Encrypt..."
-print_warning "این ممکن است چند دقیقه طول بکشد..."
-
-certbot certonly \
-    --nginx \
-    --non-interactive \
-    --agree-tos \
-    --email $EMAIL \
-    -d $DOMAIN
-
-if [ $? -eq 0 ]; then
-    print_success "گواهی SSL با موفقیت دریافت شد!"
+    
+    # فعال‌سازی کانفیگ
+    ln -sf /etc/nginx/sites-available/school-ssl-temp /etc/nginx/sites-enabled/school-ssl-temp
+    
+    # تست و reload nginx
+    if nginx -t 2>&1 | grep -q "successful"; then
+        if [ "$NGINX_ON_HOST" = true ]; then
+            systemctl reload nginx
+        fi
+        print_success "کانفیگ nginx آپدیت شد"
+    else
+        print_error "خطا در کانفیگ nginx"
+        rm -f /etc/nginx/sites-enabled/school-ssl-temp
+        exit 1
+    fi
+    
+    # دریافت گواهی
+    print_info "در حال دریافت گواهی از Let's Encrypt..."
+    print_warning "این ممکن است چند دقیقه طول بکشد..."
+    
+    certbot certonly \
+        --webroot \
+        --webroot-path=/var/www/certbot \
+        --non-interactive \
+        --agree-tos \
+        --email $EMAIL \
+        -d $DOMAIN \
+        --preferred-challenges http
+    
+    CERTBOT_EXIT=$?
     
     # حذف کانفیگ موقت
-    rm -f /etc/nginx/sites-enabled/school-proj-temp
-    rm -f /etc/nginx/sites-available/school-proj-temp
+    rm -f /etc/nginx/sites-enabled/school-ssl-temp
+    rm -f /etc/nginx/sites-available/school-ssl-temp
+    
+    if [ "$NGINX_ON_HOST" = true ]; then
+        systemctl reload nginx 2>/dev/null || true
+    fi
+    
+else
+    print_info "روش: standalone (پورت 80 آزاد است)"
+    
+    # توقف موقت nginx اگر روی host است
+    if [ "$NGINX_ON_HOST" = true ]; then
+        print_info "توقف موقت nginx..."
+        systemctl stop nginx
+    fi
+    
+    # دریافت گواهی
+    print_info "در حال دریافت گواهی از Let's Encrypt..."
+    print_warning "این ممکن است چند دقیقه طول بکشد..."
+    
+    certbot certonly \
+        --standalone \
+        --non-interactive \
+        --agree-tos \
+        --email $EMAIL \
+        -d $DOMAIN \
+        --preferred-challenges http
+    
+    CERTBOT_EXIT=$?
+    
+    # راه‌اندازی مجدد nginx
+    if [ "$NGINX_ON_HOST" = true ]; then
+        print_info "راه‌اندازی مجدد nginx..."
+        systemctl start nginx
+    fi
+fi
+
+# بررسی نتیجه
+if [ $CERTBOT_EXIT -eq 0 ]; then
+    print_success "گواهی SSL با موفقیت دریافت شد!"
     
     # نمایش اطلاعات گواهی
     print_header "📋 اطلاعات گواهی"
@@ -166,22 +237,30 @@ if [ $? -eq 0 ]; then
     
     # تنظیم تمدید خودکار
     print_info "تنظیم تمدید خودکار..."
-    if ! crontab -l | grep -q "certbot renew"; then
-        (crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet --post-hook 'systemctl reload nginx'") | crontab -
+    if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
+        (crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet") | crontab -
         print_success "تمدید خودکار تنظیم شد (هر روز ساعت 3 صبح)"
     else
         print_info "تمدید خودکار قبلاً تنظیم شده است"
     fi
     
     print_success "همه چیز آماده است!"
-    print_info "حالا می‌توانید deploy.sh را اجرا کنید"
+    echo ""
+    print_info "مرحله بعدی: دیپلوی پروژه"
+    print_success "دستور: bash deploy.sh"
     
 else
     print_error "دریافت گواهی SSL با خطا مواجه شد!"
+    echo ""
     print_info "لطفاً موارد زیر را بررسی کنید:"
     echo "  1. دامنه به درستی به IP سرور متصل است"
-    echo "  2. پورت 80 باز است"
-    echo "  3. Nginx در حال اجراست"
-    echo "  4. فایروال مشکلی ایجاد نمی‌کند"
+    echo "  2. پورت 80 در دسترس است"
+    echo "  3. فایروال مشکلی ایجاد نمی‌کند"
+    echo ""
+    print_info "برای مشاهده جزئیات خطا:"
+    echo "  sudo tail -50 /var/log/letsencrypt/letsencrypt.log"
+    echo ""
+    print_info "اگر nginx پروژه CRM در حال اجراست، این دستور را امتحان کنید:"
+    echo "  sudo certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN"
     exit 1
 fi
