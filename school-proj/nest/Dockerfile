@@ -10,8 +10,8 @@ RUN apk add --no-cache openssl python3 make g++
 # کپی فایل‌های package
 COPY package*.json ./
 
-# نصب تمام dependencies (شامل devDependencies)
-RUN npm ci --silent --no-audit --no-fund
+# نصب تمام dependencies (با npm install)
+RUN npm install --silent --no-audit --no-fund
 
 # کپی Prisma schema
 COPY prisma ./prisma
@@ -36,8 +36,8 @@ RUN apk add --no-cache openssl
 # کپی package files
 COPY package*.json ./
 
-# نصب فقط production dependencies
-RUN npm ci --only=production --silent --no-audit --no-fund
+# نصب production dependencies (با npm install)
+RUN npm install --production --silent --no-audit --no-fund
 
 # کپی Prisma schema و generate
 COPY prisma ./prisma

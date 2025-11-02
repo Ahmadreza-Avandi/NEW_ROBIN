@@ -7,8 +7,8 @@ WORKDIR /app
 # کپی فایل‌های package
 COPY package*.json ./
 
-# نصب تمام dependencies (شامل devDependencies برای build)
-RUN npm ci --silent --no-audit --no-fund
+# نصب تمام dependencies (با npm install به جای npm ci)
+RUN npm install --silent --no-audit --no-fund
 
 # کپی تمام فایل‌های پروژه
 COPY . .
@@ -24,8 +24,8 @@ WORKDIR /app
 # کپی package files
 COPY package*.json ./
 
-# نصب فقط production dependencies
-RUN npm ci --only=production --silent --no-audit --no-fund && \
+# نصب production dependencies و tsx
+RUN npm install --production --silent --no-audit --no-fund && \
     npm install tsx --silent
 
 # کپی فایل‌های build شده از مرحله قبل
