@@ -1,50 +1,95 @@
 #!/bin/bash
 
-# 🚀 اسکریپت دیپلوی سریع
+# 🚀 دیپلوی سریع School-Proj
+# این اسکریپت فقط build و deploy می‌کنه
+
 set -e
 
-# رنگ‌ها
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-RED='\033[0;31m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${GREEN}🚀 شروع دیپلوی سریع...${NC}"
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
 
-# توقف containers قبلی
-echo -e "${YELLOW}⏹️  توقف containers قبلی...${NC}"
-docker-compose down 2>/dev/null || true
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
 
-# پاک‌سازی images قدیمی (اختیاری)
-read -p "آیا می‌خواهید images قدیمی را پاک کنید؟ (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${YELLOW}🧹 پاک‌سازی images قدیمی...${NC}"
-    docker system prune -f
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+print_header() {
+    echo ""
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}  $1${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+}
+
+print_header "🚀 دیپلوی سریع School-Proj"
+
+# بررسی .env
+if [ ! -f ".env" ]; then
+    print_error "فایل .env یافت نشد!"
+    print_info "در حال ایجاد..."
+    bash setup-env.sh
 fi
 
-# بیلد و اجرا
-echo -e "${YELLOW}🔨 بیلد containers...${NC}"
-docker-compose build --parallel
+# توقف containers قبلی
+print_info "توقف containers قبلی..."
+docker-compose down 2>/dev/null || true
 
-echo -e "${YELLOW}▶️  اجرای containers...${NC}"
+# Build
+print_header "Build Containers"
+print_info "در حال build (ممکن است 5-10 دقیقه طول بکشد)..."
+
+# Build هر سرویس جداگانه برای دیباگ بهتر
+print_info "Build MySQL..."
+docker-compose build mysql
+
+print_info "Build Redis..."
+docker-compose build redis
+
+print_info "Build Nest.js..."
+docker-compose build nestjs || {
+    print_error "خطا در build Nest.js"
+    print_info "در حال تلاش مجدد..."
+    docker-compose build --no-cache nestjs
+}
+
+print_info "Build Next.js..."
+docker-compose build nextjs || {
+    print_error "خطا در build Next.js"
+    print_info "در حال تلاش مجدد..."
+    docker-compose build --no-cache nextjs
+}
+
+print_info "Build Python..."
+docker-compose build pythonserver
+
+print_success "Build کامل شد"
+
+# اجرا
+print_header "اجرای Containers"
 docker-compose up -d
 
-# صبر برای آماده شدن سرویس‌ها
-echo -e "${YELLOW}⏳ صبر برای آماده شدن سرویس‌ها...${NC}"
-sleep 10
+print_success "Containers اجرا شدند"
 
-# نمایش وضعیت
-echo -e "${GREEN}📊 وضعیت containers:${NC}"
+# انتظار
+print_info "انتظار برای آماده شدن (20 ثانیه)..."
+sleep 20
+
+# وضعیت
+print_header "وضعیت"
 docker-compose ps
 
-echo -e "${GREEN}✅ دیپلوی انجام شد!${NC}"
+print_success "دیپلوی کامل شد!"
 echo ""
-echo "🌐 سرویس‌ها در دسترس هستند:"
-echo "  • Next.js:     http://localhost:3000"
-echo "  • Nest.js:     http://localhost:3001"
-echo "  • Python API:  http://localhost:5000"
-echo "  • phpMyAdmin:  http://localhost:8081"
-echo "  • Redis UI:    http://localhost:8082"
+echo "🌐 https://sch.ahmadreza-avandi.ir"
 echo ""
-echo "📝 برای مشاهده لاگ‌ها: docker-compose logs -f"
+print_info "برای مشاهده لاگ‌ها: docker-compose logs -f"

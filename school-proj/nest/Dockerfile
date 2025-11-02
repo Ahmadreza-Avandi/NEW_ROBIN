@@ -1,17 +1,17 @@
-# استفاده از image کوچک‌تر
-FROM node:18-alpine
+# Multi-stage build برای Nest.js
+FROM node:18-alpine AS builder
 
 # تنظیم محیط کار
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # نصب dependencies سیستمی
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl python3 make g++
 
 # کپی فایل‌های package
 COPY package*.json ./
 
-# نصب dependencies با cache
-RUN npm ci --only=production --silent --no-audit --no-fund
+# نصب تمام dependencies (شامل devDependencies)
+RUN npm ci --silent --no-audit --no-fund
 
 # کپی Prisma schema
 COPY prisma ./prisma
@@ -19,9 +19,35 @@ COPY prisma ./prisma
 # تولید Prisma client
 RUN npx prisma generate
 
-# کپی کدهای build شده (باید قبلاً build شده باشه)
-COPY dist ./dist
-COPY .env* ./
+# کپی تمام فایل‌های پروژه
+COPY . .
+
+# Build پروژه
+RUN npm run build
+
+# مرحله دوم: Production image
+FROM node:18-alpine AS runner
+
+WORKDIR /app
+
+# نصب dependencies سیستمی
+RUN apk add --no-cache openssl
+
+# کپی package files
+COPY package*.json ./
+
+# نصب فقط production dependencies
+RUN npm ci --only=production --silent --no-audit --no-fund
+
+# کپی Prisma schema و generate
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# کپی فایل‌های build شده
+COPY --from=builder /app/dist ./dist
+
+# تنظیم environment
+ENV NODE_ENV=production
 
 # پورت 3001
 EXPOSE 3001
