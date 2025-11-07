@@ -492,7 +492,7 @@ const RegisterForm: React.FC = () => {
                     label="انتخاب رشته"
                     variant="outlined"
                     sx={{ direction: 'rtl' }}
-                    onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.onChange(parseInt(e.target.value, 10))}
                     value={field.value}
                   >
                     <MenuItem value={0}>انتخاب رشته</MenuItem>
@@ -518,7 +518,7 @@ const RegisterForm: React.FC = () => {
                     label="انتخاب پایه"
                     variant="outlined"
                     sx={{ direction: 'rtl' }}
-                    onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.onChange(parseInt(e.target.value, 10))}
                     value={field.value}
                   >
                     <MenuItem value={0}>انتخاب پایه</MenuItem>
