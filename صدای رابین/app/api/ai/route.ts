@@ -35,12 +35,12 @@ const SYSTEM_PROMPT = `تو رابین هستی، دستیار هوشمند شر
 
 // Environment configuration
 const AI_CONFIG = {
-  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || 's',
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || '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',
   // استفاده از مدل بدون تگ فکری - گزینه‌های پیشنهادی:
   // - google/gemini-2.0-flash-exp:free (سریع، رایگان، بدون تگ فکری)
   // - meta-llama/llama-3.2-3b-instruct:free (سریع و کوچک)
   // - anthropic/claude-3-haiku (پولی ولی عالی)
-  OPENROUTER_MODEL: process.env.OPENROUTER_MODEL || 'z-ai/glm-4.5-air:free'
+  OPENROUTER_MODEL: process.env.OPENROUTER_MODEL || 'minimax/minimax-m2:free'
 };
 
 // تابع فراخوانی OpenRouter API با retry mechanism

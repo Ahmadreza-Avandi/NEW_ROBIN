@@ -26,7 +26,9 @@ export async function GET(req: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    let whereClause = 'WHERE 1=1';
+    // فیلتر بر اساس tenant_key
+    const tenantKey = user.tenant_key || 'rabin';
+    let whereClause = `WHERE a.tenant_key = '${tenantKey}'`;
     const params: any[] = [];
 
     if (search) {
@@ -147,12 +149,13 @@ export async function POST(req: NextRequest) {
     }
 
     const activityId = uuidv4();
+    const tenantKey = user.tenant_key || 'rabin';
 
     await executeSingle(`
       INSERT INTO activities (
         id, customer_id, type, title, description, start_time, 
-        end_time, duration, performed_by, outcome, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        end_time, duration, performed_by, outcome, notes, tenant_key, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `, [
       activityId,
       customer_id,
@@ -164,7 +167,8 @@ export async function POST(req: NextRequest) {
       duration || null,
       user.id,
       outcome,
-      notes || null
+      notes || null,
+      tenantKey
     ]);
 
     return NextResponse.json({

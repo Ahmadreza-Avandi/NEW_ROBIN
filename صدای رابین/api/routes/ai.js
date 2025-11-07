@@ -61,8 +61,8 @@ const INTENT_PROMPT = `تو باید قصد کاربر رو از متن تشخی
 
 // Environment configuration
 const AI_CONFIG = {
-  OPENROUTER_API_KEY: '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',
-  OPENROUTER_MODEL: 'anthropic/claude-3-haiku'
+  OPENROUTER_API_KEY: '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',
+  OPENROUTER_MODEL: 'minimax/minimax-m2:free'
 };
 
 async function callOpenRouter(messages) {

@@ -31,8 +31,8 @@ export async function GET(req: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    // Build WHERE clause
-    let whereClause = 'WHERE 1=1';
+    // Build WHERE clause with tenant filtering
+    let whereClause = `WHERE c.tenant_key = '${user.tenant_key || 'rabin'}'`;
     const params: any[] = [];
 
     if (search) {
@@ -208,13 +208,14 @@ export async function POST(req: NextRequest) {
       finalSegment = company_name ? 'small_business' : 'individual';
     }
 
-    // Simple insert with essential fields only
+    // Simple insert with essential fields only including tenant_key
+    const tenantKey = user.tenant_key || 'rabin';
     await executeSingle(`
       INSERT INTO customers (
         id, name, company_name, email, phone, website, address, city, state, country,
         industry, company_size, annual_revenue, segment, priority, assigned_to,
-        status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        status, tenant_key, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `, [
       customerId,
       name,
@@ -232,7 +233,8 @@ export async function POST(req: NextRequest) {
       finalSegment,
       priority || 'medium',
       assigned_to || currentUserId,
-      'prospect'
+      'prospect',
+      tenantKey
     ]);
 
     const [newCustomer] = await executeQuery(`

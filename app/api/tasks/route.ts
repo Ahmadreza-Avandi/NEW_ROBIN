@@ -62,7 +62,9 @@ export async function GET(req: NextRequest) {
     const priority = searchParams.get('priority') || '';
     const assigned_to = searchParams.get('assigned_to') || '';
 
-    let whereClause = 'WHERE 1=1';
+    // فیلتر بر اساس tenant_key
+    const tenantKey = user.tenant_key || 'rabin';
+    let whereClause = `WHERE t.tenant_key = '${tenantKey}'`;
     const params: any[] = [];
 
     if (status) {
@@ -239,12 +241,13 @@ export async function POST(req: NextRequest) {
       formattedDueDate = date.toISOString().slice(0, 19).replace('T', ' ');
     }
 
-    // Create the task
+    // Create the task with tenant_key
+    const tenantKey = user.tenant_key || 'rabin';
     await executeSingle(`
       INSERT INTO tasks (
         id, title, description, customer_id, deal_id, assigned_to,
-        assigned_by, priority, category, status, due_date, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW())
+        assigned_by, priority, category, status, due_date, tenant_key, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW())
     `, [
       taskId,
       title,
@@ -255,7 +258,8 @@ export async function POST(req: NextRequest) {
       currentUser.id,
       priority || 'medium',
       category || 'follow_up',
-      formattedDueDate
+      formattedDueDate,
+      tenantKey
     ]);
 
     // Add all assignees

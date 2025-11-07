@@ -122,11 +122,15 @@ echo "   🤖 Model: $OPENROUTER_MODEL"
 if [ "$ENVIRONMENT" = "server" ]; then
     NODE_ENV="production"
     DATABASE_HOST="mysql"
+    DATABASE_USER="crm_user"
+    DATABASE_PASSWORD="1234"
     NEXTAUTH_URL="http://crm.robintejarat.com"
     APP_URL="http://crm.robintejarat.com"
 else
     NODE_ENV="development"
-    DATABASE_HOST="mysql"  # برای Docker همیشه mysql
+    DATABASE_HOST="localhost"  # برای local development
+    DATABASE_USER="root"
+    DATABASE_PASSWORD=""
     NEXTAUTH_URL="http://localhost:3000"
     APP_URL="http://localhost:3000"
 fi

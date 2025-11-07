@@ -32,28 +32,28 @@ export async function GET(request: NextRequest) {
     const connection = await pool.getConnection();
 
     try {
-      // دریافت آمار کلی
+      // دریافت آمار کلی با فیلتر tenant_key
       const [customersCount] = await connection.query(
-        'SELECT COUNT(*) as count FROM customers WHERE status = ?',
-        ['active']
+        'SELECT COUNT(*) as count FROM customers WHERE status = ? AND tenant_key = ?',
+        ['active', tenantKey]
       ) as any[];
 
       const [tasksCount] = await connection.query(
-        'SELECT COUNT(*) as count FROM tasks WHERE status IN (?, ?)',
-        ['pending', 'in_progress']
+        'SELECT COUNT(*) as count FROM tasks WHERE status IN (?, ?) AND tenant_key = ?',
+        ['pending', 'in_progress', tenantKey]
       ) as any[];
 
       const [dealsCount] = await connection.query(
-        'SELECT COUNT(*) as count FROM deals WHERE actual_close_date IS NULL',
-        []
+        'SELECT COUNT(*) as count FROM deals WHERE actual_close_date IS NULL AND tenant_key = ?',
+        [tenantKey]
       ) as any[];
 
       const [ticketsCount] = await connection.query(
-        'SELECT COUNT(*) as count FROM tickets WHERE status = ?',
-        ['open']
+        'SELECT COUNT(*) as count FROM tickets WHERE status = ? AND tenant_key = ?',
+        ['open', tenantKey]
       ) as any[];
 
-      // دریافت فعالیت‌های امروز
+      // دریافت فعالیت‌های امروز با فیلتر tenant_key
       const [todayActivities] = await connection.query(`
         SELECT 
           a.*,
@@ -62,32 +62,33 @@ export async function GET(request: NextRequest) {
         FROM activities a
         LEFT JOIN customers c ON a.customer_id = c.id
         LEFT JOIN users u ON a.performed_by = u.id
-        WHERE DATE(a.start_time) = CURDATE()
+        WHERE DATE(a.start_time) = CURDATE() AND a.tenant_key = ?
         ORDER BY a.start_time DESC
         LIMIT 10
-      `) as any[];
+      `, [tenantKey]) as any[];
 
-      // دریافت مشتریان اخیر
+      // دریافت مشتریان اخیر با فیلتر tenant_key
       const [recentCustomers] = await connection.query(`
         SELECT id, name, email, phone, status, created_at
         FROM customers
+        WHERE tenant_key = ?
         ORDER BY created_at DESC
         LIMIT 5
-      `) as any[];
+      `, [tenantKey]) as any[];
 
-      // دریافت برنامه امروز
+      // دریافت برنامه امروز با فیلتر tenant_key
       const [todaySchedule] = await connection.query(`
         SELECT 
           e.*,
           c.name as customer_name
         FROM calendar_events e
         LEFT JOIN customers c ON e.customer_id = c.id
-        WHERE DATE(e.start_date) = CURDATE()
+        WHERE DATE(e.start_date) = CURDATE() AND e.tenant_key = ?
         ORDER BY e.start_date ASC
         LIMIT 10
-      `) as any[];
+      `, [tenantKey]) as any[];
 
-      // دریافت گزارش کاربران (فقط برای مدیران)
+      // دریافت گزارش کاربران (فقط برای مدیران) با فیلتر tenant_key
       let userActivityReport = [];
       if (session.role === 'ceo' || session.role === 'sales_manager') {
         const [users] = await connection.query(`
@@ -99,12 +100,12 @@ export async function GET(request: NextRequest) {
             COUNT(DISTINCT CASE WHEN t.status = 'completed' THEN t.id END) as tasks_completed,
             COUNT(DISTINCT t.id) as tasks_assigned
           FROM users u
-          LEFT JOIN activities a ON a.performed_by = u.id AND DATE(a.start_time) = CURDATE()
-          LEFT JOIN tasks t ON t.assigned_to = u.id
-          WHERE u.status = 'active'
+          LEFT JOIN activities a ON a.performed_by = u.id AND DATE(a.start_time) = CURDATE() AND a.tenant_key = ?
+          LEFT JOIN tasks t ON t.assigned_to = u.id AND t.tenant_key = ?
+          WHERE u.status = 'active' AND u.tenant_key = ?
           GROUP BY u.id, u.name, u.role
           ORDER BY activities_today DESC
-        `) as any[];
+        `, [tenantKey, tenantKey, tenantKey]) as any[];
 
         userActivityReport = users;
       }

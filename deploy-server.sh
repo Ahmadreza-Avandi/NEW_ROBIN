@@ -577,10 +577,48 @@ if [ ! -f "setup-env.sh" ]; then
     exit 1
 fi
 
-# اجرای setup-env.sh برای ساخت .env درست
-echo "🔧 ساخت فایل .env با setup-env.sh..."
-chmod +x setup-env.sh
-bash setup-env.sh
+# اجرای setup هوشمند برای ساخت .env درست
+echo "🧠 ساخت فایل .env با تشخیص هوشمند محیط..."
+
+# تنظیم متغیرهای محیطی برای تشخیص سرور
+export VPS_MODE=true
+export DOMAIN="$DOMAIN"
+
+# اجرای setup هوشمند
+if [ -f "setup-smart-env.sh" ]; then
+    chmod +x setup-smart-env.sh
+    bash setup-smart-env.sh
+elif [ -f "setup-env.sh" ]; then
+    echo "⚠️  setup-smart-env.sh یافت نشد، استفاده از setup-env.sh..."
+    chmod +x setup-env.sh
+    bash setup-env.sh
+else
+    echo "⚠️  هیچ اسکریپت setup یافت نشد، ایجاد .env پایه..."
+    
+    # ایجاد .env پایه برای سرور
+    cat > .env << EOF
+NODE_ENV=production
+NEXTAUTH_URL=http://$DOMAIN
+DATABASE_HOST=mysql
+DATABASE_USER=crm_user
+DATABASE_PASSWORD=1234
+DATABASE_NAME=crm_system
+SAAS_DATABASE_NAME=saas_master
+DB_HOST=mysql
+DB_USER=crm_user
+DB_PASSWORD=1234
+DATABASE_URL=mysql://crm_user:1234@mysql:3306/crm_system
+JWT_SECRET=g45YtsLm1gFe1Hy1MBSXLHMbVcfIogiRE4m41iEvELGNJMwkaHP2ALvIMkPfs
+NEXTAUTH_SECRET=lwGfffrnAc9Y4ZCMgyvuYsew97UQjLsITqWVLC1Id7uq70NVYbe4MCiLtyNzArF
+VPS_MODE=true
+AUDIO_ENABLED=false
+FALLBACK_TO_MANUAL_INPUT=true
+RABIN_VOICE_OPENROUTER_API_KEY=.
+RABIN_VOICE_OPENROUTER_MODEL=anthropic/claude-3-haiku
+RABIN_VOICE_TTS_API_URL=https://api.ahmadreza-avandi.ir/text-to-speech
+RABIN_VOICE_LOG_LEVEL=INFO
+EOF
+fi
 
 # بررسی موفقیت
 if [ ! -f ".env" ]; then
@@ -593,6 +631,17 @@ echo "✅ فایل .env با موفقیت ساخته شد"
 # تنظیم NEXTAUTH_URL - ابتدا HTTP برای تست
 sed -i "s|NEXTAUTH_URL=.*|NEXTAUTH_URL=http://$DOMAIN|g" .env
 echo "🌐 NEXTAUTH_URL به HTTP تنظیم شد (برای تست اولیه)"
+
+# اطمینان از تنظیمات سرور
+sed -i "s|DATABASE_HOST=.*|DATABASE_HOST=mysql|g" .env
+sed -i "s|DATABASE_USER=.*|DATABASE_USER=crm_user|g" .env
+sed -i "s|DATABASE_PASSWORD=.*|DATABASE_PASSWORD=1234|g" .env
+sed -i "s|DB_HOST=.*|DB_HOST=mysql|g" .env
+sed -i "s|DB_USER=.*|DB_USER=crm_user|g" .env
+sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=1234|g" .env
+sed -i "s|VPS_MODE=.*|VPS_MODE=true|g" .env
+sed -i "s|NODE_ENV=.*|NODE_ENV=production|g" .env
+echo "🔧 تنظیمات سرور اعمال شد"
 
 # بارگذاری متغیرهای محیطی (با روش امن)
 echo "📋 بارگذاری متغیرهای محیطی..."

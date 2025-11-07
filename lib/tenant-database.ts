@@ -23,17 +23,48 @@ export async function getTenantConnection(tenantKey: string): Promise<mysql.Pool
   // در آینده می‌توان از جدول tenants اطلاعات دیتابیس هر تنانت را خواند
   
   // تشخیص هوشمند محیط اجرا
-  const isDocker = process.env.DOCKER_ENV === 'true' || process.env.NODE_ENV === 'production';
-  const defaultHost = isDocker ? 'mysql' : 'localhost';
+  const isDocker = process.env.DOCKER_CONTAINER === 'true' || 
+                   process.env.HOSTNAME?.includes('docker') ||
+                   process.env.HOSTNAME?.includes('nextjs') ||
+                   process.env.HOSTNAME?.includes('crm');
+  
+  const isLocal = process.env.NODE_ENV === 'development' && !isDocker;
+  
+  // Smart host detection
+  let host = process.env.DATABASE_HOST || process.env.DB_HOST;
+  if (isLocal && (host === 'mysql' || !host)) {
+    host = 'localhost';
+  } else if (isDocker && (host === 'localhost' || !host)) {
+    host = 'mysql';
+  } else if (!host) {
+    host = isDocker ? 'mysql' : 'localhost';
+  }
+  
+  // Smart user detection
+  let user = process.env.DATABASE_USER || process.env.DB_USER;
+  if (!user) {
+    user = isLocal ? 'root' : 'crm_user';
+  }
+  
+  // Smart password detection
+  let password = process.env.DATABASE_PASSWORD || process.env.DB_PASSWORD;
+  if (!password) {
+    password = isLocal ? '' : '1234';
+  }
   
   const dbConfig = {
-    host: process.env.DB_HOST || process.env.DATABASE_HOST || defaultHost,
-    user: process.env.DB_USER || process.env.DATABASE_USER || 'crm_user',
-    password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '1234',
-    database: process.env.DB_NAME || process.env.DATABASE_NAME || 'crm_system',
+    host,
+    port: 3306,
+    user,
+    password,
+    database: process.env.DATABASE_NAME || process.env.DB_NAME || 'crm_system',
     timezone: '+00:00',
     charset: 'utf8mb4',
-    connectTimeout: 10000,
+    connectTimeout: 15000,
+    acquireTimeout: 15000,
+    timeout: 15000,
+    // Force IPv4 connection
+    socketPath: undefined,
   };
 
   // ایجاد pool جدید
@@ -42,6 +73,8 @@ export async function getTenantConnection(tenantKey: string): Promise<mysql.Pool
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
+    acquireTimeout: 15000,
+    timeout: 15000,
   });
 
   // ذخیره در cache
@@ -54,7 +87,8 @@ export async function getTenantConnection(tenantKey: string): Promise<mysql.Pool
  * بستن تمام connection pool ها
  */
 export async function closeAllTenantConnections() {
-  for (const [tenantKey, pool] of tenantPools.entries()) {
+  const entries = Array.from(tenantPools.entries());
+  for (const [tenantKey, pool] of entries) {
     await pool.end();
     tenantPools.delete(tenantKey);
   }

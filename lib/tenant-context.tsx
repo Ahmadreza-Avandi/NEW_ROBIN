@@ -40,7 +40,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            setTenantInfo(data.data);
+            setTenantInfo(data.tenant); // تغییر از data.data به data.tenant
           }
         })
         .catch((error) => {

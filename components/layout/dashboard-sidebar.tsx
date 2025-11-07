@@ -28,6 +28,7 @@ import {
   Mail,
   Monitor,
   CheckCircle,
+  Mic,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -75,6 +76,7 @@ const iconMap: { [key: string]: React.ComponentType<any> } = {
   'Package': Package,
   'Mail': Mail,
   'Monitor': Monitor,
+  'Mic': Mic,
 };
 
 // نقشه نام‌های نمایشی روت‌ها
@@ -280,6 +282,11 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
             href: `/${tenantKey}/dashboard/customer-club`,
             icon: Users,
           },
+          {
+            title: 'صدای رابین',
+            href: `/${tenantKey}/dashboard/voice-assistant`,
+            icon: Mic,
+          },
 
 
           {
@@ -465,6 +472,13 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
       title: 'باشگاه مشتریان',
       href: buildTenantRoute('/dashboard/customer-club'),
       icon: Users,
+    });
+
+    // Add Rabin Voice Assistant
+    navItems.push({
+      title: 'صدای رابین',
+      href: buildTenantRoute('/dashboard/voice-assistant'),
+      icon: Mic,
     });
 
     console.log('✅ Final nav items:', navItems);

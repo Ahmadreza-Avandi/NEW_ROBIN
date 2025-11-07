@@ -18,10 +18,11 @@ services:
       - RABIN_VOICE_OPENROUTER_MODEL=${RABIN_VOICE_OPENROUTER_MODEL:-anthropic/claude-3-haiku}
       - RABIN_VOICE_TTS_API_URL=${RABIN_VOICE_TTS_API_URL:-https://api.ahmadreza-avandi.ir/text-to-speech}
       - RABIN_VOICE_LOG_LEVEL=${RABIN_VOICE_LOG_LEVEL:-INFO}
-      - DATABASE_HOST=mysql
+      - DATABASE_HOST=${DATABASE_HOST:-mysql}
       - DATABASE_NAME=${DATABASE_NAME:-crm_system}
       - DATABASE_USER=${DATABASE_USER:-crm_user}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-1234}
+      - DOCKER_CONTAINER=true
     volumes:
       # Mount logs for debugging
       - ./صدای رابین/logs:/app/logs:rw
@@ -61,6 +62,7 @@ services:
       - DATABASE_NAME=${DATABASE_NAME:-crm_system}
       - SAAS_DATABASE_NAME=${SAAS_DATABASE_NAME:-saas_master}
       - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_CONTAINER=true
       # Audio-related environment variables
       - PULSE_RUNTIME_PATH=/var/run/pulse
       - AUDIO_ENABLED=false
@@ -106,10 +108,10 @@ services:
       MYSQL_DATABASE: "${DATABASE_NAME:-crm_system}"
       # Default user to create (MariaDB will create this automatically)
       MYSQL_USER: "${DATABASE_USER:-crm_user}"
-      MYSQL_PASSWORD: "1234"
-    # Remove external port exposure for security
-    # ports:
-    #   - "3306:3306"
+      MYSQL_PASSWORD: "${DATABASE_PASSWORD:-1234}"
+    # Expose MySQL port for local development
+    ports:
+      - "3306:3306"
     expose:
       - "3306"
     volumes:
@@ -143,7 +145,7 @@ services:
       PMA_ARBITRARY: 1
       # Pre-fill login form with default user (users can still change it)
       PMA_USER: "${DATABASE_USER:-crm_user}"
-      PMA_PASSWORD: "1234"
+      PMA_PASSWORD: "${DATABASE_PASSWORD:-1234}"
       # Root password for phpMyAdmin to connect
       MYSQL_ROOT_PASSWORD: "1234"
       PMA_ABSOLUTE_URI: "${NEXTAUTH_URL}/secure-db-admin-panel-x7k9m2/"

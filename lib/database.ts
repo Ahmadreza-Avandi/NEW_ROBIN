@@ -1,19 +1,105 @@
 import mysql from 'mysql2/promise';
 
+// Smart environment detection
+function detectEnvironment() {
+  // Check if we're in Docker container (more specific checks)
+  const isDocker = process.env.DOCKER_CONTAINER === 'true' || 
+                   process.env.HOSTNAME?.includes('docker') ||
+                   process.env.HOSTNAME?.includes('nextjs') ||
+                   process.env.HOSTNAME?.includes('crm');
+  
+  // Check if we're on server (has domain or specific indicators)
+  const isServer = process.env.NEXTAUTH_URL?.includes('crm.robintejarat.com') ||
+                   process.env.DOMAIN?.includes('crm.robintejarat.com') ||
+                   (process.env.VPS_MODE === 'true' && process.env.NODE_ENV === 'production');
+  
+  // Force local if DATABASE_HOST is explicitly localhost or we're in development
+  const forceLocal = process.env.DATABASE_HOST === 'localhost' ||
+                     process.env.DB_HOST === 'localhost' ||
+                     (process.env.NODE_ENV === 'development' && !isDocker);
+  
+  return {
+    isDocker: isDocker && !forceLocal,
+    isServer: isServer && !forceLocal,
+    isLocal: !isDocker && !isServer || forceLocal
+  };
+}
+
+// Helper function to get database config with smart detection
+function getDbConfig() {
+  const env = detectEnvironment();
+  
+  // Smart host detection
+  let host = process.env.DATABASE_HOST || process.env.DB_HOST;
+  
+  // Override host based on environment detection
+  if (env.isLocal && (host === 'mysql' || host === 'auto' || !host)) {
+    // Local development - try localhost first, then 127.0.0.1
+    host = 'localhost';
+  } else if ((env.isDocker || env.isServer) && (host === 'localhost' || host === 'auto' || !host)) {
+    // Docker/Server environment - use mysql service name
+    host = 'mysql';
+  }
+  
+  // Smart user detection
+  let user = process.env.DATABASE_USER || process.env.DB_USER;
+  if (env.isLocal && !user) {
+    user = 'root'; // Default for local MySQL
+  } else if ((env.isDocker || env.isServer) && !user) {
+    user = 'crm_user'; // Default for Docker/Server
+  }
+  
+  // Smart password detection
+  let password = process.env.DATABASE_PASSWORD || process.env.DB_PASSWORD;
+  if (env.isLocal && !password) {
+    password = ''; // Default for local MySQL (usually no password for root)
+  } else if ((env.isDocker || env.isServer) && !password) {
+    password = '1234'; // Default for Docker/Server
+  }
+  
+  const config = {
+    host,
+    port: 3306,
+    user,
+    password,
+    database: process.env.DATABASE_NAME || process.env.DB_NAME || 'crm_system',
+    timezone: '+00:00',
+    charset: 'utf8mb4',
+    connectTimeout: 15000, // Increased timeout
+    socketPath: undefined, // Force TCP/IP connection
+  };
+  
+  // Log configuration for debugging (without password)
+  console.log(`🔧 Database Config (${env.isLocal ? 'Local' : env.isDocker ? 'Docker' : 'Server'}):`, {
+    ...config,
+    password: config.password ? '*'.repeat(config.password.length) : 'empty'
+  });
+  
+  return config;
+}
+
 // Secure Database connection configuration
-const dbConfig = {
-  host: process.env.DB_HOST || process.env.DATABASE_HOST || (process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost'),
-  user: process.env.DB_USER || process.env.DATABASE_USER || 'crm_user',
-  password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '1234',
-  database: process.env.DB_NAME || process.env.DATABASE_NAME || 'crm_system',
-  timezone: '+00:00',
-  charset: 'utf8mb4',
-  connectTimeout: 10000,
-};
+const dbConfig = getDbConfig();
+
+// Helper function to get clean config without invalid options
+function getCleanDbConfig() {
+  const config = getDbConfig();
+  return {
+    host: config.host,
+    port: config.port,
+    user: config.user,
+    password: config.password,
+    database: config.database,
+    timezone: config.timezone,
+    charset: config.charset,
+    connectTimeout: config.connectTimeout,
+    socketPath: config.socketPath,
+  };
+}
 
 // Create connection pool for better performance
 export const pool = mysql.createPool({
-  ...dbConfig,
+  ...getCleanDbConfig(),
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -34,8 +120,10 @@ export async function testConnection() {
       try {
         const tempConnection = await mysql.createConnection({
           host: dbConfig.host,
+          port: dbConfig.port,
           user: dbConfig.user,
           password: dbConfig.password,
+          socketPath: undefined,
         });
 
         await tempConnection.execute('CREATE DATABASE IF NOT EXISTS crm_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
@@ -65,14 +153,7 @@ export async function executeQuery<T = any>(
     });
 
     // Use individual connection instead of pool for better error handling
-    connection = await mysql.createConnection({
-      host: process.env.DB_HOST || process.env.DATABASE_HOST || (process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost'),
-      user: process.env.DB_USER || process.env.DATABASE_USER || 'crm_user',
-      password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '1234',
-      database: process.env.DB_NAME || process.env.DATABASE_NAME || 'crm_system',
-      timezone: '+00:00',
-      charset: 'utf8mb4',
-    });
+    connection = await mysql.createConnection(getCleanDbConfig());
 
     // For Docker environment, use query instead of execute for LIMIT/OFFSET
     if (query.includes('LIMIT ? OFFSET ?') && processedParams.length >= 2) {
@@ -98,7 +179,7 @@ export async function executeQuery<T = any>(
         return Array.isArray(rows) ? rows as T[] : [];
       } else {
         const result = await connection.execute(query, processedParams);
-        if (!result || !Array.isArray(result) || result.length === 0) {
+        if (!result || !Array.isArray(result)) {
           return [];
         }
         const [rows] = result;
@@ -131,14 +212,7 @@ export async function executeSingle(
     });
 
     // Use individual connection instead of pool for better error handling
-    connection = await mysql.createConnection({
-      host: process.env.DB_HOST || process.env.DATABASE_HOST || (process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost'),
-      user: process.env.DB_USER || process.env.DATABASE_USER || 'crm_user',
-      password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || '1234',
-      database: process.env.DB_NAME || process.env.DATABASE_NAME || 'crm_system',
-      timezone: '+00:00',
-      charset: 'utf8mb4',
-    });
+    connection = await mysql.createConnection(getCleanDbConfig());
 
     // For Docker environment, use query instead of execute for LIMIT/OFFSET
     if (query.includes('LIMIT ? OFFSET ?') && processedParams.length >= 2) {
