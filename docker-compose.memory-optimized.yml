@@ -38,47 +38,6 @@ services:
     networks:
       - crm-network
 
-  # Rabin Voice Assistant - باید اول بیاید بالا
-  rabin-voice:
-    build:
-      context: ./صدای رابین
-      dockerfile: Dockerfile
-      args:
-        - NODE_ENV=production
-    container_name: rabin-voice
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      NODE_ENV: production
-      OPENROUTER_API_KEY: ${RABIN_VOICE_OPENROUTER_API_KEY}
-      OPENROUTER_MODEL: ${RABIN_VOICE_OPENROUTER_MODEL:-anthropic/claude-3-haiku}
-      TTS_API_URL: ${RABIN_VOICE_TTS_API_URL:-https://api.ahmadreza-avandi.ir/text-to-speech}
-      PORT: 3001
-      LOG_LEVEL: ${RABIN_VOICE_LOG_LEVEL:-INFO}
-      DATABASE_HOST: mysql
-      DATABASE_NAME: ${DATABASE_NAME:-crm_system}
-      DATABASE_USER: ${DATABASE_USER:-crm_user}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-1234}
-      NODE_OPTIONS: --max-old-space-size=384
-    volumes:
-      # Mount logs for debugging
-      - ./صدای رابین/logs:/app/logs:rw
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3001/rabin-voice/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    deploy:
-      resources:
-        limits:
-          memory: 384M
-        reservations:
-          memory: 192M
-    networks:
-      - crm-network
-
   nextjs:
     build:
       context: .
@@ -108,7 +67,6 @@ services:
       - ./logs:/app/logs:rw
     depends_on:
       - mysql
-      - rabin-voice
     deploy:
       resources:
         limits:
@@ -166,7 +124,6 @@ services:
     depends_on:
       - nextjs
       - phpmyadmin
-      - rabin-voice
     deploy:
       resources:
         limits:
