@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ═══════════════════════════════════════════════════════════
-# اسکریپت دیپلوی کامل School-Proj با کانفیگ Nginx
+# آپدیت فقط Nginx (بدون restart containers)
 # ═══════════════════════════════════════════════════════════
 
 set -e
@@ -24,76 +24,16 @@ print_header() {
     echo ""
 }
 
-DOMAIN="sch.ahmadreza-avandi.ir"
-PROJECT_DIR="$(pwd)"
-
-print_header "🚀 دیپلوی School-Proj"
-
-# ۱. بررسی دسترسی root
 if [ "$EUID" -ne 0 ]; then 
     print_error "این اسکریپت باید با sudo اجرا شود"
     exit 1
 fi
 
-# ۲. بررسی Docker
-print_header "۱. بررسی پیش‌نیازها"
+print_header "🔧 آپدیت کانفیگ Nginx"
 
-if ! command -v docker &> /dev/null; then
-    print_error "Docker نصب نیست!"
-    exit 1
-fi
-print_success "Docker نصب شده است"
-
-if ! command -v docker-compose &> /dev/null; then
-    print_error "Docker Compose نصب نیست!"
-    exit 1
-fi
-print_success "Docker Compose نصب شده است"
-
-# ۳. بررسی SSL
-print_header "۲. بررسی SSL"
-
-if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-    print_error "گواهی SSL برای $DOMAIN وجود ندارد!"
-    print_info "لطفاً ابتدا SSL را دریافت کنید: bash setup-ssl.sh"
-    exit 1
-fi
-print_success "گواهی SSL موجود است"
-
-# ۴. توقف containers قبلی
-print_header "۳. توقف containers قبلی"
-
-if [ -f "docker-compose.yml" ]; then
-    print_info "در حال توقف containers قبلی..."
-    docker-compose down 2>/dev/null || true
-    print_success "Containers قبلی متوقف شدند"
-fi
-
-# ۵. بیلد و اجرای containers
-print_header "۴. بیلد و اجرای Containers"
-
-print_info "در حال بیلد containers..."
-docker-compose build --parallel || docker-compose build
-
-print_success "بیلد با موفقیت انجام شد"
-
-print_info "در حال اجرای containers..."
-docker-compose up -d
-
-print_success "Containers اجرا شدند"
-
-# ۶. صبر برای آماده شدن سرویس‌ها
-print_header "۵. صبر برای آماده شدن سرویس‌ها"
-
-print_info "صبر کنید تا سرویس‌ها آماده شوند..."
-sleep 10
-
-# ۷. کانفیگ Nginx
-print_header "۶. کانفیگ Nginx"
-
+# پیدا کردن IP های CRM
 print_info "پیدا کردن IP های CRM containers..."
 
-# پیدا کردن IP CRM containers
 CRM_NEXTJS_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nextjs 2>/dev/null || echo "")
 CRM_PMA_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' crm_phpmyadmin 2>/dev/null || echo "")
 
@@ -120,10 +60,6 @@ cat > /etc/nginx/sites-available/combined-projects << NGINX_EOF
 # کانفیگ Nginx برای CRM + School-Proj
 # ═══════════════════════════════════════════════════════════
 
-# ───────────────────────────────────────────────────────────
-# CRM Project - crm.robintejarat.com
-# ───────────────────────────────────────────────────────────
-
 upstream crm_nextjs {
     server $CRM_NEXTJS_HOST;
 }
@@ -131,6 +67,10 @@ upstream crm_nextjs {
 upstream crm_phpmyadmin {
     server $CRM_PMA_HOST;
 }
+
+# ───────────────────────────────────────────────────────────
+# CRM Project
+# ───────────────────────────────────────────────────────────
 
 server {
     listen 80;
@@ -188,7 +128,7 @@ server {
 }
 
 # ───────────────────────────────────────────────────────────
-# School Project - sch.ahmadreza-avandi.ir
+# School Project
 # ───────────────────────────────────────────────────────────
 
 server {
@@ -216,7 +156,7 @@ server {
     
     client_max_body_size 100M;
 
-    # School Nest.js API
+    # School Nest.js API - بدون rewrite
     location /api/ {
         proxy_pass http://localhost:3002/;
         proxy_http_version 1.1;
@@ -243,7 +183,7 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
-    # School phpMyAdmin
+    # School phpMyAdmin - با trailing slash
     location /phpmyadmin/ {
         proxy_pass http://localhost:8083/;
         proxy_http_version 1.1;
@@ -264,7 +204,7 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
-    # School Next.js Frontend - باید آخر باشه
+    # School Next.js Frontend
     location / {
         proxy_pass http://localhost:3003;
         proxy_http_version 1.1;
@@ -285,94 +225,33 @@ server {
 }
 NGINX_EOF
 
-print_success "کانفیگ Nginx ساخته شد"
+print_success "کانفیگ ساخته شد"
 
-# ۸. اعمال کانفیگ Nginx
-print_info "اعمال کانفیگ Nginx..."
-
-# پاک کردن کانفیگ‌های قدیمی
+# اعمال کانفیگ
 rm -f /etc/nginx/sites-enabled/default
 rm -f /etc/nginx/sites-enabled/*.backup
 rm -f /etc/nginx/sites-enabled/school-proj
 
-# فعال‌سازی کانفیگ جدید
 ln -sf /etc/nginx/sites-available/combined-projects /etc/nginx/sites-enabled/combined-projects
 
-# تست کانفیگ
-print_info "تست کانفیگ Nginx..."
+# تست
+print_info "تست کانفیگ..."
 if nginx -t 2>&1; then
-    print_success "کانفیگ Nginx معتبر است"
+    print_success "کانفیگ معتبر است"
     
-    # Reload nginx
     print_info "Reload Nginx..."
-    systemctl reload nginx || systemctl restart nginx
+    systemctl reload nginx
     
-    print_success "Nginx reload شد"
+    print_success "Nginx reload شد!"
+    
+    print_header "✅ تمام!"
+    echo ""
+    echo "تست کن:"
+    echo "  curl -I https://sch.ahmadreza-avandi.ir/phpmyadmin/"
+    echo "  curl https://sch.ahmadreza-avandi.ir/api/grades"
+    echo ""
 else
-    print_error "کانفیگ Nginx خطا دارد!"
+    print_error "کانفیگ خطا داره!"
     nginx -t
     exit 1
 fi
-
-# ۹. بررسی سلامت سرویس‌ها
-print_header "۷. بررسی سلامت سرویس‌ها"
-
-sleep 5
-
-check_service() {
-    local name=$1
-    local port=$2
-    local max_attempts=15
-    local attempt=1
-    
-    print_info "بررسی $name..."
-    
-    while [ $attempt -le $max_attempts ]; do
-        if curl -s -o /dev/null -w "%{http_code}" http://localhost:$port > /dev/null 2>&1; then
-            print_success "$name آماده است (پورت $port)"
-            return 0
-        fi
-        echo -n "."
-        sleep 2
-        attempt=$((attempt + 1))
-    done
-    
-    print_warning "$name هنوز آماده نیست (پورت $port)"
-    return 1
-}
-
-check_service "Next.js" 3003
-check_service "Nest.js" 3002
-check_service "Python API" 5001
-check_service "phpMyAdmin" 8083
-
-# ۱۰. نمایش اطلاعات نهایی
-print_header "✅ دیپلوی با موفقیت انجام شد!"
-
-echo ""
-print_success "پروژه‌های شما آماده هستند:"
-echo ""
-echo "  🔹 CRM:    https://crm.robintejarat.com"
-echo "  🔹 School: https://sch.ahmadreza-avandi.ir"
-echo ""
-
-print_info "School APIs:"
-echo "  • Frontend:        https://sch.ahmadreza-avandi.ir"
-echo "  • Nest.js API:     https://sch.ahmadreza-avandi.ir/api"
-echo "  • Python API:      https://sch.ahmadreza-avandi.ir/python-api"
-echo "  • phpMyAdmin:      https://sch.ahmadreza-avandi.ir/phpmyadmin"
-echo "  • Redis Commander: https://sch.ahmadreza-avandi.ir/redis-commander"
-echo ""
-
-print_info "دستورات مفید:"
-echo "  • مشاهده لاگ‌ها:       docker-compose logs -f"
-echo "  • مشاهده لاگ سرویس:   docker-compose logs -f [service-name]"
-echo "  • ری‌استارت:          docker-compose restart"
-echo "  • توقف:               docker-compose down"
-echo "  • وضعیت:              docker-compose ps"
-echo ""
-
-print_info "لاگ‌های Nginx:"
-echo "  • tail -f /var/log/nginx/access.log"
-echo "  • tail -f /var/log/nginx/error.log"
-echo ""
