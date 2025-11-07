@@ -156,9 +156,9 @@ server {
     
     client_max_body_size 100M;
 
-    # School Nest.js API - بدون rewrite
+    # School API - Next.js handles these (not Nest.js!)
     location /api/ {
-        proxy_pass http://localhost:3002/;
+        proxy_pass http://localhost:3003/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
