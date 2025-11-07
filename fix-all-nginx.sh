@@ -31,24 +31,31 @@ fi
 
 print_header "🔍 پیدا کردن پورت‌های CRM"
 
-# پیدا کردن پورت CRM Next.js
-CRM_NEXTJS_PORT=$(docker port nextjs 3000 2>/dev/null | head -n1 | cut -d: -f2 || echo "")
-if [ -z "$CRM_NEXTJS_PORT" ]; then
-    print_warning "CRM Next.js پورت expose نداره - از network استفاده می‌کنه"
-    CRM_NEXTJS_HOST="nextjs:3000"
-else
-    print_success "CRM Next.js: localhost:$CRM_NEXTJS_PORT"
+# پیدا کردن IP CRM containers
+CRM_NEXTJS_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nextjs 2>/dev/null || echo "")
+CRM_PMA_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' crm_phpmyadmin 2>/dev/null || echo "")
+
+if [ -z "$CRM_NEXTJS_IP" ]; then
+    print_error "نمی‌تونم IP container CRM Next.js رو پیدا کنم!"
+    print_info "در حال بررسی پورت‌های expose شده..."
+    
+    # سعی کن پورت پیدا کنی
+    CRM_NEXTJS_PORT=$(docker port nextjs 3000 2>/dev/null | head -n1 | cut -d: -f2 || echo "3000")
     CRM_NEXTJS_HOST="localhost:$CRM_NEXTJS_PORT"
+    print_warning "استفاده از localhost:$CRM_NEXTJS_PORT برای CRM"
+else
+    print_success "CRM Next.js IP: $CRM_NEXTJS_IP"
+    CRM_NEXTJS_HOST="$CRM_NEXTJS_IP:3000"
 fi
 
-# پیدا کردن پورت CRM phpMyAdmin
-CRM_PMA_PORT=$(docker port crm_phpmyadmin 80 2>/dev/null | head -n1 | cut -d: -f2 || echo "")
-if [ -z "$CRM_PMA_PORT" ]; then
-    print_warning "CRM phpMyAdmin پورت expose نداره - از network استفاده می‌کنه"
-    CRM_PMA_HOST="phpmyadmin"
-else
-    print_success "CRM phpMyAdmin: localhost:$CRM_PMA_PORT"
+if [ -z "$CRM_PMA_IP" ]; then
+    print_warning "نمی‌تونم IP container CRM phpMyAdmin رو پیدا کنم"
+    CRM_PMA_PORT=$(docker port crm_phpmyadmin 80 2>/dev/null | head -n1 | cut -d: -f2 || echo "8080")
     CRM_PMA_HOST="localhost:$CRM_PMA_PORT"
+    print_warning "استفاده از localhost:$CRM_PMA_PORT برای phpMyAdmin"
+else
+    print_success "CRM phpMyAdmin IP: $CRM_PMA_IP"
+    CRM_PMA_HOST="$CRM_PMA_IP:80"
 fi
 
 print_header "🔍 بررسی پورت‌های School"
@@ -60,7 +67,7 @@ print_success "School phpMyAdmin: localhost:8083"
 
 print_header "📝 ساخت کانفیگ Nginx"
 
-cat > /etc/nginx/sites-available/combined-projects << 'NGINX_EOF'
+cat > /etc/nginx/sites-available/combined-projects << NGINX_EOF
 # ═══════════════════════════════════════════════════════════
 # کانفیگ Nginx برای CRM + School-Proj
 # ═══════════════════════════════════════════════════════════
@@ -70,11 +77,11 @@ cat > /etc/nginx/sites-available/combined-projects << 'NGINX_EOF'
 # ───────────────────────────────────────────────────────────
 
 upstream crm_nextjs {
-    server nextjs:3000;
+    server $CRM_NEXTJS_HOST;
 }
 
 upstream crm_phpmyadmin {
-    server phpmyadmin;
+    server $CRM_PMA_HOST;
 }
 
 server {
@@ -86,7 +93,7 @@ server {
     }
     
     location / {
-        return 301 https://$host$request_uri;
+        return 301 https://\$host\$request_uri;
     }
 }
 
@@ -105,30 +112,30 @@ server {
     location / {
         proxy_pass http://crm_nextjs;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
     }
 
     location /secure-db-admin-panel-x7k9m2/ {
         proxy_pass http://crm_phpmyadmin/;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
     location /api/ {
         proxy_pass http://crm_nextjs;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
 
@@ -145,7 +152,7 @@ server {
     }
     
     location / {
-        return 301 https://$host$request_uri;
+        return 301 https://\$host\$request_uri;
     }
 }
 
@@ -163,16 +170,16 @@ server {
 
     # School Nest.js API - مهم: بدون trailing slash
     location /api {
-        rewrite ^/api/(.*) /$1 break;
+        rewrite ^/api/(.*) /\$1 break;
         proxy_pass http://localhost:3002;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
         
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
@@ -181,48 +188,48 @@ server {
 
     # School Python API
     location /python-api {
-        rewrite ^/python-api/(.*) /$1 break;
+        rewrite ^/python-api/(.*) /\$1 break;
         proxy_pass http://localhost:5001;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
     # School phpMyAdmin
     location /phpmyadmin {
-        rewrite ^/phpmyadmin/(.*) /$1 break;
+        rewrite ^/phpmyadmin/(.*) /\$1 break;
         proxy_pass http://localhost:8083;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
     # School Redis Commander
     location /redis-commander {
-        rewrite ^/redis-commander/(.*) /$1 break;
+        rewrite ^/redis-commander/(.*) /\$1 break;
         proxy_pass http://localhost:8084;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
     # School Next.js Frontend - باید آخر باشه
     location / {
         proxy_pass http://localhost:3003;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
     }
 
     location /_next/static {
