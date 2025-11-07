@@ -284,15 +284,7 @@ mkdir -p nginx/ssl
 mkdir -p database
 mkdir -p database/migrations
 
-# ایجاد دایرکتری‌های صدای رابین
-echo "📁 ایجاد دایرکتری‌های صدای رابین..."
-mkdir -p "صدای رابین/logs"
-mkdir -p "صدای رابین/public"
-chmod -R 755 "صدای رابین/logs"
-chmod -R 755 "صدای رابین/public"
 
-# ایجاد .gitkeep برای public
-echo "# Keep this folder in git" > "صدای رابین/public/.gitkeep"
 
 # ایجاد فولدرهای آپلود
 echo "📁 ایجاد فولدرهای آپلود..."
@@ -693,8 +685,7 @@ if [ "$FORCE_CLEAN" = true ]; then
     docker stop $(docker ps -q --filter "name=nginx") 2>/dev/null || true
     docker stop $(docker ps -q --filter "name=mysql") 2>/dev/null || true
     docker stop $(docker ps -q --filter "name=phpmyadmin") 2>/dev/null || true
-    docker stop $(docker ps -q --filter "name=rabin-voice") 2>/dev/null || true
-    docker stop $(docker ps -q --filter "name=voice") 2>/dev/null || true
+
 
     # حذف کانتینرهای متوقف شده
     echo "🗑️ حذف کانتینرهای متوقف شده..."
@@ -860,19 +851,6 @@ server {
         root /var/www/certbot;
     }
     
-    # Rabin Voice Assistant
-    location /rabin-voice {
-        set $rabin_voice_upstream rabin-voice:3001;
-        proxy_pass http://$rabin_voice_upstream;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-    
     location / {
         proxy_pass http://nextjs:3000;
         proxy_set_header Host $host;
@@ -922,19 +900,6 @@ server {
     ssl_prefer_server_ciphers off;
     
     client_max_body_size 50M;
-    
-    # Rabin Voice Assistant
-    location /rabin-voice {
-        set $rabin_voice_upstream rabin-voice:3001;
-        proxy_pass http://$rabin_voice_upstream;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
     
     location / {
         proxy_pass http://nextjs:3000;
@@ -1026,7 +991,6 @@ if [ "$FORCE_CLEAN" = true ]; then
         docker-compose -f $COMPOSE_FILE build --no-cache --force-rm mysql
         docker-compose -f $COMPOSE_FILE build --no-cache --force-rm phpmyadmin  
         docker-compose -f $COMPOSE_FILE build --no-cache --force-rm nextjs
-        docker-compose -f $COMPOSE_FILE build --no-cache --force-rm rabin-voice
         docker-compose -f $COMPOSE_FILE build --no-cache --force-rm nginx
         
         # راه‌اندازی
@@ -1050,19 +1014,7 @@ else
         echo "🔨 Build مرحله‌ای برای حافظه کم..."
         docker-compose -f $COMPOSE_FILE build --force-rm mysql || true
         docker-compose -f $COMPOSE_FILE build --force-rm phpmyadmin || true
-        echo "🎤 Build Rabin Voice (اولویت اول)..."
-        
-        # بررسی متغیر محیطی مورد نیاز
-        if [ -z "$RABIN_VOICE_OPENROUTER_API_KEY" ]; then
-            echo "⚠️  RABIN_VOICE_OPENROUTER_API_KEY تنظیم نشده - اضافه کردن به .env..."
-            if ! grep -q "RABIN_VOICE_OPENROUTER_API_KEY" .env; then
-                echo "RABIN_VOICE_OPENROUTER_API_KEY=your_openrouter_api_key_here" >> .env
-                echo "   ✅ متغیر به .env اضافه شد"
-            fi
-        fi
-        
-        docker-compose -f $COMPOSE_FILE build --force-rm rabin-voice
-        echo "🌐 Build NextJS CRM..."
+        echo "� Buildd NextJS CRM..."
         docker-compose -f $COMPOSE_FILE build --force-rm nextjs
         docker-compose -f $COMPOSE_FILE build --force-rm nginx || true
         
@@ -1070,10 +1022,8 @@ else
         docker-compose -f $COMPOSE_FILE up -d
     else
         echo "🔨 شروع build و راه‌اندازی..."
-        # Build صریح Rabin Voice و NextJS
-        echo "🎤 Build Rabin Voice (اولویت اول)..."
-        docker-compose -f $COMPOSE_FILE build --force-rm rabin-voice
-        echo "🌐 Build NextJS CRM..."
+        # Build NextJS
+        echo "� BBuild NextJS CRM..."
         docker-compose -f $COMPOSE_FILE build --force-rm nextjs
         # راه‌اندازی همه سرویس‌ها
         docker-compose -f $COMPOSE_FILE up --build -d
@@ -1086,7 +1036,7 @@ echo "✅ Build و راه‌اندازی کامل شد"
 echo ""
 echo "🔍 بررسی images ساخته شده..."
 echo "📦 Images موجود:"
-docker images | grep -E "rabin-last|صدای|mariadb|nginx|phpmyadmin" || echo "⚠️  هیچ image یافت نشد"
+docker images | grep -E "rabin-last|mariadb|nginx|phpmyadmin" || echo "⚠️  هیچ image یافت نشد"
 
 # ═══════════════════════════════════════════════════════════════
 # ⏳ مرحله 8: انتظار و تست سرویس‌ها
@@ -1106,32 +1056,19 @@ echo "🔍 بررسی جامع کانتینرها..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # نام‌های کانتینر با dash و underscore
-CONTAINERS_EXPECTED=("mysql" "phpmyadmin" "nextjs" "rabin-voice" "nginx")
+CONTAINERS_EXPECTED=("mysql" "phpmyadmin" "nextjs" "nginx")
 CONTAINERS_RUNNING=0
 CONTAINERS_MISSING=0
 
 for container in "${CONTAINERS_EXPECTED[@]}"; do
     # جستجو با همه فرمت‌های ممکن
-    if [ "$container" = "rabin-voice" ]; then
-        # برای rabin-voice جستجوی خاص
-        if docker ps --format '{{.Names}}' | grep -qE "(crm[-_]rabin[-_]voice|rabin[-_]voice)"; then
-            ACTUAL_NAME=$(docker ps --format '{{.Names}}' | grep -E "(crm[-_]rabin[-_]voice|rabin[-_]voice)" | head -1)
-            echo "✅ $container - در حال اجرا ($ACTUAL_NAME)"
-            CONTAINERS_RUNNING=$((CONTAINERS_RUNNING + 1))
-        else
-            echo "❌ $container - یافت نشد یا متوقف است"
-            CONTAINERS_MISSING=$((CONTAINERS_MISSING + 1))
-        fi
+    if docker ps --format '{{.Names}}' | grep -qE "(crm[-_]${container}|${container})"; then
+        ACTUAL_NAME=$(docker ps --format '{{.Names}}' | grep -E "(crm[-_]${container}|${container})" | head -1)
+        echo "✅ $container - در حال اجرا ($ACTUAL_NAME)"
+        CONTAINERS_RUNNING=$((CONTAINERS_RUNNING + 1))
     else
-        # برای بقیه کانتینرها
-        if docker ps --format '{{.Names}}' | grep -qE "(crm[-_]${container}|${container})"; then
-            ACTUAL_NAME=$(docker ps --format '{{.Names}}' | grep -E "(crm[-_]${container}|${container})" | head -1)
-            echo "✅ $container - در حال اجرا ($ACTUAL_NAME)"
-            CONTAINERS_RUNNING=$((CONTAINERS_RUNNING + 1))
-        else
-            echo "❌ $container - یافت نشد یا متوقف است"
-            CONTAINERS_MISSING=$((CONTAINERS_MISSING + 1))
-        fi
+        echo "❌ $container - یافت نشد یا متوقف است"
+        CONTAINERS_MISSING=$((CONTAINERS_MISSING + 1))
     fi
 done
 
@@ -1501,79 +1438,7 @@ else
     docker-compose -f $COMPOSE_FILE logs nginx | tail -5
 fi
 
-# تست Rabin Voice
-echo "🧪 تست Rabin Voice Assistant..."
 
-# بررسی اینکه container در حال اجراست (با همه فرمت‌های ممکن)
-if docker ps --format '{{.Names}}' | grep -qE "(crm[-_]rabin[-_]voice|rabin[-_]voice)"; then
-    RABIN_CONTAINER=$(docker ps --format '{{.Names}}' | grep -E "(crm[-_]rabin[-_]voice|rabin[-_]voice)" | head -1)
-    echo "✅ Container Rabin Voice در حال اجراست ($RABIN_CONTAINER)"
-    
-    sleep 10
-    # تست مستقیم پورت 3001 (بدون /rabin-voice/)
-    if curl -f http://localhost:3001/ >/dev/null 2>&1; then
-        echo "✅ Rabin Voice API پاسخ می‌دهد"
-    else
-        echo "⚠️  Rabin Voice API هنوز آماده نیست"
-        echo "🔍 لاگ Rabin Voice:"
-        docker-compose -f $COMPOSE_FILE logs rabin-voice | tail -10
-        
-        # تست مجدد با endpoint های مختلف
-        echo "🔍 تست endpoint های مختلف..."
-        curl -s -o /dev/null -w "Status: %{http_code}\n" http://localhost:3001/ || echo "Port 3001 not responding"
-        curl -s -o /dev/null -w "Status: %{http_code}\n" http://localhost:3001/api/health || echo "Health endpoint not found"
-    fi
-else
-    echo "❌ Container Rabin Voice در حال اجرا نیست!"
-    echo "🔍 بررسی همه کانتینرهای موجود:"
-    docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" | grep -E "(rabin|voice|صدای)"
-    echo ""
-    echo "🔍 بررسی وضعیت در docker-compose:"
-    docker-compose -f $COMPOSE_FILE ps rabin-voice
-    echo "🔍 لاگ Rabin Voice (اگر موجود باشد):"
-    docker-compose -f $COMPOSE_FILE logs rabin-voice 2>&1 | tail -20
-    echo ""
-    echo "🔍 بررسی images موجود:"
-    docker images | grep -E "rabin|صدای"
-    
-    echo ""
-    echo "🔧 تلاش برای راه‌اندازی مجدد Rabin Voice..."
-    docker-compose -f $COMPOSE_FILE restart rabin-voice
-    sleep 15
-    
-    # تست مجدد پس از restart
-    if docker ps --format '{{.Names}}' | grep -qE "(crm[-_]rabin[-_]voice|rabin[-_]voice)"; then
-        RABIN_CONTAINER=$(docker ps --format '{{.Names}}' | grep -E "(crm[-_]rabin[-_]voice|rabin[-_]voice)" | head -1)
-        echo "✅ Rabin Voice پس از restart در حال اجراست ($RABIN_CONTAINER)"
-        
-        # تست API پس از restart
-        if curl -f http://localhost:3001/ >/dev/null 2>&1; then
-            echo "✅ Rabin Voice API پس از restart پاسخ می‌دهد"
-        else
-            echo "⚠️  Rabin Voice API هنوز مشکل دارد"
-        fi
-    else
-        echo "❌ Rabin Voice پس از restart هم بالا نیامد"
-        
-        # بررسی docker-compose file
-        echo "🔍 بررسی docker-compose file برای rabin-voice..."
-        if grep -q "rabin-voice:" $COMPOSE_FILE; then
-            echo "   ✅ rabin-voice در docker-compose تعریف شده"
-            echo "   📋 تنظیمات rabin-voice:"
-            grep -A 10 "rabin-voice:" $COMPOSE_FILE | head -15
-        else
-            echo "   ❌ rabin-voice در docker-compose تعریف نشده!"
-        fi
-        
-        # بررسی network connectivity
-        echo "🔍 بررسی network connectivity..."
-        NETWORK_NAME=$(docker-compose -f $COMPOSE_FILE config --services | head -1 | xargs -I {} docker inspect {} --format '{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}' 2>/dev/null | head -1)
-        if [ -n "$NETWORK_NAME" ]; then
-            echo "   📡 Network: $NETWORK_NAME"
-            docker network ls | grep crm || echo "   ⚠️  CRM network یافت نشد"
-        fi
-    fi
-fi
 
 # تست دامنه
 echo "🧪 تست دامنه..."
@@ -1623,37 +1488,7 @@ else
     echo "⚠️  صفحه Calendar مشکل دارد (HTTP $CALENDAR_PAGE_TEST)"
 fi
 
-# تست Rabin Voice از طریق nginx
-echo "🧪 تست Rabin Voice از طریق nginx..."
-RABIN_VOICE_TEST=$(curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN/rabin-voice/ --connect-timeout 10)
-if [ "$RABIN_VOICE_TEST" = "200" ] || [ "$RABIN_VOICE_TEST" = "302" ]; then
-    echo "✅ Rabin Voice از طریق nginx در دسترس است (HTTP $RABIN_VOICE_TEST)"
-else
-    echo "⚠️  Rabin Voice مشکل دارد (HTTP $RABIN_VOICE_TEST)"
-    
-    # تست مستقیم پورت 3001
-    echo "🔍 تست مستقیم پورت 3001..."
-    DIRECT_TEST=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/ --connect-timeout 5)
-    echo "   پورت 3001 مستقیم: HTTP $DIRECT_TEST"
-    
-    # بررسی nginx config برای rabin-voice
-    echo "🔍 بررسی nginx config برای rabin-voice..."
-    if docker-compose -f $COMPOSE_FILE exec -T nginx grep -n "rabin-voice" /etc/nginx/conf.d/default.conf; then
-        echo "   ✅ nginx config شامل rabin-voice است"
-    else
-        echo "   ❌ nginx config شامل rabin-voice نیست"
-        echo "   🔧 اضافه کردن rabin-voice به nginx config..."
-        
-        # اضافه کردن location برای rabin-voice
-        docker-compose -f $COMPOSE_FILE exec -T nginx sh -c "
-        sed -i '/location \/ {/i\\n    # Rabin Voice Assistant\n    location /rabin-voice {\n        proxy_pass http://rabin-voice:3001;\n        proxy_set_header Host \$host;\n        proxy_set_header X-Real-IP \$remote_addr;\n        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto \$scheme;\n    }\n' /etc/nginx/conf.d/default.conf
-        " 2>/dev/null || true
-        
-        # reload nginx
-        docker-compose -f $COMPOSE_FILE exec -T nginx nginx -s reload 2>/dev/null || true
-        echo "   ✅ nginx config به‌روزرسانی شد"
-    fi
-fi
+
 
 # ═══════════════════════════════════════════════════════════════
 # 🔐 مرحله 9: تنظیمات امنیتی و نهایی
@@ -1810,47 +1645,26 @@ echo "📊 خلاصه نهایی کانتینرها:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # بررسی نهایی همه کانتینرها
-FINAL_CONTAINERS=("mysql" "phpmyadmin" "nextjs" "rabin-voice" "nginx")
+FINAL_CONTAINERS=("mysql" "phpmyadmin" "nextjs" "nginx")
 FINAL_RUNNING=0
 
 for container in "${FINAL_CONTAINERS[@]}"; do
     # جستجو با همه فرمت‌های ممکن
-    if [ "$container" = "rabin-voice" ]; then
-        # برای rabin-voice جستجوی خاص
-        if docker ps --format '{{.Names}}' | grep -qE "(crm[-_]rabin[-_]voice|rabin[-_]voice)"; then
-            ACTUAL_NAME=$(docker ps --format '{{.Names}}' | grep -E "(crm[-_]rabin[-_]voice|rabin[-_]voice)" | head -1)
-            STATUS=$(docker inspect --format='{{.State.Status}}' $ACTUAL_NAME 2>/dev/null)
-            HEALTH=$(docker inspect --format='{{.State.Health.Status}}' $ACTUAL_NAME 2>/dev/null || echo "no-healthcheck")
-            
-            if [ "$HEALTH" = "healthy" ]; then
-                echo "✅ $container - اجرا (سالم) [$ACTUAL_NAME]"
-            elif [ "$HEALTH" = "no-healthcheck" ]; then
-                echo "✅ $container - اجرا [$ACTUAL_NAME]"
-            else
-                echo "⚠️  $container - اجرا (وضعیت: $HEALTH) [$ACTUAL_NAME]"
-            fi
-            FINAL_RUNNING=$((FINAL_RUNNING + 1))
+    if docker ps --format '{{.Names}}' | grep -qE "(crm[-_]${container}|${container})"; then
+        ACTUAL_NAME=$(docker ps --format '{{.Names}}' | grep -E "(crm[-_]${container}|${container})" | head -1)
+        STATUS=$(docker inspect --format='{{.State.Status}}' $ACTUAL_NAME 2>/dev/null)
+        HEALTH=$(docker inspect --format='{{.State.Health.Status}}' $ACTUAL_NAME 2>/dev/null || echo "no-healthcheck")
+        
+        if [ "$HEALTH" = "healthy" ]; then
+            echo "✅ $container - اجرا (سالم) [$ACTUAL_NAME]"
+        elif [ "$HEALTH" = "no-healthcheck" ]; then
+            echo "✅ $container - اجرا [$ACTUAL_NAME]"
         else
-            echo "❌ $container - متوقف یا یافت نشد"
+            echo "⚠️  $container - اجرا (وضعیت: $HEALTH) [$ACTUAL_NAME]"
         fi
+        FINAL_RUNNING=$((FINAL_RUNNING + 1))
     else
-        # برای بقیه کانتینرها
-        if docker ps --format '{{.Names}}' | grep -qE "(crm[-_]${container}|${container})"; then
-            ACTUAL_NAME=$(docker ps --format '{{.Names}}' | grep -E "(crm[-_]${container}|${container})" | head -1)
-            STATUS=$(docker inspect --format='{{.State.Status}}' $ACTUAL_NAME 2>/dev/null)
-            HEALTH=$(docker inspect --format='{{.State.Health.Status}}' $ACTUAL_NAME 2>/dev/null || echo "no-healthcheck")
-            
-            if [ "$HEALTH" = "healthy" ]; then
-                echo "✅ $container - اجرا (سالم) [$ACTUAL_NAME]"
-            elif [ "$HEALTH" = "no-healthcheck" ]; then
-                echo "✅ $container - اجرا [$ACTUAL_NAME]"
-            else
-                echo "⚠️  $container - اجرا (وضعیت: $HEALTH) [$ACTUAL_NAME]"
-            fi
-            FINAL_RUNNING=$((FINAL_RUNNING + 1))
-        else
-            echo "❌ $container - متوقف یا یافت نشد"
-        fi
+        echo "❌ $container - متوقف یا یافت نشد"
     fi
 done
 
@@ -1869,15 +1683,12 @@ echo "🌐 آدرس‌های دسترسی:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
     echo "🌐 سیستم CRM: https://$DOMAIN"
-    echo "🎤 دستیار صوتی رابین: https://$DOMAIN/rabin-voice"
     echo "🔐 phpMyAdmin: https://$DOMAIN/secure-db-admin-panel-x7k9m2/"
     echo ""
     echo "⚠️  نکته: اگر redirect مشکل دارد، از HTTP استفاده کنید:"
     echo "   🌐 HTTP: http://$DOMAIN"
-    echo "   🎤 HTTP Rabin Voice: http://$DOMAIN/rabin-voice"
 else
     echo "🌐 سیستم CRM: http://$DOMAIN"
-    echo "🎤 دستیار صوتی رابین: http://$DOMAIN/rabin-voice"
     echo "🔐 phpMyAdmin: http://$DOMAIN/secure-db-admin-panel-x7k9m2/"
 fi
 echo ""
@@ -1932,9 +1743,9 @@ echo ""
 echo "📋 دستورات مفید:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "   • مشاهده لاگ‌ها: docker-compose -f $COMPOSE_FILE logs -f"
-echo "   • لاگ یک سرویس: docker-compose -f $COMPOSE_FILE logs -f rabin-voice"
+echo "   • لاگ یک سرویس: docker-compose -f $COMPOSE_FILE logs -f nextjs"
 echo "   • راه‌اندازی مجدد: docker-compose -f $COMPOSE_FILE restart"
-echo "   • راه‌اندازی مجدد یک سرویس: docker-compose -f $COMPOSE_FILE restart rabin-voice"
+echo "   • راه‌اندازی مجدد یک سرویس: docker-compose -f $COMPOSE_FILE restart nextjs"
 echo "   • توقف: docker-compose -f $COMPOSE_FILE down"
 echo "   • بررسی وضعیت: docker-compose -f $COMPOSE_FILE ps"
 echo "   • دیپلوی معمولی: ./deploy-server.sh"
@@ -1953,12 +1764,6 @@ echo "   • رفع مشکل آپلود: ./fix-upload-issue.sh"
 echo "   • بررسی فولدرهای آپلود: docker exec crm-nextjs ls -la /app/uploads/"
 echo "   • تست مجوز آپلود: docker exec crm-nextjs touch /app/uploads/test.txt"
 echo "   • ورود به کانتینر NextJS: docker exec -it crm-nextjs /bin/sh"
-echo ""
-echo "🎤 دستورات Rabin Voice:"
-echo "   • لاگ Rabin Voice: docker-compose -f $COMPOSE_FILE logs -f rabin-voice"
-echo "   • راه‌اندازی مجدد: docker-compose -f $COMPOSE_FILE restart rabin-voice"
-echo "   • تست Rabin Voice: curl -I http://$DOMAIN/rabin-voice/"
-echo "   • ورود به کانتینر: docker exec -it rabin-voice /bin/sh"
 echo ""
 echo "� انطلاعات دسترسی phpMyAdmin:"
 echo "   • آدرس: /secure-db-admin-panel-x7k9m2/"
@@ -1979,74 +1784,7 @@ echo "   • phpMyAdmin: 5.2.2"
 echo ""
 echo "✅ همه چیز آماده است!"
 
-# ═══════════════════════════════════════════════════════════════
-# 🎤 تست نهایی Rabin Voice
-# ═══════════════════════════════════════════════════════════════
 
-echo ""
-echo "🎤 تست نهایی Rabin Voice Assistant..."
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-# بررسی کانتینر
-if docker ps --format '{{.Names}}' | grep -qE "(crm[-_]rabin[-_]voice|rabin[-_]voice)"; then
-    RABIN_CONTAINER=$(docker ps --format '{{.Names}}' | grep -E "(crm[-_]rabin[-_]voice|rabin[-_]voice)" | head -1)
-    echo "✅ کانتینر: $RABIN_CONTAINER"
-    
-    # بررسی پورت
-    RABIN_PORT=$(docker port $RABIN_CONTAINER 2>/dev/null | grep 3001 || echo "پورت 3001 expose نشده")
-    echo "📡 پورت: $RABIN_PORT"
-    
-    # بررسی لاگ‌های اخیر
-    echo "📋 لاگ‌های اخیر:"
-    docker logs $RABIN_CONTAINER --tail 5 2>/dev/null || echo "   لاگ در دسترس نیست"
-    
-    # تست endpoint های مختلف
-    echo ""
-    echo "🧪 تست endpoint ها:"
-    
-    # تست مستقیم
-    DIRECT_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/ --connect-timeout 5 2>/dev/null || echo "000")
-    echo "   مستقیم (localhost:3001): HTTP $DIRECT_STATUS"
-    
-    # تست از طریق nginx
-    NGINX_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN/rabin-voice/ --connect-timeout 5 2>/dev/null || echo "000")
-    echo "   از طریق nginx (/rabin-voice/): HTTP $NGINX_STATUS"
-    
-    # تست بدون slash
-    NGINX_NO_SLASH=$(curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN/rabin-voice --connect-timeout 5 2>/dev/null || echo "000")
-    echo "   از طریق nginx (/rabin-voice): HTTP $NGINX_NO_SLASH"
-    
-    # اگر همه تست‌ها موفق بود
-    if [ "$DIRECT_STATUS" = "200" ] && ([ "$NGINX_STATUS" = "200" ] || [ "$NGINX_NO_SLASH" = "200" ]); then
-        echo ""
-        echo "🎉 Rabin Voice کاملاً آماده است!"
-        echo "🌐 دسترسی: https://$DOMAIN/rabin-voice"
-    elif [ "$DIRECT_STATUS" = "200" ]; then
-        echo ""
-        echo "⚠️  Rabin Voice روی پورت 3001 کار می‌کند ولی nginx routing مشکل دارد"
-        echo "🔧 برای حل مشکل nginx، دستور زیر را اجرا کنید:"
-        echo "   docker-compose -f $COMPOSE_FILE restart nginx"
-    else
-        echo ""
-        echo "❌ Rabin Voice مشکل دارد"
-        echo "🔍 برای بررسی بیشتر:"
-        echo "   docker logs $RABIN_CONTAINER"
-        echo "   docker-compose -f $COMPOSE_FILE restart rabin-voice"
-    fi
-    
-else
-    echo "❌ کانتینر Rabin Voice یافت نشد!"
-    echo ""
-    echo "🔧 برای حل مشکل:"
-    echo "   1. بررسی docker-compose file:"
-    echo "      grep -A 10 'rabin-voice:' $COMPOSE_FILE"
-    echo "   2. راه‌اندازی مجدد:"
-    echo "      docker-compose -f $COMPOSE_FILE up -d rabin-voice"
-    echo "   3. بررسی لاگ build:"
-    echo "      docker-compose -f $COMPOSE_FILE logs rabin-voice"
-fi
-
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # ═══════════════════════════════════════════════════════════════
 # 📋 راهنمای رفع مشکل دیتابیس خالی
