@@ -5,7 +5,7 @@ import persian from 'react-date-object/calendars/persian';
 import gregorian from 'react-date-object/calendars/gregorian';
 
 const dbConfig = {
-  connectionString: process.env.DATABASE_URL || 'mysql://user:userpassword@mysql:3306/mydatabase',
+  connectionString: process.env.DATABASE_URL || 'mysql://root:rootpassword@mysql:3306/mydatabase',
 };
 
 // Persian weekday names
