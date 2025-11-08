@@ -10,8 +10,10 @@ export async function GET(
 
     try {
         const tenantKey = request.headers.get('X-Tenant-Key');
+        console.log('🔍 Customer Profile - Tenant Key:', tenantKey);
 
         if (!tenantKey) {
+            console.log('❌ No tenant key provided');
             return NextResponse.json(
                 { success: false, message: 'Tenant key یافت نشد' },
                 { status: 400 }
@@ -19,6 +21,8 @@ export async function GET(
         }
 
         const session = getTenantSessionFromRequest(request, tenantKey);
+        console.log('🔍 Session:', session ? 'Found' : 'Not found');
+        
         if (!session) {
             return NextResponse.json(
                 { success: false, message: 'دسترسی غیرمجاز' },
@@ -27,14 +31,16 @@ export async function GET(
         }
 
         const customerId = params.id;
+        console.log('🔍 Customer ID:', customerId);
+        
         const pool = await getTenantConnection(tenantKey);
         connection = await pool.getConnection();
 
         try {
             // دریافت مشتری
             const [customers] = await connection.query(
-                'SELECT * FROM customers WHERE id = ? AND tenant_key = ?',
-                [customerId, tenantKey]
+                'SELECT * FROM customers WHERE id = ?',
+                [customerId]
             ) as any[];
 
             if (!customers || customers.length === 0) {
@@ -48,14 +54,14 @@ export async function GET(
 
             // دریافت فعالیت‌های مشتری
             const [activities] = await connection.query(
-                'SELECT id, type, title, description, performed_by as performed_by_name, created_at, outcome FROM activities WHERE customer_id = ? AND tenant_key = ? ORDER BY created_at DESC LIMIT 10',
-                [customerId, tenantKey]
+                'SELECT id, type, title, description, performed_by as performed_by_name, created_at, outcome FROM activities WHERE customer_id = ? ORDER BY created_at DESC LIMIT 10',
+                [customerId]
             ) as any[];
 
             // دریافت مخاطبین مشتری
             const [contacts] = await connection.query(
-                'SELECT id, first_name, last_name, email, phone, job_title, is_primary FROM contacts WHERE company_id = ? AND tenant_key = ? ORDER BY is_primary DESC',
-                [customerId, tenantKey]
+                'SELECT id, first_name, last_name, email, phone, job_title, is_primary FROM contacts WHERE company_id = ? ORDER BY is_primary DESC',
+                [customerId]
             ) as any[];
 
             // دریافت فروش‌های مشتری
@@ -69,10 +75,10 @@ export async function GET(
           u.name as sales_person_name
         FROM sales s 
         LEFT JOIN users u ON s.assigned_to = u.id
-        WHERE s.customer_id = ? AND s.tenant_key = ? 
+        WHERE s.customer_id = ? 
         ORDER BY s.sale_date DESC 
         LIMIT 10`,
-                [customerId, tenantKey]
+                [customerId]
             ) as any[];
 
             return NextResponse.json({
@@ -93,8 +99,9 @@ export async function GET(
 
     } catch (error) {
         console.error('❌ خطا در دریافت مشتری:', error);
+        console.error('Error details:', error instanceof Error ? error.message : String(error));
         return NextResponse.json(
-            { success: false, message: 'خطای سرور' },
+            { success: false, message: 'خطای سرور', error: error instanceof Error ? error.message : String(error) },
             { status: 500 }
         );
     }

@@ -111,33 +111,54 @@ export default function CustomerDetailPage() {
         try {
             setLoading(true);
             const token = getAuthToken();
+            const finalTenantKey = (params?.tenant_key as string) || tenantKey;
+            
+            console.log('🔍 Fetching customer data:', {
+                customerId,
+                tenantKey: finalTenantKey,
+                hasToken: !!token
+            });
+
+            if (!finalTenantKey) {
+                console.error('❌ No tenant key available');
+                toast({
+                    title: 'خطا',
+                    description: 'کلید تنانت یافت نشد',
+                    variant: 'destructive'
+                });
+                setLoading(false);
+                return;
+            }
 
             // Fetch customer data
             const customerResponse = await fetch(`/api/tenant/customers/${customerId}`, {
                 headers: {
                     'Authorization': token ? `Bearer ${token}` : '',
-                    'X-Tenant-Key': params?.tenant_key || tenantKey,
+                    'X-Tenant-Key': finalTenantKey,
                     'Content-Type': 'application/json',
                 },
             });
+            
+            console.log('🔍 Customer response status:', customerResponse.status);
             const customerData = await customerResponse.json();
+            console.log('🔍 Customer data:', customerData);
 
             if (customerData.success) {
                 // Fetch customer-specific sales
                 const salesResponse = await fetch(`/api/tenant/sales?customer_id=${customerId}`, {
                     headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'X-Tenant-Key': params?.tenant_key || tenantKey,
+                        'Authorization': token ? `Bearer ${token}` : '',
+                        'X-Tenant-Key': finalTenantKey,
                         'Content-Type': 'application/json',
                     },
                 });
                 const salesData = await salesResponse.json();
 
                 // Fetch customer activities
-                const activitiesResponse = await fetch(`/api/tenant/activities?customerId=${customerId}`, {
+                const activitiesResponse = await fetch(`/api/tenant/activities?customer_id=${customerId}`, {
                     headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'X-Tenant-Key': params?.tenant_key || tenantKey,
+                        'Authorization': token ? `Bearer ${token}` : '',
+                        'X-Tenant-Key': finalTenantKey,
                         'Content-Type': 'application/json',
                     },
                 });

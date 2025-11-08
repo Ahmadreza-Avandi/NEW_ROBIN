@@ -29,9 +29,8 @@ export async function GET(request: NextRequest) {
       const [coworkers] = await conn.query(
         `SELECT id, name, email, phone, role, department, status 
          FROM users 
-         WHERE tenant_key = ? AND status = 'active'
-         ORDER BY name`,
-        [tenantKey]
+         WHERE status = 'active'
+         ORDER BY name`
       ) as any[];
 
       return NextResponse.json({

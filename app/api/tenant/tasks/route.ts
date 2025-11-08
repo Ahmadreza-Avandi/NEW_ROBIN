@@ -27,8 +27,7 @@ export async function GET(request: NextRequest) {
 
     try {
       const [rows] = await conn.query(
-        'SELECT * FROM tasks WHERE tenant_key = ? ORDER BY created_at DESC',
-        [tenantKey]
+        'SELECT * FROM tasks ORDER BY created_at DESC'
       );
 
       return NextResponse.json({
@@ -86,11 +85,11 @@ export async function POST(request: NextRequest) {
       
       const [result] = await conn.query(
         `INSERT INTO tasks (
-          id, tenant_key, title, description, assigned_to, assigned_by,
+          id, title, description, assigned_to, assigned_by,
           status, priority, due_date, created_at, updated_at
-        ) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        ) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [
-          tenantKey, title, description || null, assigned_to || userId, userId,
+          title, description || null, assigned_to || userId, userId,
           status || 'pending', priority || 'medium', due_date || null
         ]
       ) as any;
@@ -188,10 +187,10 @@ export async function PUT(request: NextRequest) {
       }
 
       updates.push('updated_at = NOW()');
-      values.push(taskIdentifier, tenantKey);
+      values.push(taskIdentifier);
 
       await conn.query(
-        `UPDATE tasks SET ${updates.join(', ')} WHERE id = ? AND tenant_key = ?`,
+        `UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`,
         values
       );
 

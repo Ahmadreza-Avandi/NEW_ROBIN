@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 27, 2025 at 04:00 PM
+-- Generation Time: Nov 08, 2025 at 02:06 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -144,7 +144,7 @@ CREATE TABLE `super_admins` (
 --
 
 INSERT INTO `super_admins` (`id`, `username`, `email`, `password_hash`, `full_name`, `phone`, `role`, `permissions`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 'Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '$2b$10$LZwtbXyn2q1sIMV5ymNU7ujRHGJJbdPOu2PKf6jUs3wmE.syBxiKK', 'احمدرضا اوندی', NULL, 'super_admin', NULL, 1, '2025-10-24 17:06:52', '2025-10-13 15:20:25', '2025-10-24 17:06:52');
+(1, 'Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '$2b$10$LZwtbXyn2q1sIMV5ymNU7ujRHGJJbdPOu2PKf6jUs3wmE.syBxiKK', 'احمدرضا اوندی', NULL, 'super_admin', NULL, 1, '2025-11-05 08:05:31', '2025-10-13 15:20:25', '2025-11-05 08:05:31');
 
 -- --------------------------------------------------------
 
