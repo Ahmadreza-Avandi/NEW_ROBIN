@@ -799,6 +799,16 @@ server {
 }
 EOF
 
+# بررسی و متوقف کردن nginx سیستم اگر پورت 80 اشغال است
+echo "🔍 بررسی پورت 80..."
+if sudo lsof -i :80 >/dev/null 2>&1 || sudo netstat -tulpn | grep :80 >/dev/null 2>&1; then
+    echo "⚠️  پورت 80 اشغال است - متوقف کردن nginx سیستم..."
+    sudo systemctl stop nginx 2>/dev/null || true
+    sudo service nginx stop 2>/dev/null || true
+    sleep 3
+    echo "✅ nginx سیستم متوقف شد"
+fi
+
 # راه‌اندازی nginx موقت
 echo "🌐 راه‌اندازی nginx موقت..."
 docker-compose -f docker-compose.temp.yml up -d
