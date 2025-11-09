@@ -1,6 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processUserText, formatDataForAI } from '@/lib/voice-assistant/keywordDetector';
 
+// افزایش timeout برای درخواست‌های طولانی
+export const maxDuration = 60; // 60 ثانیه
+export const dynamic = 'force-dynamic';
+
+// تابع استخراج اسم کاربر از هیستوری
+function extractUserNameFromHistory(history: any[], currentMessage: string): string | null {
+  if (!history || history.length === 0) return null;
+  
+  // جستجو در هیستوری برای پیام‌هایی که اسم دارن
+  for (const msg of history) {
+    if (msg.user) {
+      const userMsg = msg.user.toLowerCase();
+      // الگوهای مختلف معرفی
+      const patterns = [
+        /اسم من (.+?)(?:\s|$)/,
+        /اسمم (.+?)(?:\s|$)/,
+        /نام من (.+?)(?:\s|$)/,
+        /نامم (.+?)(?:\s|$)/,
+        /من (.+?)(?:\s+هستم|\s+ام)/,
+        /من (.+?)(?:\s|$)/
+      ];
+      
+      for (const pattern of patterns) {
+        const match = userMsg.match(pattern);
+        if (match && match[1]) {
+          const name = match[1].trim();
+          // فیلتر کلمات غیرمرتبط
+          if (name && name.length > 1 && !['چیه', 'چیست', 'کیه', 'کیست'].includes(name)) {
+            return name;
+          }
+        }
+      }
+    }
+  }
+  
+  // بررسی پیام فعلی هم
+  const currentLower = currentMessage.toLowerCase();
+  const patterns = [
+    /اسم من (.+?)(?:\s|$)/,
+    /اسمم (.+?)(?:\s|$)/,
+    /من (.+?)(?:\s+هستم|\s+ام)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = currentLower.match(pattern);
+    if (match && match[1]) {
+      const name = match[1].trim();
+      if (name && name.length > 1 && !['چیه', 'چیست', 'کیه', 'کیست'].includes(name)) {
+        return name;
+      }
+    }
+  }
+  
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { userMessage, history } = await req.json();
@@ -73,10 +129,11 @@ ${contextData ? `\n📊 داده‌های دیتابیس:\n${contextData}` : '\n
       { role: 'system', content: systemMessage }
     ];
 
-    // اضافه کردن تاریخچه
+    // اضافه کردن تاریخچه (فقط 10 گفتگوی آخر برای جلوگیری از timeout)
     if (history && Array.isArray(history)) {
-      console.log(`📚 Adding ${history.length} previous conversations to context`);
-      history.forEach((h: any, index: number) => {
+      const recentHistory = history.slice(-10); // فقط 10 گفتگوی آخر
+      console.log(`📚 Adding ${recentHistory.length} previous conversations to context (total: ${history.length})`);
+      recentHistory.forEach((h: any, index: number) => {
         if (h.user) {
           messages.push({ role: 'user', content: h.user });
           console.log(`  [${index + 1}] User: ${h.user.substring(0, 50)}...`);
@@ -98,13 +155,40 @@ ${contextData ? `\n📊 داده‌های دیتابیس:\n${contextData}` : '\n
     const openrouterApiKey = process.env.RABIN_VOICE_OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY;
     const openrouterModel = process.env.RABIN_VOICE_OPENROUTER_MODEL || process.env.OPENROUTER_MODEL || 'anthropic/claude-3-haiku';
 
-    if (!openrouterApiKey || openrouterApiKey === '.') {
-      console.error('❌ OpenRouter API key not configured');
+    if (!openrouterApiKey || openrouterApiKey === '.' || openrouterApiKey === 'your_openrouter_api_key_here') {
+      console.error('❌ OpenRouter API key not configured - using simple fallback');
+      
+      // پاسخ ساده بدون AI ولی با استفاده از هیستوری
+      let simpleResponse = '';
+      
+      // بررسی هیستوری برای استخراج اطلاعات
+      const userName = extractUserNameFromHistory(history, userMessage);
+      
+      if (userName) {
+        // اگر اسم کاربر رو داریم
+        if (userMessage.includes('اسم') || userMessage.includes('نام')) {
+          simpleResponse = `اسم شما ${userName} است.`;
+        } else if (userMessage.includes('سلام') || userMessage.includes('حال')) {
+          simpleResponse = `سلام ${userName}! خوبم، مرسی. چطور می‌تونم کمکت کنم؟`;
+        } else {
+          simpleResponse = `سلام ${userName}! `;
+        }
+      } else {
+        simpleResponse = 'سلام! من رابین هستم. ';
+      }
+      
+      if (dbResults.hasKeywords && dbResults.summary) {
+        simpleResponse += ' ' + dbResults.summary;
+      } else if (!userName) {
+        simpleResponse += 'چطور می‌تونم کمکتون کنم؟';
+      }
+      
       return NextResponse.json({
         success: true,
-        response: 'سلام! من رابین هستم. متاسفانه در حال حاضر سرویس هوش مصنوعی در دسترس نیست. لطفاً با مدیر سیستم تماس بگیرید.',
+        response: simpleResponse,
         hasData: dbResults.hasKeywords,
-        dataCount: dbResults.results?.length || 0
+        dataCount: dbResults.results?.length || 0,
+        warning: 'AI service not configured'
       });
     }
 
@@ -116,6 +200,13 @@ ${contextData ? `\n📊 داده‌های دیتابیس:\n${contextData}` : '\n
       currentMessage: 1,
       hasDbData: !!contextData
     });
+
+    // اضافه کردن timeout برای OpenRouter
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.error('⏱️ OpenRouter request timeout after 50 seconds');
+      controller.abort();
+    }, 50000); // 50 second timeout
 
     const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -129,9 +220,12 @@ ${contextData ? `\n📊 داده‌های دیتابیس:\n${contextData}` : '\n
         model: openrouterModel,
         messages: messages,
         temperature: 0.7,
-        max_tokens: 500
-      })
+        max_tokens: 300 // کاهش برای سرعت بیشتر
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
@@ -154,11 +248,19 @@ ${contextData ? `\n📊 داده‌های دیتابیس:\n${contextData}` : '\n
 
   } catch (error: any) {
     console.error('❌ Voice AI API Error:', error);
+    
+    let errorMessage = 'متاسفانه خطایی رخ داد. لطفاً دوباره تلاش کنید.';
+    
+    if (error.name === 'AbortError') {
+      console.error('⏱️ Request was aborted (timeout)');
+      errorMessage = 'درخواست طولانی شد. لطفاً دوباره تلاش کنید.';
+    }
+    
     return NextResponse.json(
       { 
         success: false, 
         error: error.message,
-        response: 'متاسفانه خطایی رخ داد. لطفاً دوباره تلاش کنید.'
+        response: errorMessage
       },
       { status: 500 }
     );

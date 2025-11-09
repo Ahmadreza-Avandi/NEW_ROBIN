@@ -183,12 +183,53 @@ const initialState: State = {
 };
 
 export default function VoiceAssistantPage({ params }: { params: { tenant_key: string } }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const tenantKey = params.tenant_key || 'rabin';
+  
+  // بارگذاری تاریخچه از localStorage
+  const loadHistoryFromStorage = () => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(`voice-history-${tenantKey}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // تبدیل timestamp به Date object
+        return parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading history:', error);
+    }
+    return [];
+  };
+
+  const [state, dispatch] = useReducer(reducer, {
+    ...initialState,
+    history: loadHistoryFromStorage()
+  });
   const [showHistory, setShowHistory] = useState(false);
   const [buttonText, setButtonText] = useState('شروع گفتگو');
   const recognitionRef = useRef<any>(null);
   const autoStartRef = useRef<boolean>(false);
-  const tenantKey = params.tenant_key || 'rabin';
+  const historyRef = useRef<Message[]>(state.history); // نگه‌داری هیستوری در ref
+
+  // به‌روزرسانی historyRef هر بار که state.history تغییر می‌کنه
+  useEffect(() => {
+    historyRef.current = state.history;
+  }, [state.history]);
+
+  // ذخیره تاریخچه در localStorage هر بار که تغییر می‌کنه
+  useEffect(() => {
+    if (typeof window !== 'undefined' && state.history.length > 0) {
+      try {
+        localStorage.setItem(`voice-history-${tenantKey}`, JSON.stringify(state.history));
+        console.log(`💾 History saved: ${state.history.length} messages`);
+      } catch (error) {
+        console.error('Error saving history:', error);
+      }
+    }
+  }, [state.history, tenantKey]);
 
   // Check microphone permission on mount
   useEffect(() => {
@@ -247,7 +288,18 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
             dispatch({ type: 'SET_PROCESSING', payload: true });
 
             try {
-              // Call AI API
+              // استفاده از historyRef برای دریافت آخرین هیستوری
+              const currentHistory = historyRef.current;
+              
+              console.log('📤 Sending to AI:', {
+                message: messageToSend.substring(0, 50),
+                historyCount: currentHistory.length
+              });
+
+              // Call AI API with timeout
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 55000); // 55 second timeout
+
               const response = await fetch('/api/voice-assistant/ai', {
                 method: 'POST',
                 headers: {
@@ -256,15 +308,21 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
                 },
                 body: JSON.stringify({
                   userMessage: messageToSend,
-                  history: state.history
+                  history: currentHistory
                 }),
+                signal: controller.signal
               });
 
+              clearTimeout(timeoutId);
+
               if (!response.ok) {
-                throw new Error('خطا در دریافت پاسخ از AI');
+                const errorData = await response.json().catch(() => ({}));
+                console.error('❌ API Error:', response.status, errorData);
+                throw new Error(errorData.error || 'خطا در دریافت پاسخ از AI');
               }
 
               const data = await response.json();
+              console.log('✅ AI Response received');
               const responseText = data.response || 'متاسفانه نتوانستم پاسخ مناسبی تولید کنم.';
 
               // Add to history
@@ -301,10 +359,20 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
                 }
               }, 500);
 
-            } catch (error) {
+            } catch (error: any) {
+              console.error('❌ Error processing message:', error);
+              
+              let errorMessage = 'خطا در پردازش پیام. لطفاً دوباره تلاش کنید.';
+              
+              if (error.name === 'AbortError') {
+                errorMessage = 'درخواست طولانی شد و قطع شد. لطفاً دوباره تلاش کنید.';
+              } else if (error.message) {
+                errorMessage = error.message;
+              }
+              
               dispatch({
                 type: 'SET_ERROR',
-                payload: 'خطا در پردازش پیام. لطفاً دوباره تلاش کنید.'
+                payload: errorMessage
               });
               setButtonText('شروع گفتگو');
             } finally {
@@ -486,6 +554,11 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
                     onClick={() => {
                       if (confirm('آیا مطمئن هستید که می‌خواهید تاریخچه را پاک کنید؟')) {
                         dispatch({ type: 'CLEAR_HISTORY' });
+                        // پاک کردن از localStorage
+                        if (typeof window !== 'undefined') {
+                          localStorage.removeItem(`voice-history-${tenantKey}`);
+                          console.log('🗑️ History cleared from storage');
+                        }
                       }
                     }}
                     className="text-red-500 hover:text-red-700 text-sm px-3 py-1 rounded-lg hover:bg-red-50 transition-colors"
