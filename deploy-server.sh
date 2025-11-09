@@ -372,186 +372,127 @@ EOF
 # کپی فایل‌های دیتابیس اصلی
 echo "📋 کپی فایل‌های دیتابیس..."
 
-# کپی crm_system.sql - بررسی چندین مکان ممکن
+# بررسی وجود فایل crm_system.sql
 CRM_DB_FOUND=false
 if [ -f "database/crm_system.sql" ]; then
-    echo "📋 کپی فایل database/crm_system.sql..."
-    cp database/crm_system.sql database/01-crm_system.sql
+    echo "✅ فایل database/crm_system.sql موجود است"
     CRM_DB_FOUND=true
-    echo "✅ فایل crm_system.sql از پوشه database کپی شد"
-elif [ -f "crm_system.sql" ]; then
-    echo "📋 کپی فایل crm_system.sql از root..."
-    cp crm_system.sql database/01-crm_system.sql
-    CRM_DB_FOUND=true
-    echo "✅ فایل crm_system.sql از root کپی شد"
-elif [ -f "دیتابیس.sql" ]; then
-    echo "📋 استفاده از فایل دیتابیس.sql..."
-    cp "دیتابیس.sql" database/01-crm_system.sql
-    CRM_DB_FOUND=true
-    echo "✅ فایل دیتابیس.sql کپی شد"
+    
+    # اطمینان از وجود USE statement
+    if ! grep -q "USE \`crm_system\`" database/crm_system.sql; then
+        echo "🔧 اضافه کردن USE statement به crm_system.sql..."
+        sed -i '/-- Database: `crm_system`/a\\n-- استفاده از دیتابیس crm_system\nUSE `crm_system`;' database/crm_system.sql
+    fi
 else
-    echo "❌ فایل crm_system.sql یافت نشد!"
+    echo "❌ فایل database/crm_system.sql یافت نشد!"
     echo "🔍 فایل‌های موجود در database:"
     ls -la database/ | grep -i sql || echo "   هیچ فایل SQL یافت نشد"
-    echo "🔍 جستجوی فایل‌های SQL در پروژه:"
-    find . -name "*crm*" -name "*.sql" -o -name "*دیتابیس*" -name "*.sql" | head -5
-    echo ""
-    echo "💡 راه‌حل‌ها:"
-    echo "   1. فایل crm_system.sql را در پوشه database قرار دهید"
-    echo "   2. یا فایل دیتابیس.sql را در root پروژه قرار دهید"
-    echo "   3. یا از اسکریپت fix-database-import.sh استفاده کنید"
+    exit 1
 fi
 
-# کپی saas_master.sql - بررسی چندین مکان ممکن
+# بررسی وجود فایل saas_master.sql
 SAAS_DB_FOUND=false
 if [ -f "database/saas_master.sql" ]; then
-    echo "📋 کپی فایل database/saas_master.sql..."
-    cp database/saas_master.sql database/02-saas_master.sql
+    echo "✅ فایل database/saas_master.sql موجود است"
     SAAS_DB_FOUND=true
-    echo "✅ فایل saas_master.sql از پوشه database کپی شد"
-elif [ -f "saas_master.sql" ]; then
-    echo "📋 کپی فایل saas_master.sql از root..."
-    cp saas_master.sql database/02-saas_master.sql
-    SAAS_DB_FOUND=true
-    echo "✅ فایل saas_master.sql از root کپی شد"
+    
+    # اطمینان از وجود USE statement
+    if ! grep -q "USE \`saas_master\`" database/saas_master.sql; then
+        echo "🔧 اضافه کردن USE statement به saas_master.sql..."
+        sed -i '/-- Database: `saas_master`/a\\n-- استفاده از دیتابیس saas_master\nUSE `saas_master`;' database/saas_master.sql
+    fi
 else
-    echo "❌ فایل saas_master.sql یافت نشد!"
+    echo "❌ فایل database/saas_master.sql یافت نشد!"
     echo "🔍 فایل‌های موجود در database:"
     ls -la database/ | grep -i saas || echo "   هیچ فایل SaaS یافت نشد"
-    echo "🔍 فایل‌های موجود در root:"
-    ls -la *.sql 2>/dev/null | grep -i saas || echo "   هیچ فایل SaaS در root یافت نشد"
+    exit 1
 fi
 
-# اگر فایل saas_master پیدا نشد، سعی کن از فایل‌های موجود استفاده کنی
-if [ "$SAAS_DB_FOUND" = false ]; then
-    echo "🔍 جستجوی فایل‌های SaaS در همه مکان‌ها..."
-    SAAS_FILE=$(find . -name "*saas*" -name "*.sql" 2>/dev/null | head -1)
-    if [ -n "$SAAS_FILE" ]; then
-        echo "📋 فایل SaaS پیدا شد: $SAAS_FILE"
-        cp "$SAAS_FILE" database/02-saas_master.sql
-        SAAS_DB_FOUND=true
-        echo "✅ فایل SaaS کپی شد"
-    else
-        echo "⚠️  هیچ فایل SaaS یافت نشد - ایجاد فایل خالی..."
-        # ایجاد فایل saas_master خالی با ساختار پایه
-        cat > database/02-saas_master.sql << 'EOF'
-USE `saas_master`;
-
--- جداول پایه SaaS Master
-CREATE TABLE IF NOT EXISTS `super_admins` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `full_name` varchar(255) DEFAULT NULL,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ایجاد Super Admin پیش‌فرض
-INSERT INTO `super_admins` (`username`, `email`, `password`, `full_name`, `is_active`) VALUES
-('Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '$2a$10$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye', 'احمدرضا اوندی', 1)
-ON DUPLICATE KEY UPDATE `is_active` = 1;
-
-CREATE TABLE IF NOT EXISTS `tenants` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `tenant_key` varchar(50) NOT NULL,
-  `company_name` varchar(255) NOT NULL,
-  `admin_email` varchar(255) NOT NULL,
-  `subscription_status` enum('active','expired','suspended','trial') DEFAULT 'trial',
-  `subscription_plan` enum('basic','professional','enterprise','custom') DEFAULT 'basic',
-  `subscription_start` date DEFAULT NULL,
-  `subscription_end` date DEFAULT NULL,
-  `max_users` int(11) DEFAULT 5,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `tenant_key` (`tenant_key`),
-  UNIQUE KEY `admin_email` (`admin_email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-EOF
-        SAAS_DB_FOUND=true
-        echo "✅ فایل saas_master پایه ایجاد شد"
-    fi
-fi
-
-# اضافه کردن USE statements به فایل‌ها
-if [ -f "database/01-crm_system.sql" ] && [ "$CRM_DB_FOUND" = true ]; then
-    echo "🔧 اضافه کردن USE statement به crm_system.sql..."
-    # حذف USE statements قدیمی اگر وجود دارد
-    sed -i '/^USE /d' database/01-crm_system.sql
-    # اضافه کردن USE statement جدید
-    sed -i '1i USE `crm_system`;' database/01-crm_system.sql
-    echo "✅ USE statement به crm_system.sql اضافه شد"
-fi
-
-if [ -f "database/02-saas_master.sql" ] && [ "$SAAS_DB_FOUND" = true ]; then
-    echo "🔧 اضافه کردن USE statement به saas_master.sql..."
-    # حذف USE statements قدیمی اگر وجود دارد
-    sed -i '/^USE /d' database/02-saas_master.sql
-    # اضافه کردن USE statement جدید
-    sed -i '1i USE `saas_master`;' database/02-saas_master.sql
-    echo "✅ USE statement به saas_master.sql اضافه شد"
-fi
+# بررسی نهایی فایل‌ها
+echo ""
+echo "📊 بررسی نهایی فایل‌های SQL:"
 
 # ایجاد فایل .gitkeep برای migrations
 if [ ! -f "database/migrations/.gitkeep" ]; then
     echo "# This folder is for future database migrations" > database/migrations/.gitkeep
 fi
 
-# ایجاد فایل کاربران ادمین
-echo "👑 ایجاد فایل کاربران ادمین..."
-cat > database/03-admin-users.sql << 'EOF'
+# بررسی وجود فایل 03-admin-users.sql
+if [ ! -f "database/03-admin-users.sql" ]; then
+    echo "👑 ایجاد فایل کاربران ادمین..."
+    cat > database/03-admin-users.sql << 'EOF'
 -- ===========================================
 -- Admin Users Creation Script
+-- ===========================================
+-- این فایل آخرین فایل است که اجرا می‌شود (03-)
+-- وظیفه: اطمینان از وجود کاربران ادمین
 -- ===========================================
 
 USE `crm_system`;
 
--- اطمینان از وجود کاربر CEO (مهندس کریمی)
--- این کاربر از فایل اصلی crm_system.sql می‌آید
+-- ===========================================
+-- کاربر CEO (مهندس کریمی)
+-- ===========================================
+-- این کاربر از فایل crm_system.sql می‌آید
 -- فقط اطمینان حاصل می‌کنیم که رمز عبور درست است
+-- رمز عبور: 1234 (bcrypt hash)
 
 UPDATE users SET 
-    password = '$2a$10$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye'
+    password = '$2a$10$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye',
+    is_active = 1,
+    updated_at = NOW()
 WHERE id = 'ceo-001' AND email = 'Robintejarat@gmail.com';
 
 USE `saas_master`;
 
--- اطمینان از وجود Super Admin (احمدرضا اوندی)
--- این کاربر از فایل اصلی saas_master.sql می‌آید
--- فقط اطمینان حاصل می‌کنیم که فعال است
+-- ===========================================
+-- کاربر Super Admin (احمدرضا اوندی)
+-- ===========================================
 
-UPDATE super_admins SET 
-    is_active = 1,
-    updated_at = NOW()
-WHERE username = 'Ahmadreza.avandi' AND email = 'ahmadrezaavandi@gmail.com';
+INSERT INTO `super_admins` (
+    `username`, 
+    `email`, 
+    `password`, 
+    `full_name`, 
+    `is_active`
+) VALUES (
+    'Ahmadreza.avandi',
+    'ahmadrezaavandi@gmail.com',
+    '$2a$10$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye',
+    'احمدرضا اوندی',
+    1
+)
+ON DUPLICATE KEY UPDATE 
+    `is_active` = 1,
+    `password` = '$2a$10$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye',
+    `updated_at` = NOW();
 EOF
+else
+    echo "✅ فایل 03-admin-users.sql موجود است"
+fi
 
 # خلاصه فایل‌های آماده شده
+echo ""
 echo "✅ فایل‌های دیتابیس آماده شدند:"
-echo "   📄 00-init-databases.sql - ایجاد دیتابیس‌ها و کاربر"
+echo "   📄 00-init-databases.sql - ایجاد دیتابیس‌ها و دسترسی‌ها"
 if [ "$CRM_DB_FOUND" = true ]; then
-    echo "   📄 01-crm_system.sql - جداول CRM ✅"
+    echo "   📄 crm_system.sql - جداول CRM ✅"
 else
-    echo "   📄 01-crm_system.sql - جداول CRM ❌ (یافت نشد)"
+    echo "   📄 crm_system.sql - جداول CRM ❌ (یافت نشد)"
+    exit 1
 fi
 if [ "$SAAS_DB_FOUND" = true ]; then
-    echo "   📄 02-saas_master.sql - جداول SaaS ✅"
+    echo "   📄 saas_master.sql - جداول SaaS ✅"
 else
-    echo "   📄 02-saas_master.sql - جداول SaaS ❌ (یافت نشد)"
+    echo "   📄 saas_master.sql - جداول SaaS ❌ (یافت نشد)"
+    exit 1
 fi
 echo "   📄 03-admin-users.sql - کاربران ادمین"
 
 # نمایش اندازه فایل‌ها برای اطمینان
 echo ""
 echo "📊 اندازه فایل‌های دیتابیس:"
-ls -lh database/0*.sql 2>/dev/null | while read -r line; do
+ls -lh database/*.sql 2>/dev/null | grep -E "(00-init|crm_system|saas_master|03-admin)" | while read -r line; do
     echo "   $line"
 done
 
@@ -951,28 +892,33 @@ echo ""
 echo "🔨 مرحله 7: Build و راه‌اندازی سرویس‌ها..."
 
 # اطمینان از وجود فایل‌های SQL قبل از build
-echo "� بررسی نهcایی فایل‌های SQL..."
+echo "🔍 بررسی نهایی فایل‌های SQL..."
+
+# بررسی فایل‌های ضروری
 if [ ! -f "database/00-init-databases.sql" ]; then
     echo "❌ فایل 00-init-databases.sql یافت نشد!"
     exit 1
 fi
 
-if [ ! -f "database/01-crm_system.sql" ]; then
-    echo "❌ فایل 01-crm_system.sql یافت نشد!"
+if [ ! -f "database/crm_system.sql" ]; then
+    echo "❌ فایل crm_system.sql یافت نشد!"
     echo "🔍 فایل‌های موجود در database/:"
     ls -la database/*.sql 2>/dev/null || echo "   هیچ فایل SQL یافت نشد"
     exit 1
 fi
 
-if [ ! -f "database/02-saas_master.sql" ]; then
-    echo "⚠️  فایل 02-saas_master.sql یافت نشد - ادامه با ساختار پایه"
+if [ ! -f "database/saas_master.sql" ]; then
+    echo "❌ فایل saas_master.sql یافت نشد!"
+    echo "🔍 فایل‌های موجود در database/:"
+    ls -la database/*.sql 2>/dev/null || echo "   هیچ فایل SQL یافت نشد"
+    exit 1
 fi
 
 if [ ! -f "database/03-admin-users.sql" ]; then
     echo "⚠️  فایل 03-admin-users.sql یافت نشد - ادامه بدون آن"
 fi
 
-echo "✅ فایل‌های SQL آماده هستند"
+echo "✅ همه فایل‌های SQL آماده هستند"
 
 # تنظیم docker-compose برای استفاده از nginx config فعال
 echo "🔧 تنظیم docker-compose..."

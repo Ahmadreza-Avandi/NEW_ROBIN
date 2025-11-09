@@ -21,6 +21,9 @@ SET time_zone = "+00:00";
 -- Database: `saas_master`
 --
 
+-- استفاده از دیتابیس saas_master
+USE `saas_master`;
+
 -- --------------------------------------------------------
 
 --
