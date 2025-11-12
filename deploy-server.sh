@@ -1274,7 +1274,7 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
     echo "🔧 بررسی و اصلاح دیتابیس‌های خالی..."
     
     # اگر crm_system خالی است، تلاش برای ایمپورت مجدد
-    if [ "$CRM_TABLE_COUNT" -le 1 ] && [ -f "database/01-crm_system.sql" ]; then
+    if [ "$CRM_TABLE_COUNT" -le 1 ] && [ -f "database/crm_system.sql" ]; then
         echo "🔧 ایمپورت مجدد crm_system..."
         echo "📋 کپی فایل به کانتینر..."
         
@@ -1284,7 +1284,7 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         # کپی فایل به کانتینر
         MYSQL_CONTAINER=$(docker-compose -f $COMPOSE_FILE ps -q mysql)
         if [ -n "$MYSQL_CONTAINER" ]; then
-            docker cp database/01-crm_system.sql $MYSQL_CONTAINER:/tmp/crm_import.sql
+            docker cp database/crm_system.sql $MYSQL_CONTAINER:/tmp/crm_import.sql
             
             # ایمپورت با روش مطمئن
             echo "⏳ در حال ایمپورت... (ممکن است چند دقیقه طول بکشد)"
@@ -1298,7 +1298,7 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
             else
                 echo "❌ ایمپورت crm_system ناموفق - احتمالاً نیاز به rebuild کامل دارید"
                 echo "💡 راه‌حل: ./deploy-server.sh --clean"
-                echo "   یا دستی: docker cp database/01-crm_system.sql \$(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/import.sql"
+                echo "   یا دستی: docker cp database/crm_system.sql \$(docker-compose -f $COMPOSE_FILE ps -q mysql):/tmp/import.sql"
                 echo "   سپس: docker-compose -f $COMPOSE_FILE exec mysql mariadb -u root -p1234 crm_system < /tmp/import.sql"
             fi
         else
@@ -1318,8 +1318,8 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         # ایمپورت فایل اگر موجود باشد
         MYSQL_CONTAINER=$(docker-compose -f $COMPOSE_FILE ps -q mysql)
         if [ -n "$MYSQL_CONTAINER" ]; then
-            if [ -f "database/02-saas_master.sql" ]; then
-                echo "📥 ایمپورت از database/02-saas_master.sql..."
+            if [ -f "database/saas_master.sql" ]; then
+                echo "📥 ایمپورت از database/saas_master.sql..."
                 echo "📋 کپی فایل به کانتینر..."
                 
                 # کپی فایل به کانتینر
