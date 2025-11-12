@@ -86,7 +86,7 @@ services:
     networks:
       - crm-network
 
-  # phpMyAdmin - Hidden and Secured
+  # phpMyAdmin - Secured with Authentication
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.2.2
     container_name: crm-phpmyadmin
@@ -95,16 +95,18 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
-      # Allow login with any valid MySQL user (set to 1 for flexibility)
-      PMA_ARBITRARY: 1
-      # Pre-fill login form with default user (users can still change it)
-      PMA_USER: "${DATABASE_USER:-crm_user}"
-      PMA_PASSWORD: "${DATABASE_PASSWORD:-1234}"
+      # Disable arbitrary server connection for security
+      PMA_ARBITRARY: 0
+      # Do not pre-fill credentials - force manual login
+      # PMA_USER and PMA_PASSWORD removed for security
       # Root password for phpMyAdmin to connect
       MYSQL_ROOT_PASSWORD: "1234"
-      PMA_ABSOLUTE_URI: "${NEXTAUTH_URL}/secure-db-admin-panel-x7k9m2/"
+      PMA_ABSOLUTE_URI: "${NEXTAUTH_URL}/db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/"
       # Hide phpMyAdmin version for security
       HIDE_PHP_VERSION: 1
+      # Additional security settings
+      PMA_CONTROLUSER: "${DATABASE_USER:-crm_user}"
+      PMA_CONTROLPASS: "${DATABASE_PASSWORD:-1234}"
     restart: unless-stopped
     # Remove external port exposure
     expose:
@@ -130,6 +132,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
       - ./nginx/ssl:/etc/nginx/ssl
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot

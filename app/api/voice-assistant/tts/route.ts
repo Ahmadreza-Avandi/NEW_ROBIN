@@ -30,13 +30,17 @@ export async function POST(req: NextRequest) {
 
     console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
 
+    // افزایش timeout برای متن‌های طولانی‌تر
+    const timeoutDuration = Math.max(45000, processedText.length * 100); // حداقل 45 ثانیه یا بیشتر برای متن‌های طولانی
+    console.log(`⏱️ Timeout set to: ${timeoutDuration}ms`);
+
     const ttsResponse = await fetch(ttsUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
-      signal: AbortSignal.timeout(30000) // 30 second timeout
+      signal: AbortSignal.timeout(timeoutDuration)
     });
 
     console.log('📡 TTS API Response Status:', ttsResponse.status, ttsResponse.statusText);
@@ -54,16 +58,26 @@ export async function POST(req: NextRequest) {
     if (data && data.success && data.audioUrl) {
       console.log('🔗 Audio URL:', data.audioUrl);
       console.log('🔗 Direct URL:', data.directUrl);
+      console.log('✅ TTS successful - Audio ready');
 
-      return NextResponse.json({
+      // اضافه کردن cache headers برای جلوگیری از از دست رفتن صدا
+      const response = NextResponse.json({
         success: true,
         audioUrl: data.audioUrl,
         directUrl: data.directUrl,
         checksum: data.checksum,
         base64: data.base64 || null,
         requestId: data.requestId,
-        shamsiDate: data.shamsiDate
+        shamsiDate: data.shamsiDate,
+        textLength: processedText.length,
+        timestamp: new Date().toISOString()
       });
+
+      // اضافه کردن headers برای بهبود قابلیت اطمینان
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      response.headers.set('X-Audio-Ready', 'true');
+      
+      return response;
     } else {
       console.error('❌ Invalid TTS response structure:', data);
       throw new Error(data.error || 'پاسخ نامعتبر از سرور TTS');

@@ -81,45 +81,107 @@ function stopListening(recognition: any): void {
   }
 }
 
-// تابع پخش صدا
-async function playAudio(text: string): Promise<void> {
-  try {
-    const response = await fetch('/api/voice-assistant/tts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text }),
-    });
+// تابع پخش صدا با retry mechanism
+async function playAudio(text: string, retries = 3): Promise<void> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`🎵 Attempt ${attempt}/${retries} - Requesting TTS for text length: ${text.length}`);
+      
+      const response = await fetch('/api/voice-assistant/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
 
-    if (!response.ok) {
-      throw new Error('خطا در دریافت صدا');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `خطا در دریافت صدا (${response.status})`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success || !data.audioUrl) {
+        throw new Error(data.error || 'پاسخ نامعتبر از سرور');
+      }
+
+      console.log('✅ TTS Response received:', {
+        audioUrl: data.audioUrl,
+        directUrl: data.directUrl,
+        requestId: data.requestId
+      });
+
+      // استفاده از directUrl اگر موجود باشد، در غیر این صورت audioUrl
+      const audioSrc = data.directUrl || data.audioUrl;
+      
+      // ایجاد audio element با تنظیمات بهتر
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.crossOrigin = 'anonymous';
+      
+      // تنظیم src
+      audio.src = audioSrc;
+      
+      console.log('🔊 Loading audio from:', audioSrc);
+      
+      // منتظر بارگذاری کامل صدا
+      await new Promise<void>((resolve, reject) => {
+        const loadTimeout = setTimeout(() => {
+          reject(new Error('Timeout loading audio'));
+        }, 15000); // 15 second timeout for loading
+        
+        audio.oncanplaythrough = () => {
+          clearTimeout(loadTimeout);
+          console.log('✅ Audio loaded and ready to play');
+          resolve();
+        };
+        
+        audio.onerror = (e) => {
+          clearTimeout(loadTimeout);
+          console.error('❌ Audio loading error:', e);
+          reject(new Error('خطا در بارگذاری صدا'));
+        };
+        
+        // شروع بارگذاری
+        audio.load();
+      });
+      
+      // پخش صدا
+      console.log('▶️ Starting audio playback...');
+      await audio.play();
+      
+      // منتظر پایان پخش
+      return new Promise((resolve, reject) => {
+        audio.onended = () => {
+          console.log('✅ Audio playback completed');
+          resolve();
+        };
+        
+        audio.onerror = (e) => {
+          console.error('❌ Audio playback error:', e);
+          reject(new Error('خطا در پخش صدا'));
+        };
+      });
+      
+    } catch (error: any) {
+      lastError = error;
+      console.error(`❌ Attempt ${attempt}/${retries} failed:`, error.message);
+      
+      // اگر آخرین تلاش نبود، کمی صبر کن قبل از تلاش مجدد
+      if (attempt < retries) {
+        const waitTime = attempt * 1000; // 1s, 2s, 3s
+        console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
     }
-
-    const data = await response.json();
-    
-    if (!data.success || !data.audioUrl) {
-      throw new Error(data.error || 'خطا در دریافت صدا');
-    }
-
-    // استفاده از audioUrl که از API برمیگرده
-    const audio = new Audio(data.audioUrl);
-    
-    await audio.play();
-    
-    return new Promise((resolve, reject) => {
-      audio.onended = () => {
-        resolve();
-      };
-      audio.onerror = (e) => {
-        console.error('Audio playback error:', e);
-        reject(new Error('خطا در پخش صدا'));
-      };
-    });
-  } catch (error) {
-    console.error('خطا در پخش صدا:', error);
-    throw error;
   }
+  
+  // اگر همه تلاش‌ها ناموفق بودند
+  console.error('❌ All audio playback attempts failed');
+  throw lastError || new Error('خطا در پخش صدا پس از چند تلاش');
 }
 
 // State management
@@ -335,18 +397,25 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
                 },
               });
 
-              // Play audio response
+              // Play audio response with retry
               dispatch({ type: 'SET_PLAYING', payload: true });
               setButtonText('در حال پخش...');
 
               try {
+                console.log('🎵 Starting audio playback for response...');
                 await playAudio(responseText);
-              } catch (audioError) {
-                console.error('Audio playback failed:', audioError);
+                console.log('✅ Audio playback successful');
+              } catch (audioError: any) {
+                console.error('❌ Audio playback failed after retries:', audioError);
+                
+                // نمایش پیام خطا به کاربر
                 dispatch({
                   type: 'SET_ERROR',
-                  payload: 'پاسخ دریافت شد اما پخش صدا ناموفق بود.'
+                  payload: `پاسخ دریافت شد: "${responseText.substring(0, 100)}..." اما پخش صدا ناموفق بود. لطفاً متن را بخوانید.`
                 });
+                
+                // نمایش پاسخ متنی برای کاربر
+                alert(`پاسخ رابین:\n\n${responseText}`);
               }
 
               dispatch({ type: 'SET_PLAYING', payload: false });

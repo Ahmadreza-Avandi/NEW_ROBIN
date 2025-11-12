@@ -661,6 +661,70 @@ else
 fi
 
 # ═══════════════════════════════════════════════════════════════
+# 🔐 مرحله 5.5: ایجاد احراز هویت برای phpMyAdmin
+# ═══════════════════════════════════════════════════════════════
+
+echo ""
+echo "🔐 مرحله 5.5: تنظیم احراز هویت phpMyAdmin..."
+
+# ایجاد دایرکتری nginx اگر وجود نداشته باشد
+mkdir -p nginx
+
+# ایجاد username و password تصادفی برای Basic Auth
+PHPMYADMIN_USER="dbadmin_$(date +%s | sha256sum | base64 | head -c 8)"
+PHPMYADMIN_PASS="$(date +%s | sha256sum | base64 | head -c 24)"
+
+# ذخیره اطلاعات در فایل امن
+cat > .phpmyadmin_credentials << EOF
+# phpMyAdmin Access Credentials
+# ================================
+# URL: https://$DOMAIN/db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/
+# 
+# Basic Auth (nginx):
+# Username: $PHPMYADMIN_USER
+# Password: $PHPMYADMIN_PASS
+#
+# MySQL Login:
+# Username: crm_user
+# Password: 1234
+# 
+# MySQL Root:
+# Username: root
+# Password: 1234
+# ================================
+# ⚠️  این فایل را در جای امن نگه دارید و از سرور حذف کنید!
+EOF
+
+chmod 600 .phpmyadmin_credentials
+
+echo "✅ اطلاعات دسترسی phpMyAdmin در فایل .phpmyadmin_credentials ذخیره شد"
+echo ""
+echo "📋 اطلاعات دسترسی phpMyAdmin:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🌐 URL: https://$DOMAIN/db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/"
+echo ""
+echo "🔐 Basic Auth (لایه اول امنیتی):"
+echo "   Username: $PHPMYADMIN_USER"
+echo "   Password: $PHPMYADMIN_PASS"
+echo ""
+echo "🗄️  MySQL Login (لایه دوم امنیتی):"
+echo "   Username: crm_user"
+echo "   Password: 1234"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "⚠️  این اطلاعات را در جای امن یادداشت کنید!"
+echo "⚠️  فایل .phpmyadmin_credentials را پس از یادداشت حذف کنید"
+echo ""
+
+# ایجاد فایل .htpasswd برای nginx
+# استفاده از openssl برای hash کردن password
+HASHED_PASS=$(openssl passwd -apr1 "$PHPMYADMIN_PASS")
+echo "$PHPMYADMIN_USER:$HASHED_PASS" > nginx/.htpasswd
+chmod 644 nginx/.htpasswd
+
+echo "✅ فایل احراز هویت nginx ایجاد شد"
+
+# ═══════════════════════════════════════════════════════════════
 # 🌐 مرحله 6: تنظیم SSL و nginx
 # ═══════════════════════════════════════════════════════════════
 
@@ -690,12 +754,25 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
     
-    location /secure-db-admin-panel-x7k9m2/ {
+    # phpMyAdmin - Secured with Basic Auth
+    location /db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/ {
+        # Basic Authentication
+        auth_basic "Database Management - Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        
         proxy_pass http://phpmyadmin/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Security headers
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        
+        # Disable caching for security
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
     }
 }
 EOF
@@ -813,12 +890,25 @@ server {
         proxy_read_timeout 60s;
     }
     
-    location /secure-db-admin-panel-x7k9m2/ {
+    # phpMyAdmin - Secured with Basic Auth
+    location /db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/ {
+        # Basic Authentication
+        auth_basic "Database Management - Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        
         proxy_pass http://phpmyadmin/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Security headers
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        
+        # Disable caching for security
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
     }
     
     location /api/ {
@@ -863,12 +953,25 @@ server {
         proxy_read_timeout 60s;
     }
     
-    location /secure-db-admin-panel-x7k9m2/ {
+    # phpMyAdmin - Secured with Basic Auth
+    location /db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/ {
+        # Basic Authentication
+        auth_basic "Database Management - Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        
         proxy_pass http://phpmyadmin/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
+        
+        # Security headers
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        
+        # Disable caching for security
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
     }
     
     location /api/ {
@@ -1228,8 +1331,8 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
                 echo "📥 ایمپورت مستقیم از database/saas_master.sql..."
                 docker cp database/saas_master.sql $MYSQL_CONTAINER:/tmp/saas_import.sql
                 docker-compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
-        else
-            echo "⚠️  فایل saas_master یافت نشد - ایجاد ساختار پایه..."
+            else
+                echo "⚠️  فایل saas_master یافت نشد - ایجاد ساختار پایه..."
             docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
             USE saas_master;
             
@@ -1269,6 +1372,7 @@ if docker-compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
               UNIQUE KEY \`admin_email\` (\`admin_email\`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             " 2>/dev/null || true
+            fi
         fi
         
         sleep 5
@@ -1639,13 +1743,13 @@ echo "🌐 آدرس‌های دسترسی:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
     echo "🌐 سیستم CRM: https://$DOMAIN"
-    echo "🔐 phpMyAdmin: https://$DOMAIN/secure-db-admin-panel-x7k9m2/"
+    echo "🔐 phpMyAdmin: https://$DOMAIN/db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/"
     echo ""
     echo "⚠️  نکته: اگر redirect مشکل دارد، از HTTP استفاده کنید:"
     echo "   🌐 HTTP: http://$DOMAIN"
 else
     echo "🌐 سیستم CRM: http://$DOMAIN"
-    echo "🔐 phpMyAdmin: http://$DOMAIN/secure-db-admin-panel-x7k9m2/"
+    echo "🔐 phpMyAdmin: http://$DOMAIN/db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/"
 fi
 echo ""
 echo "👑 اطلاعات لاگین:"

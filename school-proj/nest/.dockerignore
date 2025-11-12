@@ -1,0 +1,15 @@
+node_modules
+.git*
+README.md
+Dockerfile*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+*.tsbuildinfo
+coverage
+test
+tests
+*.test.*
+*.spec.*
+src
