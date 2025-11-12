@@ -111,21 +111,38 @@ async function playAudio(text: string, retries = 3): Promise<void> {
       console.log('✅ TTS Response received:', {
         audioUrl: data.audioUrl,
         directUrl: data.directUrl,
-        requestId: data.requestId
+        requestId: data.requestId,
+        hasBase64: !!data.base64
       });
 
-      // استفاده از directUrl اگر موجود باشد، در غیر این صورت audioUrl
-      const audioSrc = data.directUrl || data.audioUrl;
+      // اولویت: base64 > directUrl > audioUrl
+      let audioSrc = '';
+      
+      if (data.base64) {
+        // استفاده از base64 برای قابلیت اطمینان بیشتر
+        audioSrc = `data:audio/mpeg;base64,${data.base64}`;
+        console.log('🎵 Using base64 audio (most reliable)');
+      } else if (data.directUrl) {
+        audioSrc = data.directUrl;
+        console.log('🎵 Using directUrl:', audioSrc);
+      } else {
+        audioSrc = data.audioUrl;
+        console.log('🎵 Using audioUrl:', audioSrc);
+      }
       
       // ایجاد audio element با تنظیمات بهتر
       const audio = new Audio();
       audio.preload = 'auto';
-      audio.crossOrigin = 'anonymous';
+      
+      // فقط برای URL های خارجی از crossOrigin استفاده کن
+      if (!audioSrc.startsWith('data:')) {
+        audio.crossOrigin = 'anonymous';
+      }
       
       // تنظیم src
       audio.src = audioSrc;
       
-      console.log('🔊 Loading audio from:', audioSrc);
+      console.log('🔊 Loading audio from:', audioSrc.substring(0, 100) + (audioSrc.length > 100 ? '...' : ''));
       
       // منتظر بارگذاری کامل صدا
       await new Promise<void>((resolve, reject) => {
@@ -403,19 +420,25 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
 
               try {
                 console.log('🎵 Starting audio playback for response...');
+                console.log('📝 Response text:', responseText.substring(0, 100) + '...');
                 await playAudio(responseText);
                 console.log('✅ Audio playback successful');
               } catch (audioError: any) {
                 console.error('❌ Audio playback failed after retries:', audioError);
+                console.error('❌ Error details:', {
+                  name: audioError.name,
+                  message: audioError.message,
+                  stack: audioError.stack
+                });
                 
                 // نمایش پیام خطا به کاربر
                 dispatch({
                   type: 'SET_ERROR',
-                  payload: `پاسخ دریافت شد: "${responseText.substring(0, 100)}..." اما پخش صدا ناموفق بود. لطفاً متن را بخوانید.`
+                  payload: `پخش صدا ناموفق بود. پاسخ: "${responseText.substring(0, 80)}..."`
                 });
                 
-                // نمایش پاسخ متنی برای کاربر
-                alert(`پاسخ رابین:\n\n${responseText}`);
+                // نمایش پاسخ متنی در console برای debug
+                console.log('📝 Full response text:', responseText);
               }
 
               dispatch({ type: 'SET_PLAYING', payload: false });
