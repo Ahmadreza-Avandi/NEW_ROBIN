@@ -5,7 +5,8 @@ import { NextApiRequest, NextApiResponse } from 'next';
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === 'GET') {
     try {
-      const response = await axios.get('http://localhost:3001/new-person'); // جایگزین کنید با URL API Next.js خود
+      const nestjsUrl = process.env.NESTJS_API_URL || 'http://localhost:3001';
+      const response = await axios.get(`${nestjsUrl}/new-person`);
       res.status(200).json(response.data);
     } catch (error) {
       res.status(500).json({ error: 'Internal Server Error' });

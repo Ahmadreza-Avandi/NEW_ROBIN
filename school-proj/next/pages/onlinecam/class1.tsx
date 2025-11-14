@@ -10,13 +10,14 @@ const DVRStreamView: React.FC = () => {
 
   const checkStatus = async () => {
     try {
-      const res = await fetch('http://localhost:5000/status');
+      const pythonUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${pythonUrl}/status`);
       const { online } = await res.json();
       setIsOnline(online);
 
       // اگر دوربین آنلاین است، بروزرسانی تصویر
       if (videoRef.current && online) {
-        videoRef.current.src = `http://localhost:5000/video_feed?t=${Date.now()}`;
+        videoRef.current.src = `${pythonUrl}/video_feed?t=${Date.now()}`;
       }
     } catch (error) {
       setIsOnline(false);
@@ -66,7 +67,7 @@ const DVRStreamView: React.FC = () => {
           <Box
             component="img"
             ref={videoRef}
-            src={`http://localhost:5000/video_feed?t=${Date.now()}`}
+            src={`${process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:5000'}/video_feed?t=${Date.now()}`}
             sx={{
               width: '100%',
               height: 'auto',

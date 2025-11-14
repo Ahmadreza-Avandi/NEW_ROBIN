@@ -107,7 +107,9 @@ const RegisterForm: React.FC = () => {
   const handleCapturedImageUpload = async (imageData: string) => {
     try {
       setLoading(true);
-      const response = await fetch('https://sch.ahmadreza-avandi.ir/python-api/upload', {
+      // استفاده از متغیر محیطی برای آدرس Python API
+      const pythonApiUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${pythonApiUrl}/upload`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

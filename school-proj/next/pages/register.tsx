@@ -69,7 +69,8 @@ const RegisterPage = () => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/users/role');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const response = await axios.get(`${apiUrl}/users/role`);
         interface Role {
           id: number;
           name: string;

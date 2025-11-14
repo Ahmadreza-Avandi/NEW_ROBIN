@@ -37,8 +37,9 @@ export default async (req: RequestWithFiles, res: NextApiResponse) => {
         const { firstName, lastName, nationalCode, studentId } = body;
         const face = files && files.length > 0 ? files[0].buffer : null;
 
+        const nestjsUrl = process.env.NESTJS_API_URL || 'http://localhost:3001';
         const response = await axios.post(
-          'http://localhost:3001/new-person',
+          `${nestjsUrl}/new-person`,
           {
             face,
             firstName,

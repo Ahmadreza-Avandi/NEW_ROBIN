@@ -59,7 +59,8 @@ const LocationsTable: React.FC = () => {
   const fetchLocations = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/locations');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/locations`);
       if (!response.ok) {
         throw new Error('خطا در دریافت مکان‌ها');
       }
@@ -119,8 +120,9 @@ const LocationsTable: React.FC = () => {
   const confirmDelete = async () => {
     if (locationToDelete) {
       try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const response = await fetch(
-          `http://localhost:3001/locations/${locationToDelete}`,
+          `${apiUrl}/locations/${locationToDelete}`,
           { method: 'DELETE' }
         );
         if (!response.ok) {
@@ -140,8 +142,9 @@ const LocationsTable: React.FC = () => {
       const updatedLocation = locations.find(loc => loc.id === locationToSave);
       if (updatedLocation) {
         try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
           const response = await fetch(
-            `http://localhost:3001/locations/${locationToSave}`,
+            `${apiUrl}/locations/${locationToSave}`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },

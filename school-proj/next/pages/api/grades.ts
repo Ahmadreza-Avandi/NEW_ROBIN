@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import mysql from 'mysql2/promise';
+import { DATABASE_URL } from '@/lib/config';
 
-// استفاده از تنظیمات داکر برای اتصال به دیتابیس
+// استفاده از تنظیمات مرکزی برای اتصال به دیتابیس
 const dbConfig = {
-  // استفاده از نام سرویس داکر برای اتصال از داخل شبکه داکر
-  connectionString: process.env.DATABASE_URL || "mysql://root:rootpassword@mysql:3306/mydatabase"
+  connectionString: DATABASE_URL
 };
 
 export default async function handler(

@@ -4,8 +4,10 @@ import { DateObject } from 'react-multi-date-picker';
 import persian from 'react-date-object/calendars/persian';
 import gregorian from 'react-date-object/calendars/gregorian';
 
+import { DATABASE_URL } from '@/lib/config';
+
 const dbConfig = {
-  connectionString: process.env.DATABASE_URL || 'mysql://root:rootpassword@mysql:3306/mydatabase',
+  connectionString: DATABASE_URL,
 };
 
 // Persian weekday names

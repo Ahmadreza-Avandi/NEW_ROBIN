@@ -15,8 +15,10 @@ interface UserRow {
   gradeName: string | null;
 }
 
+import { DATABASE_URL } from '@/lib/config';
+
 const dbConfig = {
-  connectionString: process.env.DATABASE_URL || 'mysql://root:rootpassword@mysql:3306/mydatabase',
+  connectionString: DATABASE_URL,
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

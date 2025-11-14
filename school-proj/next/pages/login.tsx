@@ -42,7 +42,9 @@ const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginInputs) => {
     setLoading(true);
     try {
-      const response = await axios.post('https://sch.ahmadreza-avandi.ir/api/login', data);
+      // استفاده از متغیر محیطی برای آدرس API
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await axios.post(`${apiUrl}/login`, data);
       
       interface LoginResponse {
         access_token: string;

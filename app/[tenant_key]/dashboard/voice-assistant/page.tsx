@@ -81,8 +81,62 @@ function stopListening(recognition: any): void {
   }
 }
 
+// تابع تقسیم متن به جملات
+function splitTextIntoChunks(text: string, maxLength = 500): string[] {
+  // اگر متن کوتاه است، همان را برگردان
+  if (text.length <= maxLength) {
+    return [text];
+  }
+  
+  const chunks: string[] = [];
+  const sentences = text.split(/([.!?؟۔]\s+)/); // تقسیم بر اساس علائم نقطه‌گذاری
+  
+  let currentChunk = '';
+  
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i];
+    
+    // اگر اضافه کردن این جمله از حد مجاز بیشتر شود
+    if (currentChunk.length + sentence.length > maxLength && currentChunk.length > 0) {
+      chunks.push(currentChunk.trim());
+      currentChunk = sentence;
+    } else {
+      currentChunk += sentence;
+    }
+  }
+  
+  // اضافه کردن آخرین قطعه
+  if (currentChunk.trim().length > 0) {
+    chunks.push(currentChunk.trim());
+  }
+  
+  console.log(`📝 Text split into ${chunks.length} chunks:`, chunks.map(c => c.length));
+  return chunks;
+}
+
 // تابع پخش صدا با retry mechanism
 async function playAudio(text: string, retries = 3): Promise<void> {
+  // تقسیم متن به قطعات کوچک‌تر برای متن‌های طولانی
+  const chunks = splitTextIntoChunks(text, 500);
+  
+  console.log(`🎵 Playing audio in ${chunks.length} chunk(s)`);
+  
+  // پخش هر قطعه به ترتیب
+  for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+    const chunk = chunks[chunkIndex];
+    console.log(`🎵 Playing chunk ${chunkIndex + 1}/${chunks.length} (${chunk.length} chars)`);
+    
+    await playAudioChunk(chunk, retries);
+    
+    // کمی توقف بین قطعات (اختیاری)
+    if (chunkIndex < chunks.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  }
+}
+
+// تابع پخش یک قطعه صدا
+async function playAudioChunk(text: string, retries = 3): Promise<void> {
   let lastError: Error | null = null;
   
   for (let attempt = 1; attempt <= retries; attempt++) {

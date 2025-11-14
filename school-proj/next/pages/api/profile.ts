@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
+import { SERVER_NESTJS_URL } from '@/lib/config';
 
-const API_URL = 'http://localhost:3001/users'; // آدرس بک‌اند
+const API_URL = `${SERVER_NESTJS_URL}/users`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const token = req.headers.authorization?.split(' ')[1];

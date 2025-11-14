@@ -17,7 +17,8 @@ const DisplayImages = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await fetch('http://localhost:5000/get_all_images'); // آدرس API Flask
+        const pythonUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${pythonUrl}/get_all_images`);
         const data: ImageData[] = await res.json(); // تایپ داده‌ها
         setImages(data);
         setLoading(false);

@@ -68,7 +68,8 @@ const RoleCreationPage: React.FC = () => {
     };
 
     try {
-      const response = await axios.post('http://localhost:3001/users/role', newRole);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await axios.post(`${apiUrl}/users/role`, newRole);
       setAlert({
         open: true,
         message: 'نقش با موفقیت ایجاد شد',
