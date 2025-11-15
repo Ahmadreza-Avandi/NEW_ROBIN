@@ -2,9 +2,10 @@
 
 # 🔧 اسکریپت ایجاد فایل‌های .env برای School-Proj
 # این اسکریپت تمام env های لازم رو می‌سازه
-# استفاده: bash setup-env.sh [0|1]
-#   0 = لوکال (پیش‌فرض)
+# استفاده: bash setup-env.sh [0|1|auto]
+#   0 = لوکال
 #   1 = سرور
+#   auto = تشخیص خودکار (پیش‌فرض)
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -36,8 +37,35 @@ print_header() {
     echo ""
 }
 
-# دریافت حالت از آرگومان (0=لوکال، 1=سرور)
-MODE=${1:-0}
+# تشخیص خودکار محیط
+detect_environment() {
+    # اگر docker-compose.yml وجود داره و nginx روی سیستم نصب هست = سرور
+    if [ -f "docker-compose.yml" ] && command -v nginx &> /dev/null; then
+        # اگر SSL certificate وجود داره = سرور
+        if [ -f "/etc/letsencrypt/live/sch.ahmadreza-avandi.ir/fullchain.pem" ]; then
+            echo "1"
+            return
+        fi
+    fi
+    
+    # اگر در مسیر /root یا /home/*/NEW_ROBIN هستیم = احتمالاً سرور
+    if [[ "$PWD" == /root/* ]] || [[ "$PWD" == /home/*/NEW_ROBIN/* ]]; then
+        echo "1"
+        return
+    fi
+    
+    # پیش‌فرض = لوکال
+    echo "0"
+}
+
+# دریافت حالت از آرگومان
+MODE=${1:-auto}
+
+# اگر auto بود، تشخیص بده
+if [ "$MODE" = "auto" ]; then
+    MODE=$(detect_environment)
+    print_info "🔍 تشخیص خودکار محیط..."
+fi
 
 # تنظیمات بر اساس حالت
 if [ "$MODE" = "0" ]; then

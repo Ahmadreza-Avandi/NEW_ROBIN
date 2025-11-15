@@ -22,10 +22,9 @@ RUN mkdir -p trainer labels assets/face_detection data
 COPY get-face-data.py .
 COPY assets/face_detection/ assets/face_detection/
 
-# متغیرهای محیطی
+# متغیرهای محیطی پیش‌فرض (docker-compose می‌تواند override کند)
 ENV FLASK_APP=get-face-data.py \
     FLASK_ENV=production \
-    REDIS_HOST=redis \
     PYTHONUNBUFFERED=1
 
 EXPOSE 5000
