@@ -21,13 +21,28 @@ os.makedirs("labels", exist_ok=True)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", "")
+
+logging.info(f"🔄 تلاش برای اتصال به Redis در {REDIS_HOST}:{REDIS_PORT}")
+
+redis_client = None
 try:
-    redis_client = redis.StrictRedis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
+    redis_client = redis.StrictRedis(
+        host=REDIS_HOST, 
+        port=REDIS_PORT, 
+        db=0, 
+        password=REDIS_PASSWORD if REDIS_PASSWORD else None,
+        decode_responses=True,
+        socket_connect_timeout=5,
+        socket_timeout=5
+    )
     redis_client.ping()
-    logging.info("اتصال به Redis با موفقیت برقرار شد.")
+    logging.info(f"✅ اتصال به Redis در {REDIS_HOST}:{REDIS_PORT} با موفقیت برقرار شد.")
 except Exception as e:
-    logging.error("خطا در اتصال به Redis: %s", e)
-    exit(1)
+    logging.error(f"❌ خطا در اتصال به Redis ({REDIS_HOST}:{REDIS_PORT}): {e}")
+    logging.warning("⚠️ سرویس بدون Redis ادامه می‌یابد. برخی قابلیت‌ها ممکن است کار نکنند.")
+    redis_client = None
 
 # تنظیم Flask و CORS
 app = Flask(__name__)
@@ -143,11 +158,16 @@ def save_to_redis(national_code, full_name, face_image_gray):
             "faceImage": face_base64,
             "detectionTime": JalaliDateTime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
-        redis_client.set(national_code, json.dumps(data))
-        logging.info("اطلاعات کاربر با کد ملی %s در Redis ذخیره شد.", national_code)
+        
+        if redis_client:
+            redis_client.set(national_code, json.dumps(data))
+            logging.info("اطلاعات کاربر با کد ملی %s در Redis ذخیره شد.", national_code)
+        else:
+            logging.warning("Redis در دسترس نیست. اطلاعات در Redis ذخیره نشد.")
     except Exception as e:
         logging.error("خطا در ذخیره اطلاعات در Redis: %s", e)
-        raise ValueError("ذخیره اطلاعات در Redis با خطا مواجه شد.")
+        # Don't raise error if Redis fails
+        logging.warning("ادامه بدون Redis...")
 
 
 
