@@ -82,7 +82,9 @@ services:
       - FLASK_ENV=production
       - REDIS_HOST=${REDIS_HOST:-redis}
       - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
       - MYSQL_USER=${MYSQL_USER:-user}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-userpassword}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-mydatabase}
