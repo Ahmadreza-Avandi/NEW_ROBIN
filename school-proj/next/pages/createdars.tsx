@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TextField,
   Button,
@@ -10,67 +10,148 @@ import {
   FormControl,
   Snackbar,
   Alert,
-  SnackbarCloseReason,
   SelectChangeEvent,
+  Paper,
+  Typography,
+  Box,
+  CircularProgress,
 } from '@mui/material';
+import { Book } from '@mui/icons-material';
+import { useRouter } from 'next/router';
 
-interface FormData {
-  title: string;
-  className: string;
-  teacher: string;
-  dayAndPeriod: string;
-  grade: string;
+interface Class {
+  id: number;
+  name: string;
 }
 
-const NewLessonPage: React.FC = () => {
+interface Teacher {
+  id: number;
+  fullName: string;
+}
+
+interface FormData {
+  name: string;
+  classId: string;
+  teacherId: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+}
+
+const CreateSubjectPage: React.FC = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
-    title: '',
-    className: '',
-    teacher: '',
-    dayAndPeriod: '',
-    grade: '',
+    name: '',
+    classId: '',
+    teacherId: '',
+    dayOfWeek: '',
+    startTime: '',
+    endTime: '',
   });
 
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
   const [open, setOpen] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
   const [severity, setSeverity] = useState<'success' | 'error'>('success');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
-  ) => {
-    const { name, value } = e.target as HTMLInputElement;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  useEffect(() => {
+    // بررسی لاگین
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoadingData(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      // دریافت کلاس‌ها
+      const classesRes = await fetch('/api/classes', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (classesRes.ok) {
+        const classesData = await classesRes.json();
+        setClasses(classesData);
+      }
+
+      // دریافت معلمان
+      const teachersRes = await fetch('/api/teachers', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (teachersRes.ok) {
+        const teachersData = await teachersRes.json();
+        setTeachers(teachersData);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const { name, value } = event.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
-  const submitNewLesson = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.classId || !formData.teacherId || !formData.dayOfWeek || !formData.startTime || !formData.endTime) {
+      setMessage('لطفاً تمام فیلدها را پر کنید');
+      setSeverity('error');
+      setOpen(true);
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/lessons`, {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('/api/admin/create-subject', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          classId: parseInt(formData.classId),
+          teacherId: parseInt(formData.teacherId),
+          dayOfWeek: formData.dayOfWeek,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+        }),
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         setMessage('درس جدید با موفقیت ثبت شد');
         setSeverity('success');
         setOpen(true);
-        setFormData({ title: '', className: '', teacher: '', dayAndPeriod: '', grade: '' });
+        setFormData({
+          name: '',
+          classId: '',
+          teacherId: '',
+          dayOfWeek: '',
+          startTime: '',
+          endTime: '',
+        });
       } else {
-        setMessage('خطا در ثبت درس جدید');
+        setMessage(data.message || 'خطا در ثبت درس جدید');
         setSeverity('error');
         setOpen(true);
       }
@@ -79,107 +160,166 @@ const NewLessonPage: React.FC = () => {
       setSeverity('error');
       setOpen(true);
       console.error('خطا در ارتباط با سرور:', error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    submitNewLesson();
-  };
-
-  const handleClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: SnackbarCloseReason
-  ) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+  const handleClose = () => {
     setOpen(false);
   };
 
+  if (loadingData) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
   return (
-    <Container>
-      <h1>ایجاد درس جدید</h1>
-      <form onSubmit={handleSubmit}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="عنوان درس"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              fullWidth
-              margin="normal"
-              sx={{ fontSize: '14px' }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="کلاس برگزار کننده"
-              name="className"
-              value={formData.className}
-              onChange={handleInputChange}
-              fullWidth
-              margin="normal"
-              sx={{ fontSize: '14px' }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="دبیر مربوطه"
-              name="teacher"
-              value={formData.teacher}
-              onChange={handleInputChange}
-              fullWidth
-              margin="normal"
-              sx={{ fontSize: '14px' }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="روز و زنگ برگزاری"
-              name="dayAndPeriod"
-              value={formData.dayAndPeriod}
-              onChange={handleInputChange}
-              fullWidth
-              margin="normal"
-              sx={{ fontSize: '14px' }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>پایه</InputLabel>
-              <Select
-                label="پایه"
-                name="grade"
-                value={formData.grade}
-                onChange={handleSelectChange}
-              >
-                <MenuItem value="دهم">دهم</MenuItem>
-                <MenuItem value="یازدهم">یازدهم</MenuItem>
-                <MenuItem value="دوازدهم">دوازدهم</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} style={{ display: 'flex', justifyContent: 'center' }}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              sx={{ padding: '12px 24px', fontSize: '16px' }}
-            >
-              ثبت
-            </Button>
-          </Grid>
-        </Grid>
-      </form>
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
-          {message}
-        </Alert>
-      </Snackbar>
-    </Container>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <Book sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
+            <Typography variant="h4" component="h1" fontWeight="bold">
+              ایجاد درس جدید
+            </Typography>
+          </Box>
+
+          <form onSubmit={handleSubmit}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  label="نام درس"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  placeholder="مثال: ریاضی"
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>کلاس</InputLabel>
+                  <Select
+                    label="کلاس"
+                    name="classId"
+                    value={formData.classId}
+                    onChange={handleSelectChange}
+                  >
+                    {classes.map((cls) => (
+                      <MenuItem key={cls.id} value={cls.id.toString()}>
+                        {cls.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>معلم</InputLabel>
+                  <Select
+                    label="معلم"
+                    name="teacherId"
+                    value={formData.teacherId}
+                    onChange={handleSelectChange}
+                  >
+                    {teachers.map((teacher) => (
+                      <MenuItem key={teacher.id} value={teacher.id.toString()}>
+                        {teacher.fullName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>روز هفته</InputLabel>
+                  <Select
+                    label="روز هفته"
+                    name="dayOfWeek"
+                    value={formData.dayOfWeek}
+                    onChange={handleSelectChange}
+                  >
+                    <MenuItem value="شنبه">شنبه</MenuItem>
+                    <MenuItem value="یکشنبه">یکشنبه</MenuItem>
+                    <MenuItem value="دوشنبه">دوشنبه</MenuItem>
+                    <MenuItem value="سه‌شنبه">سه‌شنبه</MenuItem>
+                    <MenuItem value="چهارشنبه">چهارشنبه</MenuItem>
+                    <MenuItem value="پنج‌شنبه">پنج‌شنبه</MenuItem>
+                    <MenuItem value="جمعه">جمعه</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  label="ساعت شروع"
+                  name="startTime"
+                  type="time"
+                  value={formData.startTime}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  label="ساعت پایان"
+                  name="endTime"
+                  type="time"
+                  value={formData.endTime}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    onClick={() => setFormData({
+                      name: '',
+                      classId: '',
+                      teacherId: '',
+                      dayOfWeek: '',
+                      startTime: '',
+                      endTime: '',
+                    })}
+                  >
+                    پاک کردن
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={submitting}
+                    sx={{ minWidth: 120 }}
+                  >
+                    {submitting ? 'در حال ثبت...' : 'ثبت درس'}
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </form>
+        </Paper>
+
+        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+            {message}
+          </Alert>
+        </Snackbar>
+      </Container>
   );
 };
 
-export default NewLessonPage;
+export default CreateSubjectPage;

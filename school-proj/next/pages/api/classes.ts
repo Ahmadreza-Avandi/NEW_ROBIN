@@ -1,10 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import mysql from 'mysql2/promise';
-import { DATABASE_URL } from '@/lib/config';
-
-const dbConfig = {
-  connectionString: DATABASE_URL,
-};
+import { executeQuery } from '@/lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -12,8 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
   try {
-    const connection = await mysql.createConnection(dbConfig.connectionString);
-    const [rows] = await connection.execute(
+    const rows = await executeQuery(
       `SELECT 
          c.id,
          c.name,
@@ -23,7 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
        LEFT JOIN major m ON c.majorId = m.id
        LEFT JOIN grade g ON c.gradeId = g.id`
     );
-    await connection.end();
     return res.status(200).json(rows);
   } catch (error) {
     console.error('Error fetching classes:', error);

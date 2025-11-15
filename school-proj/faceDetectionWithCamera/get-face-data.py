@@ -11,6 +11,10 @@ from flask_cors import CORS
 from persiantools.jdatetime import JalaliDateTime
 import boto3
 from botocore.exceptions import NoCredentialsError
+from dotenv import load_dotenv
+
+# بارگذاری متغیرهای محیطی از فایل .env
+load_dotenv()
 
 # --------------------- تنظیمات اولیه ---------------------
 # ایجاد پوشه‌های مورد نیاز برای ذخیره مدل و لیبل‌ها
@@ -21,8 +25,17 @@ os.makedirs("labels", exist_ok=True)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", "")
+
 try:
-    redis_client = redis.StrictRedis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
+    redis_client = redis.StrictRedis(
+        host=REDIS_HOST, 
+        port=REDIS_PORT, 
+        db=0, 
+        password=REDIS_PASSWORD if REDIS_PASSWORD else None,
+        decode_responses=True
+    )
     redis_client.ping()
     logging.info("اتصال به Redis با موفقیت برقرار شد.")
 except Exception as e:

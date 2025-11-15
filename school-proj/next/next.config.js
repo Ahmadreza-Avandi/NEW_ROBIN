@@ -6,8 +6,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   async rewrites() {
-    // استفاده از متغیرهای محیطی برای rewrites
-    const nestjsUrl = process.env.NESTJS_API_URL || 'http://localhost:3001';
     const pythonUrl = process.env.PYTHON_API_URL || 'http://localhost:5000';
     
     const rewrites = [];
@@ -26,17 +24,11 @@ const nextConfig = {
       );
     }
     
-    // همیشه این rewrites را اضافه کن
-    rewrites.push(
-      {
-        source: '/python-api/:path*',
-        destination: `${pythonUrl}/:path*`,
-      },
-      {
-        source: '/api/:path*',
-        destination: `${nestjsUrl}/:path*`,
-      }
-    );
+    // Python API rewrite
+    rewrites.push({
+      source: '/python-api/:path*',
+      destination: `${pythonUrl}/:path*`,
+    });
     
     return rewrites;
   }

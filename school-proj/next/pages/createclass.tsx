@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TextField,
   Button,
@@ -7,24 +7,51 @@ import {
   Snackbar,
   Alert,
   SnackbarCloseReason,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
 } from '@mui/material';
+import { AdminRoute } from '@/components/ProtectedRoute';
+import { useRequireAdmin } from '@/hooks/useAuth';
 
 interface FormData {
-  title: string;
-  className: string;
-  teacher: string;
-  dayAndPeriod: string;
-  grade: string;
+  name: string;
+  majorId: string;
+  gradeId: string;
 }
 
-const NewLessonPage: React.FC = () => {
+const NewClassPage: React.FC = () => {
+  const { user, loading } = useRequireAdmin();
+  const [majors, setMajors] = useState<any[]>([]);
+  const [grades, setGrades] = useState<any[]>([]);
   const [formData, setFormData] = useState<FormData>({
-    title: '',
-    className: '',
-    teacher: '',
-    dayAndPeriod: '',
-    grade: '',
+    name: '',
+    majorId: '',
+    gradeId: '',
   });
+
+  // دریافت رشته‌ها و پایه‌ها
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [majorsRes, gradesRes] = await Promise.all([
+          fetch('/api/majors'),
+          fetch('/api/grades'),
+        ]);
+        
+        if (majorsRes.ok) setMajors(await majorsRes.json());
+        if (gradesRes.ok) setGrades(await gradesRes.json());
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    
+    if (!loading && user) {
+      fetchData();
+    }
+  }, [loading, user]);
 
   const [open, setOpen] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
@@ -40,24 +67,35 @@ const NewLessonPage: React.FC = () => {
     });
   };
 
-  const submitNewLesson = async () => {
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    const { name, value } = event.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const submitNewClass = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/lessons`, {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('/api/admin/create-class', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         setMessage('کلاس جدید با موفقیت ثبت شد');
         setSeverity('success');
         setOpen(true);
-        setFormData({ title: '', className: '', teacher: '', dayAndPeriod: '', grade: '' });
+        setFormData({ name: '', majorId: '', gradeId: '' });
       } else {
-        setMessage('خطا در ثبت کلاس جدید');
+        setMessage(data.message || 'خطا در ثبت کلاس جدید');
         setSeverity('error');
         setOpen(true);
       }
@@ -71,8 +109,12 @@ const NewLessonPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    submitNewLesson();
+    submitNewClass();
   };
+
+  if (loading) {
+    return <div>در حال بارگذاری...</div>;
+  }
 
   const handleClose = (
     event: React.SyntheticEvent | Event,
@@ -85,45 +127,82 @@ const NewLessonPage: React.FC = () => {
   };
 
   return (
-    <Container>
-      <form onSubmit={handleSubmit}>
-        <Grid container spacing={2} justifyContent="center">
-          {/* عنوان کلاس */}
-          <Grid item xs={12}>
-            <h1 style={{ textAlign: 'center' }}>ایجاد کلاس جدید</h1>
+    <AdminRoute>
+      <Container>
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={2} justifyContent="center">
+            <Grid item xs={12}>
+              <h1 style={{ textAlign: 'center' }}>ایجاد کلاس جدید</h1>
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="نام کلاس"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                fullWidth
+                margin="normal"
+                required
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth margin="normal" required>
+                <InputLabel>رشته</InputLabel>
+                <Select
+                  label="رشته"
+                  name="majorId"
+                  value={formData.majorId}
+                  onChange={handleSelectChange}
+                >
+                  {majors.map((major) => (
+                    <MenuItem key={major.id} value={major.id}>
+                      {major.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth margin="normal" required>
+                <InputLabel>پایه</InputLabel>
+                <Select
+                  label="پایه"
+                  name="gradeId"
+                  value={formData.gradeId}
+                  onChange={handleSelectChange}
+                >
+                  {grades.map((grade) => (
+                    <MenuItem key={grade.id} value={grade.id}>
+                      {grade.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} style={{ display: 'flex', justifyContent: 'center' }}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                sx={{ padding: '12px 24px', fontSize: '16px' }}
+              >
+                ثبت کلاس
+              </Button>
+            </Grid>
           </Grid>
-          {/* ورودی عنوان */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="عنوان کلاس"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              fullWidth
-              margin="normal"
-              sx={{ fontSize: '14px' }}
-            />
-          </Grid>
-          {/* دکمه ثبت */}
-          <Grid item xs={12} style={{ display: 'flex', justifyContent: 'center' }}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              sx={{ padding: '12px 24px', fontSize: '16px' }}
-            >
-              ثبت
-            </Button>
-          </Grid>
-        </Grid>
-      </form>
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
-          {message}
-        </Alert>
-      </Snackbar>
-    </Container>
+        </form>
+        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+            {message}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </AdminRoute>
   );
 };
 
-export default NewLessonPage;
+export default NewClassPage;

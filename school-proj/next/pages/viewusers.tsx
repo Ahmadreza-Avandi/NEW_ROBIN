@@ -85,9 +85,12 @@ const UsersTable: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('access_token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       const [classesResponse, rolesResponse, usersResponse] = await Promise.all([
         axios.get<ClassType[]>('/api/classes'),
-        axios.get<Role[]>('/api/roles'),
+        axios.get<Role[]>('/api/roles', { headers }),
         axios.get<User[]>('/api/user.view', {
           params: {
             classId: selectedClass || undefined,

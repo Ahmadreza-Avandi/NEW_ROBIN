@@ -18,25 +18,47 @@ let UserService = class UserService {
         this.prisma = prisma;
     }
     async create(createUserDto) {
-        const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-        const classRecord = await this.prisma.class.findFirst({
-            where: {
-                majorId: createUserDto.majorId,
-                gradeId: createUserDto.gradeId,
-            },
-        });
-        return this.prisma.user.create({
-            data: {
-                fullName: createUserDto.fullName,
-                nationalCode: createUserDto.nationalCode,
-                phoneNumber: createUserDto.phoneNumber,
-                password: hashedPassword,
-                roleId: createUserDto.roleId,
-                majorId: createUserDto.majorId,
-                gradeId: createUserDto.gradeId,
-                classId: classRecord ? classRecord.id : null,
-            },
-        });
+        try {
+            const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+            const classRecord = await this.prisma.class.findFirst({
+                where: {
+                    majorId: createUserDto.majorId,
+                    gradeId: createUserDto.gradeId,
+                },
+            });
+            const majorId = typeof createUserDto.majorId === 'string'
+                ? parseInt(createUserDto.majorId, 10)
+                : createUserDto.majorId;
+            const gradeId = typeof createUserDto.gradeId === 'string'
+                ? parseInt(createUserDto.gradeId, 10)
+                : createUserDto.gradeId;
+            const roleId = typeof createUserDto.roleId === 'string'
+                ? parseInt(createUserDto.roleId, 10)
+                : createUserDto.roleId;
+            const classId = classRecord ? classRecord.id : null;
+            const query = `
+        INSERT INTO \`User\` 
+        (\`fullName\`, \`nationalCode\`, \`phoneNumber\`, \`password\`, \`roleId\`, \`majorId\`, \`gradeId\`, \`classId\`) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+            const values = [
+                createUserDto.fullName,
+                createUserDto.nationalCode,
+                createUserDto.phoneNumber,
+                hashedPassword,
+                roleId,
+                majorId,
+                gradeId,
+                classId
+            ];
+            console.log('Executing raw SQL query with values:', values);
+            await this.prisma.$executeRawUnsafe(query, ...values);
+            return this.findByNationalCode(createUserDto.nationalCode);
+        }
+        catch (error) {
+            console.error('Error creating user:', error);
+            throw error;
+        }
     }
     async findAll() {
         return this.prisma.user.findMany({
@@ -57,8 +79,21 @@ let UserService = class UserService {
             where: { nationalCode },
             include: { role: true },
         });
-        if (!user)
-            throw new common_1.NotFoundException('User not found');
+        if (!user) {
+            try {
+                const result = await this.prisma.$queryRaw `
+          SELECT * FROM \`User\` WHERE nationalCode = ${nationalCode} LIMIT 1
+        `;
+                if (Array.isArray(result) && result.length > 0) {
+                    return result[0];
+                }
+                throw new common_1.NotFoundException('User not found');
+            }
+            catch (error) {
+                console.error('Error finding user by national code:', error);
+                throw error;
+            }
+        }
         return user;
     }
     async update(id, updateUserDto) {

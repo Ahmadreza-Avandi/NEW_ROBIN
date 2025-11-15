@@ -173,7 +173,7 @@ const RegisterForm: React.FC = () => {
       }
 
       // استفاده از API محلی Next.js برای افزودن کاربر
-      const response = await axios.post('/api/add-user', { ...processedData, identityPhoto: optimizedPhoto });
+      const response = await axios.post('/api/register-user', processedData);
       
       // بررسی دقیق‌تر وضعیت پاسخ
       if (response.status >= 200 && response.status < 300) {
@@ -204,8 +204,25 @@ const RegisterForm: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      
       // نمایش پیام خطای دقیق‌تر
-      const errorMessage = error.response?.data?.message || error.message || 'خطا در ارسال داده‌ها';
+      let errorMessage = 'خطا در ارسال داده‌ها';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 400) {
+        errorMessage = 'اطلاعات وارد شده نامعتبر است';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'خطای سرور. لطفاً دوباره تلاش کنید';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setMessage(errorMessage);
       setSeverity('error');
       setOpen(true);

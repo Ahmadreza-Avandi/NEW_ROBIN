@@ -1,14 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import mysql from 'mysql2/promise';
 import { DateObject } from 'react-multi-date-picker';
 import persian from 'react-date-object/calendars/persian';
 import gregorian from 'react-date-object/calendars/gregorian';
+import { getDbPool } from '@/lib/db';
 
-import { DATABASE_URL } from '@/lib/config';
-
-const dbConfig = {
-  connectionString: DATABASE_URL,
-};
 
 // Persian weekday names
 const persianWeekDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
@@ -43,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { classId, date, mode, attendanceFilter, subjectId } = req.query;
     
     try {
-      const connection = await mysql.createConnection(dbConfig.connectionString);
+      const pool = getDbPool();
       
       // حالت نمایش بر اساس تاریخ و کلاس
       if (classId && date) {
@@ -68,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ORDER BY s.startTime ASC
         `;
         
-        const [subjects] = await connection.execute(subjectsQuery, [classId, calculatedDayOfWeek]);
+        const [subjects] = await pool.execute(subjectsQuery, [classId, calculatedDayOfWeek]);
         console.log("Found subjects:", subjects);
         
         // متغیرهای مورد نیاز برای کوئری - مقداردهی اولیه
@@ -282,7 +277,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           console.log("Executing student query:", studentsQuery);
           console.log("Executing student query with params:", queryParams);
           
-          const [students] = await connection.execute(studentsQuery, queryParams);
+          const [students] = await pool.execute(studentsQuery, queryParams);
           console.log(`Found ${(students as any[]).length} students`);
           
           // لاگ کردن کاربران موجود در دیتابیس با classId مشابه
@@ -294,10 +289,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             WHERE u.classId = ?
           `;
           
-          const [debugUsers] = await connection.execute(debugUsersQuery, [classId]);
+          const [debugUsers] = await pool.execute(debugUsersQuery, [classId]);
           console.log("All users in this class:", debugUsers);
-          
-          await connection.end();
           
           return res.status(200).json({
             students,
@@ -335,7 +328,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     
     try {
-      const connection = await mysql.createConnection(dbConfig.connectionString);
+      const pool = getDbPool();
       
       // استفاده از تاریخ ارسالی یا تاریخ امروز
       const today = new Date();
@@ -373,7 +366,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           LEFT JOIN Class c ON u.classId = c.id
           WHERE u.id = ?
         `;
-        const [userRows]: any = await connection.execute(getUserQuery, [userId]);
+        const [userRows]: any = await pool.execute(getUserQuery, [userId]);
         
         if (userRows.length > 0) {
           userNationalCode = userRows[0].nationalCode;
@@ -381,7 +374,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           userClassId = userRows[0].classId;
           userClassName = userRows[0].className;
         } else {
-          await connection.end();
           return res.status(404).json({ message: 'کاربر یافت نشد' });
         }
       }
@@ -411,7 +403,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log("Check query:", checkQuery);
         console.log("Check params:", checkParams);
         
-        const [existingRows]: any = await connection.execute(checkQuery, checkParams);
+        const [existingRows]: any = await pool.execute(checkQuery, checkParams);
         console.log("Existing rows:", existingRows);
         
         if (existingRows.length > 0) {
@@ -421,14 +413,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             SET status = ? 
             WHERE id = ?
           `;
-          await connection.execute(updateQuery, [status, existingRows[0].id]);
+          await pool.execute(updateQuery, [status, existingRows[0].id]);
           
           // اگر درس خاصی انتخاب شده، فقط همان درس را بروزرسانی میکنیم
           if (subjectId) {
             console.log(`وضعیت حضور برای درس با آیدی ${subjectId} بروز شد`);
           }
-          
-          await connection.end();
           return res.status(200).json({ 
             message: 'وضعیت با موفقیت به‌روزرسانی شد',
             id: existingRows[0].id 
@@ -473,10 +463,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           console.log("Insert query:", insertQuery);
           console.log("Insert params:", insertParams);
           
-          const [result]: any = await connection.execute(insertQuery, insertParams);
+          const [result]: any = await pool.execute(insertQuery, insertParams);
           let insertedId = result.insertId;
-          
-          await connection.end();
           return res.status(201).json({ 
             message: 'رکورد حضور ایجاد شد',
             id: insertedId
@@ -485,14 +473,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else {
         // آپدیت رکورد موجود
         const updateQuery = `UPDATE attendance SET status = ? WHERE id = ?`;
-        await connection.execute(updateQuery, [status, id]);
+        await pool.execute(updateQuery, [status, id]);
         
         // اگر درس انتخاب شده، فقط همان درس را بروزرسانی میکنیم
         if (subjectId) {
           console.log(`بروزرسانی رکورد حضور برای درس با آیدی ${subjectId}`);
         }
-        
-        await connection.end();
         return res.status(200).json({ 
           message: 'وضعیت با موفقیت به‌روزرسانی شد',
           id

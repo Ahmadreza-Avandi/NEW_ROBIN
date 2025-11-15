@@ -1,10 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import mysql from 'mysql2/promise';
-import { DATABASE_URL } from '@/lib/config';
-
-const dbConfig = {
-  connectionString: DATABASE_URL
-};
+import { executeQuery } from '@/lib/db';
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,9 +10,7 @@ export default async function handler(
   }
 
   try {
-    const connection = await mysql.createConnection(dbConfig.connectionString);
-    const [rows] = await connection.execute('SELECT * FROM major ORDER BY id ASC');
-    await connection.end();
+    const rows = await executeQuery('SELECT * FROM major ORDER BY id ASC');
     return res.status(200).json(rows);
   } catch (error) {
     console.error('Error fetching majors:', error);

@@ -13,7 +13,7 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - "./mydatabase (3).sql:/docker-entrypoint-initdb.d/init.sql:ro"
+      - "./school.sql:/docker-entrypoint-initdb.d/init.sql:ro"
     restart: unless-stopped
     networks:
       - app-network
@@ -37,34 +37,6 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
 
-  # سرویس Nest.js (بک‌اند)
-  nestjs:
-    build:
-      context: ./nest
-      dockerfile: Dockerfile
-    ports:
-      - "3002:3001"
-    environment:
-      - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=${DATABASE_URL:-mysql://root:rootpassword@mysql:3306/mydatabase?connect_timeout=30}
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - JWT_SECRET=${JWT_SECRET:-default_jwt_secret}
-      - FACE_DETECTION_URL=http://pythonserver:5000
-      - DOMAIN=${DOMAIN:-sch.ahmadreza-avandi.ir}
-    restart: unless-stopped
-    env_file:
-      - .env
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    networks:
-      - app-network
-    command: >
-      sh -c "sleep 15 && npx prisma migrate deploy && node dist/main.js"
-
   # سرویس Next.js (فرانت‌اند)
   nextjs:
     build:
@@ -72,22 +44,24 @@ services:
       dockerfile: Dockerfile
       args:
         - NODE_ENV=production
-        - NEXT_PUBLIC_API_URL=/api
         - NEXT_PUBLIC_PYTHON_API_URL=/python-api
     ports:
       - "3003:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=/api
       - NEXT_PUBLIC_PYTHON_API_URL=/python-api
-      - NESTJS_API_URL=http://nestjs:3001
       - PYTHON_API_URL=http://pythonserver:5000
       - REDIS_HOST=${REDIS_HOST:-redis}
       - REDIS_PORT=${REDIS_PORT:-6379}
+      - DATABASE_URL=${DATABASE_URL:-mysql://root:rootpassword@mysql:3306/mydatabase?connect_timeout=30}
+      - JWT_SECRET=${JWT_SECRET:-default_jwt_secret}
+      - DOMAIN=${DOMAIN:-sch.ahmadreza-avandi.ir}
     restart: unless-stopped
     depends_on:
-      - nestjs
-      - pythonserver
+      mysql:
+        condition: service_healthy
+      pythonserver:
+        condition: service_started
     networks:
       - app-network
 

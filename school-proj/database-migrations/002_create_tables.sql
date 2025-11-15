@@ -1,0 +1,137 @@
+-- ========================================
+-- مرحله 2: ایجاد جداول اصلی
+-- ========================================
+
+USE school;
+
+-- جدول نقش‌ها
+CREATE TABLE IF NOT EXISTS role (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(191) NOT NULL UNIQUE,
+  permissions JSON NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- جدول پایه‌های تحصیلی
+CREATE TABLE IF NOT EXISTS grade (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(191) NOT NULL UNIQUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- جدول رشته‌ها
+CREATE TABLE IF NOT EXISTS major (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(191) NOT NULL UNIQUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- جدول کلاس‌ها
+CREATE TABLE IF NOT EXISTS class (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(191) NOT NULL,
+  majorId INT NOT NULL,
+  gradeId INT NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (majorId) REFERENCES major(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+  FOREIGN KEY (gradeId) REFERENCES grade(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+  INDEX idx_major (majorId),
+  INDEX idx_grade (gradeId),
+  INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- جدول کاربران
+CREATE TABLE IF NOT EXISTS user (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  fullName VARCHAR(191) NOT NULL,
+  nationalCode VARCHAR(191) NOT NULL UNIQUE,
+  phoneNumber VARCHAR(191) NOT NULL,
+  password VARCHAR(191) NOT NULL,
+  roleId INT NOT NULL,
+  majorId INT NULL,
+  gradeId INT NULL,
+  classId INT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (roleId) REFERENCES role(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+  FOREIGN KEY (majorId) REFERENCES major(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  FOREIGN KEY (gradeId) REFERENCES grade(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  FOREIGN KEY (classId) REFERENCES class(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  INDEX idx_nationalCode (nationalCode),
+  INDEX idx_role (roleId),
+  INDEX idx_class (classId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- جدول دروس
+CREATE TABLE IF NOT EXISTS subject (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(191) NOT NULL,
+  classId INT NOT NULL,
+  teacherId INT NOT NULL,
+  dayOfWeek ENUM('شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه') NOT NULL,
+  startTime TIME NOT NULL,
+  endTime TIME NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (classId) REFERENCES class(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (teacherId) REFERENCES user(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+  INDEX idx_class (classId),
+  INDEX idx_teacher (teacherId),
+  INDEX idx_day (dayOfWeek)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- جدول حضور و غیاب
+CREATE TABLE IF NOT EXISTS attendance (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nationalCode VARCHAR(10) NOT NULL,
+  fullName VARCHAR(255) NOT NULL,
+  classId INT NULL,
+  className VARCHAR(255) NULL,
+  jalali_date VARCHAR(10) NOT NULL,
+  gregorian_date DATE NOT NULL,
+  checkin_time VARCHAR(8) NOT NULL,
+  location VARCHAR(255) NOT NULL,
+  dayOfWeek VARCHAR(20) NULL,
+  status ENUM('present','absent') DEFAULT 'present',
+  subjectId INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (classId) REFERENCES class(id) ON DELETE SET NULL,
+  FOREIGN KEY (nationalCode) REFERENCES user(nationalCode) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (subjectId) REFERENCES subject(id) ON DELETE SET NULL,
+  INDEX idx_nationalCode (nationalCode),
+  INDEX idx_date (jalali_date),
+  INDEX idx_status (status),
+  INDEX idx_subject (subjectId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- جدول مکان‌ها
+CREATE TABLE IF NOT EXISTS location (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(191) NOT NULL,
+  representative VARCHAR(191) NOT NULL,
+  grade VARCHAR(191) NOT NULL,
+  major VARCHAR(191) NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- جدول آخرین بازدید
+CREATE TABLE IF NOT EXISTS last_seen (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  fullName VARCHAR(191) NOT NULL,
+  nationalCode VARCHAR(191) NOT NULL,
+  checkin_time DATETIME(3) NOT NULL,
+  location VARCHAR(191) NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_nationalCode (nationalCode),
+  INDEX idx_time (checkin_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SELECT 'مرحله 2: جداول با موفقیت ایجاد شدند' AS status;

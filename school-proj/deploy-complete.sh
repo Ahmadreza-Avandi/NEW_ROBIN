@@ -40,7 +40,7 @@ DOMAIN="sch.ahmadreza-avandi.ir"
 
 print_header "🚀 دیپلوی کامل School-Proj"
 print_info "دامنه: $DOMAIN"
-print_info "پورت‌ها: Next.js:3003, Nest.js:3002, Python:5001, MySQL:3307, Redis:6380"
+print_info "پورت‌ها: Next.js:3003, Python:5001, MySQL:3307, Redis:6380"
 echo ""
 
 # 1. ایجاد فایل‌های .env
@@ -199,7 +199,6 @@ check_service() {
 }
 
 check_service "Next.js Frontend" 3003
-check_service "Nest.js Backend" 3002
 check_service "Python API" 5001
 check_service "phpMyAdmin" 8083
 
@@ -221,17 +220,15 @@ echo "🌐 لینک‌های دسترسی:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "  🌐 وب‌سایت اصلی:      https://$DOMAIN"
-echo "  🔧 API Nest.js:        https://$DOMAIN/api"
-echo "  🐍 API Python:         https://$DOMAIN/python-api"
-echo "  💾 phpMyAdmin:         https://$DOMAIN/phpmyadmin"
-echo "  📊 Redis Commander:    https://$DOMAIN/redis-commander"
+echo "  � APPI Python:         https://$DOMAIN/python-api"
+echo "  � phpMyAdhmin:         https://$DOMAIN/phpmyadmin"
+echo "  � Repdis Commander:    https://$DOMAIN/redis-commander"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📍 پورت‌های محلی:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "  • Next.js:         localhost:3003"
-echo "  • Nest.js:         localhost:3002"
 echo "  • Python:          localhost:5001"
 echo "  • MySQL:           localhost:3307"
 echo "  • Redis:           localhost:6380"

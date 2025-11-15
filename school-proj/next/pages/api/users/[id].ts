@@ -1,10 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import mysql from 'mysql2/promise';
-import { DATABASE_URL } from '@/lib/config';
-
-const dbConfig = {
-  connectionString: DATABASE_URL,
-};
+import { getDbPool } from '@/lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
@@ -12,7 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'User ID is required' });
   }
   try {
-    const connection = await mysql.createConnection(dbConfig.connectionString);
+    const pool = getDbPool();
     if (req.method === 'PUT') {
       const { fullName, nationalCode, phoneNumber, roleId, classId } = req.body;
       const query = `
@@ -21,17 +16,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         WHERE id = ?
       `;
       const params = [fullName, nationalCode, phoneNumber, roleId, classId || null, id];
-      await connection.execute(query, params);
-      await connection.end();
+      await pool.execute(query, params);
       return res.status(200).json({ message: 'User updated successfully' });
     } else if (req.method === 'DELETE') {
       const query = `DELETE FROM user WHERE id = ?`;
-      await connection.execute(query, [id]);
-      await connection.end();
+      await pool.execute(query, [id]);
       return res.status(200).json({ message: 'User deleted successfully' });
     } else {
       res.setHeader('Allow', ['PUT', 'DELETE']);
-      await connection.end();
       return res.status(405).json({ message: 'Method not allowed' });
     }
   } catch (error) {

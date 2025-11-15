@@ -1,10 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import mysql from 'mysql2/promise';
-import { DATABASE_URL } from '@/lib/config';
-
-const dbConfig = {
-  connectionString: DATABASE_URL,
-};
+import { executeQuery } from '@/lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -19,8 +14,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const connection = await mysql.createConnection(dbConfig.connectionString);
-    
     // کوئری برای دریافت همه دانش‌آموزان یک کلاس
     const query = `
       SELECT 
@@ -34,8 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ORDER BY u.fullName ASC
     `;
     
-    const [students] = await connection.execute(query, [classId]);
-    await connection.end();
+    const students = await executeQuery(query, [classId]);
     
     return res.status(200).json(students);
   } catch (error: unknown) {

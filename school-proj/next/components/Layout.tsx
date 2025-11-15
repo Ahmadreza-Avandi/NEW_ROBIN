@@ -176,13 +176,23 @@ export function Layout({ children, darkMode, setDarkMode, userRole }: LayoutProp
 
   const handleDrawer = () => setDrawerOpen(!drawerOpen);
 
-  const navigate = (path: string) => router.push(path);
+  const navigate = async (path: string) => {
+    console.log('Navigating to:', path);
+    try {
+      // استفاده از router.push با options برای force refresh
+      await router.push(path, undefined, { shallow: false });
+    } catch (err) {
+      console.error('Navigation error:', err);
+    }
+  };
 
   const handleMenuToggle = (id: number) => {
+    console.log('Toggling menu:', id, 'current:', openMenuId);
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
   const handleMenuClick = (item: MenuItem) => {
+    console.log('Menu clicked:', item.text, 'path:', item.path, 'id:', item.id);
     if (typeof item.path === 'string') {
       navigate(item.path);
     } else {
@@ -286,6 +296,11 @@ export function Layout({ children, darkMode, setDarkMode, userRole }: LayoutProp
       path: false,
       sublists: [
         {
+          text: 'مدیریت جامع (مدیر)',
+          icon: <DashboardIcon />,
+          path: '/admin/manage-all',
+        },
+        {
           text: 'ایجاد کلاس   ',
           icon: <ClassIcon />,
           path: '/createclass',
@@ -301,14 +316,27 @@ export function Layout({ children, darkMode, setDarkMode, userRole }: LayoutProp
           path: '/createreshte',
         },
         {
-          text: 'مشاهده کلاس ها  ',
-          icon: <ClassIcon />,
-          path: '#',
+          text: 'مشاهده پایه‌ها (مدیر)',
+          icon: <SchoolIcon />,
+          path: '/admin/view-grades',
+        },
+      ],
+    },
+    {
+      text: 'مدیریت معلمان',
+      id: 9,
+      icon: <PersonAddIcon />,
+      path: false,
+      sublists: [
+        {
+          text: 'افزودن معلم (مدیر)',
+          icon: <PersonAddIcon />,
+          path: '/admin/add-teacher',
         },
         {
-          text: 'مشاهده رشته ها ',
-          icon: <SchoolIcon />,
-          path: '#',
+          text: 'لیست معلمان',
+          icon: <GroupIcon />,
+          path: '/admin/teachers-list',
         },
       ],
     },

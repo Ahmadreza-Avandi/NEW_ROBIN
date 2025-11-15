@@ -3,74 +3,56 @@ import {
   TextField,
   Button,
   Container,
-  Grid,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
+  Paper,
+  Typography,
+  Box,
   Snackbar,
   Alert,
-  SnackbarCloseReason,
-  SelectChangeEvent,
 } from '@mui/material';
+import { Category } from '@mui/icons-material';
+import { AdminRoute } from '@/components/ProtectedRoute';
+import { useRequireAdmin } from '@/hooks/useAuth';
 
-interface FormData {
-  title: string;
-  className: string;
-  teacher: string;
-  dayAndPeriod: string;
-  grade: string;
-}
-
-const NewLessonPage: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    className: '',
-    teacher: '',
-    dayAndPeriod: '',
-    grade: '',
-  });
-
+const CreateMajorPage: React.FC = () => {
+  const { user, loading } = useRequireAdmin();
+  const [majorName, setMajorName] = useState<string>('');
   const [open, setOpen] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
   const [severity, setSeverity] = useState<'success' | 'error'>('success');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
-  ) => {
-    const { name, value } = e.target as HTMLInputElement;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleSelectChange = (event: SelectChangeEvent<string>) => {
-    const { name, value } = event.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+    if (!majorName.trim()) {
+      setMessage('لطفاً نام رشته را وارد کنید');
+      setSeverity('error');
+      setOpen(true);
+      return;
+    }
 
-  const submitNewLesson = async () => {
+    setSubmitting(true);
+
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/lessons`, {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('/api/admin/create-major', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ name: majorName }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setMessage('درس جدید با موفقیت ثبت شد');
+        setMessage('رشته جدید با موفقیت ثبت شد');
         setSeverity('success');
         setOpen(true);
-        setFormData({ title: '', className: '', teacher: '', dayAndPeriod: '', grade: '' });
+        setMajorName('');
       } else {
-        setMessage('خطا در ثبت درس جدید');
+        setMessage(data.message || 'خطا در ثبت رشته جدید');
         setSeverity('error');
         setOpen(true);
       }
@@ -79,74 +61,71 @@ const NewLessonPage: React.FC = () => {
       setSeverity('error');
       setOpen(true);
       console.error('خطا در ارتباط با سرور:', error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    submitNewLesson();
-  };
-
-  const handleClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: SnackbarCloseReason
-  ) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+  const handleClose = () => {
     setOpen(false);
   };
 
+  if (loading) {
+    return <div>در حال بارگذاری...</div>;
+  }
+
   return (
-    <Container>
-      <h1>ایجاد رشته جدید</h1>
-      <form onSubmit={handleSubmit}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
+    <AdminRoute>
+      <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <Category sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
+            <Typography variant="h4" component="h1" fontWeight="bold">
+              ایجاد رشته جدید
+            </Typography>
+          </Box>
+
+          <form onSubmit={handleSubmit}>
             <TextField
-              label="عنوان رشته"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
+              label="نام رشته"
+              name="name"
+              value={majorName}
+              onChange={(e) => setMajorName(e.target.value)}
               fullWidth
+              required
               margin="normal"
-              sx={{ fontSize: '14px' }}
+              placeholder="مثال: شبکه و نرم‌افزار"
+              sx={{ mb: 3 }}
             />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>پایه</InputLabel>
-              <Select
-                label="پایه"
-                name="grade"
-                value={formData.grade}
-                onChange={handleSelectChange}
+
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={() => setMajorName('')}
               >
-                <MenuItem value="دهم">دهم</MenuItem>
-                <MenuItem value="یازدهم">یازدهم</MenuItem>
-                <MenuItem value="دوازدهم">دوازدهم</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} style={{ display: 'flex', justifyContent: 'center' }}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              sx={{ padding: '12px 24px', fontSize: '16px' }}
-            >
-              ثبت
-            </Button>
-          </Grid>
-        </Grid>
-      </form>
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
-          {message}
-        </Alert>
-      </Snackbar>
-    </Container>
+                پاک کردن
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={submitting}
+                sx={{ minWidth: 120 }}
+              >
+                {submitting ? 'در حال ثبت...' : 'ثبت رشته'}
+              </Button>
+            </Box>
+          </form>
+        </Paper>
+
+        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
+            {message}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </AdminRoute>
   );
 };
 
-export default NewLessonPage;
+export default CreateMajorPage;

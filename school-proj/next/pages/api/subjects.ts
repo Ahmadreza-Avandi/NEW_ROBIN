@@ -1,11 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import mysql from 'mysql2/promise';
-import { DATABASE_URL } from '@/lib/config';
-
-// استفاده از تنظیمات مرکزی برای اتصال به دیتابیس
-const dbConfig = {
-  connectionString: DATABASE_URL,
-};
+import { executeQuery } from '@/lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -16,9 +10,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { classId, dayOfWeek } = req.query;
 
   try {
-    console.log('Connecting to database using:', dbConfig.connectionString.replace(/:[^:]*@/, ':****@'));
-    const connection = await mysql.createConnection(dbConfig.connectionString);
-    
     let query = `
       SELECT 
         s.id,
@@ -50,8 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     query += ` ORDER BY s.name ASC`;
     
-    const [rows] = await connection.execute(query, queryParams);
-    await connection.end();
+    const rows = await executeQuery(query, queryParams);
     
     return res.status(200).json(rows);
   } catch (error: unknown) {

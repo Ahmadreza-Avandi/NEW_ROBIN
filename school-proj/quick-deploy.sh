@@ -55,13 +55,6 @@ docker-compose build mysql
 print_info "Build Redis..."
 docker-compose build redis
 
-print_info "Build Nest.js..."
-docker-compose build nestjs || {
-    print_error "خطا در build Nest.js"
-    print_info "در حال تلاش مجدد..."
-    docker-compose build --no-cache nestjs
-}
-
 print_info "Build Next.js..."
 docker-compose build nextjs || {
     print_error "خطا در build Next.js"

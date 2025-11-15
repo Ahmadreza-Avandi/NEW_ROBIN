@@ -152,7 +152,7 @@ export class UserService {
     const role = await this.prisma.role.findUnique({
       where: { name: roleName },
     });
-    if (!role) throw new NotFoundException('Role not found'); ´
+    if (!role) throw new NotFoundException('Role not found'); 
     return role.id;
   }
 }

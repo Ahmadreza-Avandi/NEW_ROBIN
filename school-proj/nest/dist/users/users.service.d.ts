@@ -5,17 +5,7 @@ import { RoleEnum } from './users.controller';
 export declare class UserService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(createUserDto: CreateUserDto): Promise<{
-        id: number;
-        fullName: string;
-        nationalCode: string;
-        phoneNumber: string;
-        password: string;
-        roleId: number;
-        majorId: number | null;
-        gradeId: number | null;
-        classId: number | null;
-    }>;
+    create(createUserDto: CreateUserDto): Promise<any>;
     findAll(): Promise<({
         role: {
             name: string;
@@ -50,23 +40,7 @@ export declare class UserService {
         gradeId: number | null;
         classId: number | null;
     }>;
-    findByNationalCode(nationalCode: string): Promise<{
-        role: {
-            name: string;
-            permissions: import("@prisma/client/runtime/library").JsonValue;
-            id: number;
-        };
-    } & {
-        id: number;
-        fullName: string;
-        nationalCode: string;
-        phoneNumber: string;
-        password: string;
-        roleId: number;
-        majorId: number | null;
-        gradeId: number | null;
-        classId: number | null;
-    }>;
+    findByNationalCode(nationalCode: string): Promise<any>;
     update(id: number, updateUserDto: UpdateUserDto): Promise<{
         id: number;
         fullName: string;

@@ -1,18 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import axios from 'axios';
-
-// Define environment variable type
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      NESTJS_API_URL?: string;
-    }
-  }
-}
+import bcrypt from 'bcryptjs';
+import { executeQuery } from '../../lib/db';
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === 'POST') {
-    const { fullName, nationalCode, phoneNumber, password, roleId, majorId, gradeId, identityPhoto } = req.body;
+    const { fullName, nationalCode, phoneNumber, password, roleId, majorId, gradeId, classId } = req.body;
 
     // اعتبارسنجی ورودی‌های الزامی
     if (!fullName || !nationalCode || !phoneNumber || !password) {
@@ -20,44 +12,42 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     try {
-      // استفاده از آدرس داخلی داکر برای ارسال درخواست به سرویس Nest.js
-      const nestApiUrl = process.env.NESTJS_API_URL || 'http://nestjs:3001';
-      
-      // لاگ کردن اطلاعات برای دیباگ
-      console.log(`Sending user registration to: ${nestApiUrl}/users/add-user`);
-      
-      // ساخت داده‌های درخواست با فیلدهای اختیاری
-      const requestData: any = {
-        fullName,
-        nationalCode,
-        phoneNumber,
-        password,
-        roleId: roleId || 2, // تنظیم نقش به صورت پیشفرض 2 (کاربر عادی) اگر ارسال نشده باشد
-      };
-
-      // افزودن فیلدهای اختیاری در صورت وجود
-      if (majorId !== undefined) requestData.majorId = Number(majorId);
-      if (gradeId !== undefined) requestData.gradeId = Number(gradeId);
-      if (identityPhoto) requestData.identityPhoto = identityPhoto;
-
-      // نمایش داده‌های ارسالی به سرور
-      console.log('Registration data:', JSON.stringify(requestData, null, 2));
-      
-      const response = await axios.post(
-        `${nestApiUrl}/users/add-user`,
-        requestData
+      // بررسی تکراری بودن کد ملی
+      const existingUser = await executeQuery<any[]>(
+        'SELECT id FROM user WHERE nationalCode = ?',
+        [nationalCode]
       );
 
-      // اگر عملیات افزودن کاربر موفقیت‌آمیز بود
-      return res.status(200).json(response.data);
+      if (existingUser.length > 0) {
+        return res.status(400).json({ message: 'کاربری با این کد ملی قبلاً ثبت شده است' });
+      }
+
+      // هش کردن پسورد
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // درج کاربر جدید
+      const result = await executeQuery(
+        `INSERT INTO user (fullName, nationalCode, phoneNumber, password, roleId, majorId, gradeId, classId) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          fullName,
+          nationalCode,
+          phoneNumber,
+          hashedPassword,
+          roleId || 2,
+          majorId || null,
+          gradeId || null,
+          classId || null
+        ]
+      );
+
+      return res.status(200).json({ 
+        message: 'کاربر با موفقیت ثبت شد',
+        userId: (result as any).insertId 
+      });
     } catch (error: any) {
-      // Handle errors with type checking
       console.error('Error adding user:', error);
-      
-      const errorMessage = error.response?.data?.message || 'Failed to add user';
-      const statusCode = error.response?.status || 500;
-      
-      return res.status(statusCode).json({ message: errorMessage });
+      return res.status(500).json({ message: 'خطا در ثبت کاربر' });
     }
   } else {
     return res.status(405).json({ message: 'Method Not Allowed' });

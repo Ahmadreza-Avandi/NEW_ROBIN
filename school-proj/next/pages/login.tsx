@@ -42,9 +42,8 @@ const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginInputs) => {
     setLoading(true);
     try {
-      // استفاده از متغیر محیطی برای آدرس API
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await axios.post(`${apiUrl}/login`, data);
+      // استفاده از API لاگین Next.js
+      const response = await axios.post('/api/login', data);
       
       interface LoginResponse {
         access_token: string;

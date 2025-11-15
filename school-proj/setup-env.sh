@@ -54,9 +54,7 @@ if [ "$MODE" = "0" ]; then
     JWT_SECRET="school_proj_jwt_secret_local_dev"
     
     # آدرس‌های لوکال
-    NEXT_PUBLIC_API_URL="http://localhost:3001/api"
     NEXT_PUBLIC_PYTHON_API_URL="http://localhost:5000"
-    NESTJS_API_URL="http://localhost:3001"
     PYTHON_API_URL="http://localhost:5000"
     REDIS_HOST="localhost"
     
@@ -76,9 +74,7 @@ else
     JWT_SECRET="school_proj_jwt_secret_$(date +%s)_$(openssl rand -hex 16)"
     
     # آدرس‌های سرور (Docker)
-    NEXT_PUBLIC_API_URL="https://${DOMAIN}/api"
     NEXT_PUBLIC_PYTHON_API_URL="https://${DOMAIN}/python-api"
-    NESTJS_API_URL="http://nestjs:3001"
     PYTHON_API_URL="http://pythonserver:5000"
     REDIS_HOST="redis"
     
@@ -105,16 +101,17 @@ MYSQL_PASSWORD=${MYSQL_PASSWORD}
 REDIS_HOST=${REDIS_HOST}
 REDIS_PORT=6379
 
-# Database URL for Nest.js
+# Database URL
 DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?connect_timeout=30
 
 # API URLs for Next.js (Client-side)
-NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 NEXT_PUBLIC_PYTHON_API_URL=${NEXT_PUBLIC_PYTHON_API_URL}
 
 # API URLs for Server-side
-NESTJS_API_URL=${NESTJS_API_URL}
 PYTHON_API_URL=${PYTHON_API_URL}
+
+# JWT Secret
+JWT_SECRET=${JWT_SECRET}
 
 # Domain
 DOMAIN=${DOMAIN}
@@ -125,37 +122,7 @@ EOF
 
 print_success "فایل .env اصلی ایجاد شد"
 
-# 2. فایل .env برای Nest.js
-print_info "ایجاد nest/.env..."
-
-cat > nest/.env << EOF
-# Nest.js Environment Variables
-# School-Proj Backend
-# حالت: $([ "$MODE" = "0" ] && echo "لوکال" || echo "سرور")
-
-# Database
-DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?connect_timeout=30
-
-# Redis
-REDIS_HOST=${REDIS_HOST}
-REDIS_PORT=6379
-
-# Face Detection Service
-FACE_DETECTION_URL=${PYTHON_API_URL}
-
-# JWT Secret
-JWT_SECRET=${JWT_SECRET}
-
-# Environment
-NODE_ENV=${NODE_ENV}
-
-# Domain
-DOMAIN=${DOMAIN}
-EOF
-
-print_success "فایل nest/.env ایجاد شد"
-
-# 3. فایل .env.local برای Next.js
+# 2. فایل .env.local برای Next.js
 print_info "ایجاد next/.env.local..."
 
 cat > next/.env.local << EOF
@@ -164,11 +131,9 @@ cat > next/.env.local << EOF
 # حالت: $([ "$MODE" = "0" ] && echo "لوکال" || echo "سرور")
 
 # API URLs for Client-side (Browser)
-NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 NEXT_PUBLIC_PYTHON_API_URL=${NEXT_PUBLIC_PYTHON_API_URL}
 
 # API URLs for Server-side
-NESTJS_API_URL=${NESTJS_API_URL}
 PYTHON_API_URL=${PYTHON_API_URL}
 
 # Redis
@@ -178,13 +143,16 @@ REDIS_PORT=6379
 # Database
 DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?connect_timeout=30
 
+# JWT Secret
+JWT_SECRET=${JWT_SECRET}
+
 # Environment
 NODE_ENV=${NODE_ENV}
 EOF
 
 print_success "فایل next/.env.local ایجاد شد"
 
-# 4. فایل .env برای Next.js (production)
+# 3. فایل .env برای Next.js (production)
 if [ "$MODE" = "1" ]; then
     print_info "ایجاد next/.env.production..."
     
@@ -192,7 +160,6 @@ if [ "$MODE" = "1" ]; then
 # Next.js Production Environment
 # School-Proj
 
-NEXT_PUBLIC_API_URL=/api
 NEXT_PUBLIC_PYTHON_API_URL=/python-api
 NODE_ENV=production
 EOF

@@ -1,16 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { executeQuery } from '../../lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const nestjsUrl = process.env.NESTJS_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${nestjsUrl}/last_seen`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch data from NestJS API');
-    }
-    const data = await response.json();
+    const data = await executeQuery<any[]>(
+      `SELECT id, fullName, nationalCode, checkin_time, location, createdAt 
+       FROM last_seen 
+       ORDER BY checkin_time DESC 
+       LIMIT 50`
+    );
     res.status(200).json(data);
   } catch (error) {
     console.error('Error fetching last_seen data:', error);
-    res.status(500).json({ message: 'Error fetching last_seen data' });
+    res.status(500).json({ message: 'خطا در دریافت اطلاعات' });
   }
 }

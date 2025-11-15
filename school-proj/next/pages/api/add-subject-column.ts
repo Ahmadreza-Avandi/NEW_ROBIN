@@ -1,10 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import mysql from 'mysql2/promise';
-import { DATABASE_URL } from '@/lib/config';
-
-const dbConfig = {
-  connectionString: DATABASE_URL,
-};
+import { executeTransaction } from '@/lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -13,27 +8,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const connection = await mysql.createConnection(dbConfig.connectionString);
-    
-    // Check if the subjectId column already exists
-    const [columns] = await connection.execute(`
-      SHOW COLUMNS FROM attendance LIKE 'subjectId'
-    `);
-    
-    if ((columns as any[]).length === 0) {
-      // The column doesn't exist, so add it
-      await connection.execute(`
-        ALTER TABLE attendance 
-        ADD COLUMN subjectId INT NULL,
-        ADD CONSTRAINT subject_fk FOREIGN KEY (subjectId) REFERENCES subject(id) ON DELETE SET NULL
+    await executeTransaction(async (connection) => {
+      // Check if the subjectId column already exists
+      const [columns] = await connection.execute(`
+        SHOW COLUMNS FROM attendance LIKE 'subjectId'
       `);
       
-      await connection.end();
-      return res.status(200).json({ message: 'Added subjectId column to attendance table' });
-    } else {
-      await connection.end();
-      return res.status(200).json({ message: 'subjectId column already exists' });
-    }
+      if ((columns as any[]).length === 0) {
+        // The column doesn't exist, so add it
+        await connection.execute(`
+          ALTER TABLE attendance 
+          ADD COLUMN subjectId INT NULL,
+          ADD CONSTRAINT subject_fk FOREIGN KEY (subjectId) REFERENCES subject(id) ON DELETE SET NULL
+        `);
+        return { message: 'Added subjectId column to attendance table' };
+      } else {
+        return { message: 'subjectId column already exists' };
+      }
+    });
+    
+    return res.status(200).json({ message: 'Database schema updated successfully' });
   } catch (error: unknown) {
     console.error('Error updating database schema:', error);
     return res.status(500).json({ 

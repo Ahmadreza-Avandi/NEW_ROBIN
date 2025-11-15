@@ -13,6 +13,10 @@ import os
 import logging.handlers
 import json
 import base64
+from dotenv import load_dotenv
+
+# بارگذاری متغیرهای محیطی از فایل .env
+load_dotenv()
 
 # تنظیمات لاگینگ
 logging.basicConfig(
@@ -48,20 +52,21 @@ class CameraManager:
         # اتصال به دیتابیس MySQL با استفاده از متغیرهای محیطی
         try:
             self.db = mysql.connector.connect(
-                host=os.environ.get('MYSQL_HOST', '91.107.165.2'),
-                database=os.environ.get('MYSQL_DATABASE', 'mydatabase'),
-                user=os.environ.get('MYSQL_USER', 'user'),
-                password=os.environ.get('MYSQL_PASSWORD', 'userpassword')
+                host=os.environ.get('MYSQL_HOST', 'localhost'),
+                database=os.environ.get('MYSQL_DATABASE', 'school'),
+                user=os.environ.get('MYSQL_USER', 'crm_user'),
+                password=os.environ.get('MYSQL_PASSWORD', '1234'),
+                port=int(os.environ.get('MYSQL_PORT', '3306'))
             )
-            logger.info("اتصال به دیتابیس MySQL در %s برقرار شد", os.environ.get('MYSQL_HOST'))
+            logger.info("اتصال به دیتابیس MySQL در %s برقرار شد", os.environ.get('MYSQL_HOST', 'localhost'))
         except mysql.connector.Error as err:
             logger.error("خطا در اتصال به دیتابیس: %s", err)
             self.db = None
 
-        # اتصال به Redis با تنظیمات سرور مرکزی
+        # اتصال به Redis با تنظیمات لوکال
         try:
             self.redis_db = redis.StrictRedis(
-                host=os.environ.get('REDIS_HOST', '91.107.165.2'),
+                host=os.environ.get('REDIS_HOST', 'localhost'),
                 port=int(os.environ.get('REDIS_PORT', 6379)),
                 db=0,
                 password=os.environ.get('REDIS_PASSWORD', ''),
@@ -71,7 +76,7 @@ class CameraManager:
                 socket_keepalive=True
             )
             if self.redis_db.ping():
-                logger.info("اتصال به Redis در %s برقرار شد", os.environ.get('REDIS_HOST'))
+                logger.info("اتصال به Redis در %s برقرار شد", os.environ.get('REDIS_HOST', 'localhost'))
         except Exception as e:
             logger.error("خطا در اتصال به Redis: %s", e)
             self.redis_db = None

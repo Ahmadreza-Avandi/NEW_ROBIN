@@ -67,7 +67,6 @@ check_service() {
 }
 
 check_service "Next.js Frontend" 3003 "/"
-check_service "Nest.js Backend" 3002 "/"
 check_service "Python API" 5001 "/"
 check_service "phpMyAdmin" 8083 "/"
 
@@ -83,14 +82,12 @@ docker-compose logs --tail=10
 print_header "🌐 لینک‌های دسترسی"
 echo ""
 echo "  🌐 وب‌سایت اصلی:      https://sch.ahmadreza-avandi.ir"
-echo "  🔧 API Nest.js:        https://sch.ahmadreza-avandi.ir/api"
 echo "  🐍 API Python:         https://sch.ahmadreza-avandi.ir/python-api"
 echo "  💾 phpMyAdmin:         https://sch.ahmadreza-avandi.ir/phpmyadmin"
 echo "  📊 Redis Commander:    https://sch.ahmadreza-avandi.ir/redis-commander"
 echo ""
 echo "  📍 پورت‌های محلی:"
 echo "     Next.js:    localhost:3003"
-echo "     Nest.js:    localhost:3002"
 echo "     Python:     localhost:5001"
 echo "     MySQL:      localhost:3307"
 echo "     Redis:      localhost:6380"

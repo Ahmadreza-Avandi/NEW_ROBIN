@@ -27,6 +27,8 @@ function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('access_token');
+      const publicPaths = ['/login', '/register2'];
+      
       if (token) {
         try {
           const response = await axios.get('/api/validate-token', {
@@ -46,6 +48,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             setIsAuthenticated(true);
             setUserRole(user?.role || null);
 
+            // فقط اگر در صفحه لاگین هستیم، redirect کن
             if (router.pathname === '/login') {
               if (user?.role === 'ADMIN') {
                 router.replace('/admin-dashboard');
@@ -56,31 +59,30 @@ function MyApp({ Component, pageProps }: AppProps) {
           } else {
             localStorage.removeItem('access_token');
             setIsAuthenticated(false);
-            router.push('/login');
+            if (!publicPaths.includes(router.pathname)) {
+              router.push('/login');
+            }
           }
         } catch (error) {
           console.error('Error during authentication check:', error);
           localStorage.removeItem('access_token');
           setIsAuthenticated(false);
-          router.push('/login');
+          if (!publicPaths.includes(router.pathname)) {
+            router.push('/login');
+          }
         }
       } else {
         setIsAuthenticated(false);
-
-        // اجازه دسترسی به صفحه register2 بدون نیاز به ورود
-        if (router.pathname !== '/register2') {
+        if (!publicPaths.includes(router.pathname)) {
           router.push('/login');
         }
       }
       setLoading(false);
     };
 
-    if (router.pathname !== '/login') {
-      checkAuth();
-    } else {
-      setLoading(false);
-    }
-  }, [router.pathname]);
+    // فقط یک بار وقتی component mount میشه
+    checkAuth();
+  }, []); // dependency array خالی - فقط یک بار اجرا میشه
 
   const theme = createTheme({
     palette: {
@@ -133,10 +135,10 @@ function MyApp({ Component, pageProps }: AppProps) {
       <CssBaseline />
       {isAuthenticated ? (
         <Layout darkMode={darkMode} setDarkMode={setDarkMode} userRole={userRole}>
-          <Component {...pageProps} />
+          <Component {...pageProps} key={router.asPath} />
         </Layout>
       ) : (
-        <Component {...pageProps} />
+        <Component {...pageProps} key={router.asPath} />
       )}
     </ThemeProvider>
   );

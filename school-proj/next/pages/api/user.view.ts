@@ -1,6 +1,6 @@
 // src/pages/api/user.view.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import mysql from 'mysql2/promise';
+import { executeQuery } from '@/lib/db';
 
 interface UserRow {
   id: number;
@@ -15,12 +15,6 @@ interface UserRow {
   gradeName: string | null;
 }
 
-import { DATABASE_URL } from '@/lib/config';
-
-const dbConfig = {
-  connectionString: DATABASE_URL,
-};
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -28,7 +22,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   try {
     const { classId, roleId } = req.query;
-    const connection = await mysql.createConnection(dbConfig.connectionString);
     let query = `
       SELECT 
         u.id,
@@ -60,8 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
     }
-    const [rows] = await connection.execute(query, params);
-    await connection.end();
+    const rows = await executeQuery(query, params);
 
     // تبدیل داده‌های دریافت شده به ساختار دلخواه
     const users = (rows as UserRow[]).map((row) => ({

@@ -1,10 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import mysql from 'mysql2/promise';
-import { DATABASE_URL } from '@/lib/config';
-
-const dbConfig = {
-  connectionString: DATABASE_URL,
-};
+import { executeQuery } from '@/lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -19,8 +14,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const connection = await mysql.createConnection(dbConfig.connectionString);
-    
     // کوئری برای دریافت دروس کلاس در روز هفته مشخص
     const query = `
       SELECT 
@@ -40,8 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ORDER BY s.startTime ASC
     `;
     
-    const [rows] = await connection.execute(query, [classId, dayOfWeek]);
-    await connection.end();
+    const rows = await executeQuery(query, [classId, dayOfWeek]);
     
     return res.status(200).json(rows);
   } catch (error: unknown) {
