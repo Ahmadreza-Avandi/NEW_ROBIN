@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
          c.name,
          m.name as major,
          g.name as grade
-       FROM Class c
+       FROM class c
        LEFT JOIN major m ON c.majorId = m.id
        LEFT JOIN grade g ON c.gradeId = g.id`
     );

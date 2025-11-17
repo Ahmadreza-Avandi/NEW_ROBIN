@@ -33,7 +33,7 @@ export default withAuth(
           s.endTime,
           s.dayOfWeek
         FROM attendance a
-        LEFT JOIN Subject s ON a.subjectId = s.id
+        LEFT JOIN subject s ON a.subjectId = s.id
         WHERE a.nationalCode = ?
           AND a.jalali_date BETWEEN ? AND ?
         ORDER BY a.jalali_date DESC, a.checkin_time DESC

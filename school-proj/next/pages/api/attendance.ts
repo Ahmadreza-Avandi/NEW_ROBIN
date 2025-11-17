@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             TIME_FORMAT(s.startTime, '%H:%i:%s') as startTime,
             TIME_FORMAT(s.endTime, '%H:%i:%s') as endTime,
             s.dayOfWeek
-          FROM Subject s
+          FROM subject s
           WHERE s.classId = ? AND s.dayOfWeek = ?
           ORDER BY s.startTime ASC
         `;
@@ -85,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   (
                     SELECT att.id 
                     FROM attendance att 
-                    JOIN Subject sbj ON sbj.id = ?
+                    JOIN subject sbj ON sbj.id = ?
                     WHERE att.nationalCode = u.nationalCode 
                       AND att.jalali_date = ? 
                       AND att.subjectId IS NULL
@@ -98,7 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   (
                     SELECT TIME_FORMAT(att.checkin_time, '%H:%i:%s')
                     FROM attendance att
-                    JOIN Subject sbj ON sbj.id = ?
+                    JOIN subject sbj ON sbj.id = ?
                     WHERE att.nationalCode = u.nationalCode 
                       AND att.jalali_date = ? 
                       AND att.subjectId IS NULL
@@ -113,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   CASE WHEN (
                     SELECT COUNT(*) 
                     FROM attendance att 
-                    JOIN Subject sbj ON sbj.id = ?
+                    JOIN subject sbj ON sbj.id = ?
                     WHERE att.nationalCode = u.nationalCode 
                       AND att.jalali_date = ? 
                       AND att.subjectId IS NULL
@@ -125,9 +125,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 s.name as subjectName,
                 0 as present_count, 
                 0 as total_subjects
-              FROM User u
-              JOIN Class c ON u.classId = c.id
-              JOIN Subject s ON s.id = ?
+              FROM user u
+              JOIN class c ON u.classId = c.id
+              JOIN subject s ON s.id = ?
               LEFT JOIN attendance a ON a.nationalCode = u.nationalCode 
                 AND a.jalali_date = ? 
                 AND a.subjectId = s.id
@@ -201,7 +201,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     ORDER BY s.startTime
                     SEPARATOR ' | '
                   )
-                  FROM Subject s
+                  FROM subject s
                   LEFT JOIN attendance a ON a.nationalCode = u.nationalCode 
                     AND a.jalali_date = ? 
                     AND a.subjectId = s.id
@@ -210,7 +210,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 ) as subjects_attended,
                 (
                   SELECT COUNT(*)
-                  FROM Subject s
+                  FROM subject s
                   LEFT JOIN attendance a ON a.nationalCode = u.nationalCode 
                     AND a.jalali_date = ? 
                     AND a.subjectId = s.id
@@ -233,12 +233,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 ) as present_count,
                 (
                   SELECT COUNT(*)
-                  FROM Subject s
+                  FROM subject s
                   WHERE s.classId = ? 
                     AND s.dayOfWeek = ?
                 ) as total_subjects
-              FROM User u
-              JOIN Class c ON u.classId = c.id
+              FROM user u
+              JOIN class c ON u.classId = c.id
               WHERE u.classId = ? AND u.roleId = 3
             `;
             
@@ -283,9 +283,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           // لاگ کردن کاربران موجود در دیتابیس با classId مشابه
           const debugUsersQuery = `
             SELECT u.id, u.fullName, u.nationalCode, u.roleId, r.name as roleName, u.classId, c.name as className
-            FROM User u
-            JOIN Class c ON u.classId = c.id
-            LEFT JOIN Role r ON u.roleId = r.id
+            FROM user u
+            JOIN class c ON u.classId = c.id
+            LEFT JOIN role r ON u.roleId = r.id
             WHERE u.classId = ?
           `;
           
@@ -362,8 +362,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!userNationalCode || !userFullName) {
         const getUserQuery = `
           SELECT u.nationalCode, u.fullName, u.classId, c.name as className
-          FROM User u
-          LEFT JOIN Class c ON u.classId = c.id
+          FROM user u
+          LEFT JOIN class c ON u.classId = c.id
           WHERE u.id = ?
         `;
         const [userRows]: any = await pool.execute(getUserQuery, [userId]);

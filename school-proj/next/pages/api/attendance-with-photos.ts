@@ -35,8 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           TIME_FORMAT(a.checkin_time, '%H:%i:%s') as checkin_time,
           a.jalali_date,
           COALESCE(a.status, 'absent') as status
-        FROM User u
-        JOIN Class c ON u.classId = c.id
+        FROM user u
+        JOIN class c ON u.classId = c.id
         LEFT JOIN attendance a ON a.nationalCode = u.nationalCode 
           AND a.jalali_date = ?
         WHERE u.classId = ? AND u.roleId = 3
