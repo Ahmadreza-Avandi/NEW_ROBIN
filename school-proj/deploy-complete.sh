@@ -2,6 +2,10 @@
 
 # 🚀 اسکریپت دیپلوی کامل School-Proj
 # این اسکریپت همه چیز رو از صفر تا صد انجام می‌ده
+# استفاده: bash deploy-complete.sh [local|server|auto]
+#   local = حالت لوکال
+#   server = حالت سرور
+#   auto = تشخیص خودکار (پیش‌فرض)
 
 set -e
 
@@ -36,25 +40,52 @@ print_header() {
     echo ""
 }
 
-DOMAIN="sch.ahmadreza-avandi.ir"
+# تشخیص حالت
+MODE=${1:-auto}
 
-print_header "🚀 دیپلوی کامل School-Proj"
-print_info "دامنه: $DOMAIN"
-print_info "پورت‌ها: Next.js:3003, Python:5001, MySQL:3307, Redis:6380"
+# تشخیص خودکار محیط
+detect_environment() {
+    if [ -f "/etc/letsencrypt/live/sch.ahmadreza-avandi.ir/fullchain.pem" ] && command -v nginx &> /dev/null; then
+        echo "server"
+    else
+        echo "local"
+    fi
+}
+
+if [ "$MODE" = "auto" ]; then
+    MODE=$(detect_environment)
+    print_info "🔍 تشخیص خودکار محیط: $MODE"
+fi
+
+# تنظیمات بر اساس حالت
+if [ "$MODE" = "local" ]; then
+    DOMAIN="localhost"
+    ENV_MODE="0"
+    print_header "🏠 حالت لوکال"
+    print_info "دامنه: $DOMAIN"
+    print_info "پورت‌ها: Next.js:3003, Python:5001, MySQL:3307, Redis:6380"
+else
+    DOMAIN="sch.ahmadreza-avandi.ir"
+    ENV_MODE="1"
+    print_header "🌐 حالت سرور"
+    print_info "دامنه: $DOMAIN"
+    print_info "پورت‌ها: Next.js:3003, Python:5001, MySQL:3307, Redis:6380"
+fi
+
 echo ""
 
 # 1. ایجاد فایل‌های .env
 print_header "1️⃣ ایجاد فایل‌های .env"
 
-if [ ! -f ".env" ] || [ ! -f "nest/.env" ] || [ ! -f "next/.env.local" ]; then
+if [ ! -f ".env" ] || [ ! -f "next/.env.local" ]; then
     print_info "فایل‌های .env یافت نشدند، در حال ایجاد..."
-    bash setup-env.sh
+    bash setup-env.sh $ENV_MODE
 else
     print_success "فایل‌های .env موجود هستند"
     read -p "آیا می‌خواهید فایل‌های .env را دوباره بسازید؟ (y/n) " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        bash setup-env.sh
+        bash setup-env.sh $ENV_MODE
     fi
 fi
 
@@ -71,18 +102,22 @@ sudo rm -f /etc/nginx/sites-available/school-proj-certbot 2>/dev/null || true
 
 print_success "پاک‌سازی انجام شد"
 
-# 3. بررسی SSL
-print_header "3️⃣ بررسی گواهی SSL"
-
-if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-    print_success "گواهی SSL موجود است"
-    EXPIRY=$(openssl x509 -enddate -noout -in /etc/letsencrypt/live/$DOMAIN/fullchain.pem | cut -d= -f2)
-    print_info "تاریخ انقضا: $EXPIRY"
+# 3. بررسی گواهی SSL (فقط برای سرور)
+if [ "$MODE" = "server" ]; then
+    print_header "3️⃣ بررسی گواهی SSL"
+    
+    if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+        print_success "گواهی SSL موجود است"
+        EXPIRY=$(openssl x509 -enddate -noout -in /etc/letsencrypt/live/$DOMAIN/fullchain.pem | cut -d= -f2)
+        print_info "تاریخ انقضا: $EXPIRY"
+    else
+        print_error "گواهی SSL یافت نشد!"
+        print_info "لطفاً ابتدا SSL را دریافت کنید:"
+        echo "  sudo bash get-ssl-manual.sh"
+        exit 1
+    fi
 else
-    print_error "گواهی SSL یافت نشد!"
-    print_info "لطفاً ابتدا SSL را دریافت کنید:"
-    echo "  sudo bash get-ssl-manual.sh"
-    exit 1
+    print_info "⏭️ حالت لوکال - بررسی SSL رد شد"
 fi
 
 # 4. توقف containers قبلی
@@ -95,31 +130,126 @@ if [ -f "docker-compose.yml" ]; then
 fi
 
 # 5. کانفیگ Nginx
-print_header "5️⃣ کانفیگ Nginx"
-
-print_info "کپی کانفیگ nginx..."
-sudo cp nginx-config.conf /etc/nginx/sites-available/school-proj
-
-# حذف و ایجاد symlink
-sudo rm -f /etc/nginx/sites-enabled/school-proj
-sudo ln -sf /etc/nginx/sites-available/school-proj /etc/nginx/sites-enabled/school-proj
-
-# تست nginx
-print_info "تست کانفیگ nginx..."
-if sudo nginx -t 2>&1 | grep -q "successful"; then
-    print_success "کانفیگ nginx صحیح است"
+if [ "$MODE" = "server" ]; then
+    print_header "5️⃣ کانفیگ Nginx"
     
-    # reload nginx
-    if sudo systemctl is-active --quiet nginx 2>/dev/null; then
-        sudo systemctl reload nginx
-        print_success "nginx reload شد"
+    # بررسی وجود nginx container
+    if docker ps --format "{{.Names}}" | grep -q "^nginx$"; then
+        print_info "nginx container یافت شد - استفاده از Docker nginx"
+        
+        # ایجاد کانفیگ Docker برای سرور
+        print_info "ایجاد کانفیگ nginx برای Docker..."
+        cat > nginx-docker-config.conf << 'EOF'
+upstream school_nextjs_backend {
+    server school-proj-nextjs-1:3000;
+}
+upstream school_python_backend {
+    server school-proj-pythonserver-1:5000;
+}
+upstream school_phpmyadmin_backend {
+    server school-proj-phpmyadmin-1:80;
+}
+upstream school_redis_commander_backend {
+    server school-proj-redis-commander-1:8081;
+}
+
+server {
+    listen 80;
+    server_name sch.ahmadreza-avandi.ir;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name sch.ahmadreza-avandi.ir;
+
+    ssl_certificate /etc/letsencrypt/live/sch.ahmadreza-avandi.ir/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sch.ahmadreza-avandi.ir/privkey.pem;
+
+    client_max_body_size 50M;
+    proxy_read_timeout 300s;
+    proxy_connect_timeout 75s;
+
+    location /python-api/ {
+        proxy_pass http://school_python_backend/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /phpmyadmin/ {
+        proxy_pass http://school_phpmyadmin_backend/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /redis-commander/ {
+        proxy_pass http://school_redis_commander_backend/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        proxy_pass http://school_nextjs_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+EOF
+
+        # کپی کانفیگ به nginx container
+        docker cp nginx-docker-config.conf nginx:/etc/nginx/conf.d/school-proj.conf
+        docker network connect school-proj_app-network nginx 2>/dev/null || true
+        
+        # تست و reload
+        if docker exec nginx nginx -t 2>&1 | grep -q "successful"; then
+            docker exec nginx nginx -s reload
+            print_success "✅ nginx container کانفیگ شد"
+        else
+            print_error "خطا در کانفیگ nginx container"
+            docker exec nginx nginx -t
+            exit 1
+        fi
+        
     else
-        print_info "nginx روی host فعال نیست (در Docker است)"
+        print_info "nginx container یافت نشد - استفاده از system nginx"
+        
+        # کانفیگ برای system nginx
+        sudo cp nginx-config.conf /etc/nginx/sites-available/school-proj
+        sudo rm -f /etc/nginx/sites-enabled/school-proj
+        sudo ln -sf /etc/nginx/sites-available/school-proj /etc/nginx/sites-enabled/school-proj
+        
+        # تست و reload
+        if sudo nginx -t 2>&1 | grep -q "successful"; then
+            if sudo systemctl is-active --quiet nginx 2>/dev/null; then
+                sudo systemctl reload nginx
+            else
+                sudo systemctl start nginx
+            fi
+            print_success "✅ system nginx کانفیگ شد"
+        else
+            print_error "خطا در کانفیگ nginx"
+            sudo nginx -t
+            exit 1
+        fi
     fi
 else
-    print_error "خطا در کانفیگ nginx"
-    sudo nginx -t
-    exit 1
+    print_info "⏭️ حالت لوکال - کانفیگ nginx رد شد"
 fi
 
 # 6. Build containers
@@ -248,3 +378,30 @@ echo ""
 
 print_success "همه چیز آماده است! 🎉"
 print_info "پروژه School-Proj کاملاً مستقل از CRM است و هیچ تداخلی ندارد"
+
+# تست نهایی سایت
+print_header "🌐 تست نهایی"
+
+if [ "$MODE" = "server" ]; then
+    print_info "تست دسترسی به سایت..."
+    if curl -s -I https://sch.ahmadreza-avandi.ir | head -1 | grep -q "200\|301\|302"; then
+        print_success "✅ سایت از طریق HTTPS قابل دسترسی است!"
+        echo ""
+        echo "🎯 سایت شما آماده است:"
+        echo "   👉 https://sch.ahmadreza-avandi.ir"
+    else
+        print_warning "⚠️ سایت ممکن است هنوز کاملاً آماده نباشد"
+        print_info "چند دقیقه صبر کنید یا لاگ‌ها را بررسی کنید"
+    fi
+else
+    print_info "تست دسترسی محلی..."
+    if curl -s -I http://localhost:3003 | head -1 | grep -q "200\|301\|302"; then
+        print_success "✅ سایت از طریق localhost قابل دسترسی است!"
+        echo ""
+        echo "🎯 سایت محلی شما آماده است:"
+        echo "   👉 http://localhost:3003"
+    else
+        print_warning "⚠️ سایت محلی ممکن است هنوز کاملاً آماده نباشد"
+        print_info "چند دقیقه صبر کنید یا لاگ‌ها را بررسی کنید"
+    fi
+fi

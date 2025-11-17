@@ -36,6 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         fullName: decoded.fullName,
         roleId: decoded.roleId,
         roleName: decoded.roleName,
+        role: decoded.roleName, // برای سازگاری با کد قدیمی
       },
     });
   } catch (error) {

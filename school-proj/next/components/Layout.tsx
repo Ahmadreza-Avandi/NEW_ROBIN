@@ -45,6 +45,7 @@ import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import SchoolIcon from '@mui/icons-material/School';
 import ClassIcon from '@mui/icons-material/Class';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import BookIcon from '@mui/icons-material/Book';
 
 const drawerWidth = 240;
 const secAppbarHeight = 64;
@@ -65,6 +66,7 @@ interface LayoutProps {
   darkMode: boolean;
   setDarkMode: (darkMode: boolean) => void;
   userRole: string | null;
+  userRoleId: number | null;
 }
 
 interface MenuItem {
@@ -153,7 +155,7 @@ const ProfileMenu: React.FC<{ userRole: string | null }> = ({ userRole }) => {
   );
 };
 
-export function Layout({ children, darkMode, setDarkMode, userRole }: LayoutProps) {
+export function Layout({ children, darkMode, setDarkMode, userRole, userRoleId }: LayoutProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -380,9 +382,35 @@ export function Layout({ children, darkMode, setDarkMode, userRole }: LayoutProp
     },
   ];
 
-  const filteredMenuItems = userRole === 'USER' 
-    ? menuItems.filter(item => item.id !== 3 && item.id !== 4)
-    : menuItems;
+  // فیلتر منو بر اساس نقش کاربر
+  const filteredMenuItems = React.useMemo(() => {
+    // دانش‌آموز: فقط حاضری و پروفایل
+    if (userRoleId === 3) {
+      return [
+        {
+          text: 'حاضری من',
+          id: 100,
+          icon: <BookIcon />,
+          path: '/student-attendance',
+        },
+        {
+          text: 'پروفایل',
+          id: 101,
+          icon: <AccountCircleIcon />,
+          path: '/profile',
+        }
+      ];
+    }
+    
+    // معلم: منوی محدود
+    if (userRoleId === 2) {
+      return menuItems.filter(item => item.id !== 3 && item.id !== 4);
+    }
+    
+    // مدیر: همه منوها
+    return menuItems;
+  }, [userRoleId]);
+
 
   const toggleTheme = () => {
     setLoading(true);

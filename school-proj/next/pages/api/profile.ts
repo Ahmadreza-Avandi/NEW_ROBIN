@@ -1,42 +1,109 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import axios from 'axios';
-import { SERVER_NESTJS_URL } from '@/lib/config';
-
-const API_URL = `${SERVER_NESTJS_URL}/users`;
+import { getDbPool } from '@/lib/db';
+import { decodeToken } from '@/lib/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const token = req.headers.authorization?.split(' ')[1];
-
+  const authHeader = req.headers.authorization;
+  
   // بررسی وجود توکن
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized' });
+  if (!authHeader) {
+    return res.status(401).json({ message: 'توکن یافت نشد' });
   }
+
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'توکن نامعتبر است' });
+  }
+
+  // دیکد کردن توکن
+  const user = decodeToken(token);
+  if (!user) {
+    return res.status(401).json({ message: 'توکن نامعتبر است' });
+  }
+
+  const pool = getDbPool();
 
   try {
     if (req.method === 'GET') {
-      // دریافت اطلاعات کاربر
-      const response = await axios.get(API_URL, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return res.status(200).json(response.data);
+      // دریافت اطلاعات کاربر از دیتابیس
+      const query = `
+        SELECT 
+          u.id,
+          u.fullName,
+          u.nationalCode,
+          u.phoneNumber,
+          u.roleId,
+          r.name as roleName,
+          u.classId,
+          c.name as className,
+          u.majorId,
+          m.name as majorName,
+          u.gradeId,
+          g.name as gradeName
+        FROM user u
+        LEFT JOIN role r ON u.roleId = r.id
+        LEFT JOIN class c ON u.classId = c.id
+        LEFT JOIN major m ON u.majorId = m.id
+        LEFT JOIN grade g ON u.gradeId = g.id
+        WHERE u.id = ?
+      `;
+
+      const [rows] = await pool.execute(query, [user.id]);
+      const userData = (rows as any[])[0];
+
+      if (!userData) {
+        return res.status(404).json({ message: 'کاربر یافت نشد' });
+      }
+
+      // حذف رمز عبور از پاسخ
+      return res.status(200).json(userData);
+
     } else if (req.method === 'PUT') {
       // به‌روزرسانی اطلاعات کاربر
-      const response = await axios.put(API_URL, req.body, {
-        headers: { Authorization: `Bearer ${token}` },
+      const { fullName, phoneNumber } = req.body;
+
+      if (!fullName && !phoneNumber) {
+        return res.status(400).json({ message: 'حداقل یک فیلد برای به‌روزرسانی لازم است' });
+      }
+
+      const updates: string[] = [];
+      const values: any[] = [];
+
+      if (fullName) {
+        updates.push('fullName = ?');
+        values.push(fullName);
+      }
+
+      if (phoneNumber) {
+        updates.push('phoneNumber = ?');
+        values.push(phoneNumber);
+      }
+
+      values.push(user.id);
+
+      const updateQuery = `
+        UPDATE user 
+        SET ${updates.join(', ')}
+        WHERE id = ?
+      `;
+
+      await pool.execute(updateQuery, values);
+
+      return res.status(200).json({ 
+        message: 'اطلاعات با موفقیت به‌روزرسانی شد',
+        success: true 
       });
-      return res.status(200).json(response.data);
+
     } else {
       // اگر متد معتبر نیست
       res.setHeader('Allow', ['GET', 'PUT']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
+      return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
     }
   } catch (error: any) {
-    console.error('Error fetching or updating profile:', error);
-    
-    // Handle errors directly
-    const statusCode = error.response?.status || 500;
-    const message = error.response?.data?.message || 'An error occurred while processing your request';
-    
-    res.status(statusCode).json({ error: message });
+    console.error('Error in profile API:', error);
+    return res.status(500).json({ 
+      message: 'خطای سرور',
+      error: error.message 
+    });
   }
 }

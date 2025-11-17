@@ -270,11 +270,12 @@ const AttendancePage = () => {
       
       // اطلاعات مورد نیاز برای ارسال به API
       const data = {
-        id: student.id,
+        id: student.id || 0, // اگر ID وجود نداشت، 0 ارسال می‌کنیم
         status: newStatus,
         userId: student.userId,
         nationalCode: student.nationalCode,
         fullName: student.fullName,
+        classId: selectedClass?.id,
         className: student.className,
         jalali_date: formattedDate,
         dayOfWeek: dayOfWeek,
@@ -299,21 +300,9 @@ const AttendancePage = () => {
       const responseData = await response.json();
       console.log("Response from server:", responseData);
       
-      // آپدیت لیست دانش‌آموزان با وضعیت جدید
-      setAttendanceData(prev =>
-        prev.map(item =>
-          item.nationalCode === student.nationalCode 
-            ? { 
-                ...item, 
-                status: newStatus, 
-                id: responseData.id 
-              } 
-            : item
-        )
-      );
-      
-      // بارگذاری مجدد داده‌ها بعد از تغییر وضعیت (اختیاری)
-      setTimeout(() => handleFetchAttendance(), 500);
+      // بارگذاری مجدد داده‌ها بعد از تغییر وضعیت
+      // این باعث می‌شه لیست بر اساس فیلتر فعلی رفرش بشه
+      await handleFetchAttendance();
       
       setSnackbar({
         open: true,

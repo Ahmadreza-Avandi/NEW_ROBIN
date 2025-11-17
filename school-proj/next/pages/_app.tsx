@@ -11,6 +11,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRoleId, setUserRoleId] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,6 +40,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             valid: boolean;
             user?: {
               role: string;
+              roleId: number;
             };
           }
 
@@ -47,13 +49,19 @@ function MyApp({ Component, pageProps }: AppProps) {
           if (valid) {
             setIsAuthenticated(true);
             setUserRole(user?.role || null);
+            setUserRoleId(user?.roleId || null);
 
             // فقط اگر در صفحه لاگین هستیم، redirect کن
             if (router.pathname === '/login') {
-              if (user?.role === 'ADMIN') {
+              if (user?.roleId === 1) {
+                // مدیر
                 router.replace('/admin-dashboard');
-              } else if (user?.role === 'USER') {
+              } else if (user?.roleId === 2) {
+                // معلم
                 router.replace('/user-dashboard');
+              } else if (user?.roleId === 3) {
+                // دانش‌آموز
+                router.replace('/student-attendance');
               }
             }
           } else {
@@ -134,7 +142,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       {isAuthenticated ? (
-        <Layout darkMode={darkMode} setDarkMode={setDarkMode} userRole={userRole}>
+        <Layout darkMode={darkMode} setDarkMode={setDarkMode} userRole={userRole} userRoleId={userRoleId}>
           <Component {...pageProps} key={router.asPath} />
         </Layout>
       ) : (

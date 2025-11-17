@@ -47,6 +47,13 @@ const LoginForm: React.FC = () => {
       
       interface LoginResponse {
         access_token: string;
+        user: {
+          id: number;
+          fullName: string;
+          nationalCode: string;
+          roleId: number;
+          roleName: string;
+        };
       }
       
       const responseData = response.data as LoginResponse;
@@ -55,10 +62,24 @@ const LoginForm: React.FC = () => {
       setSnackbarSeverity('success');
       setSnackbarMessage('ورود موفقیت‌آمیز بود');
       setSnackbarOpen(true);
+      
+      // تعیین مسیر بر اساس نقش کاربر
+      let redirectPath = '/';
+      if (responseData.user.roleId === 1) {
+        // مدیر
+        redirectPath = '/admin-dashboard';
+      } else if (responseData.user.roleId === 2) {
+        // معلم
+        redirectPath = '/user-dashboard';
+      } else if (responseData.user.roleId === 3) {
+        // دانش‌آموز
+        redirectPath = '/student-attendance';
+      }
+      
       setTimeout(() => {
         setLoading(false);
-        router.push('/');
-      }, 2000);
+        router.push(redirectPath);
+      }, 1500);
     } catch (error: any) {
       setLoading(false);
       setError('nationalCode', { message: 'Login failed' });

@@ -147,7 +147,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (attendanceFilter === 'present') {
               studentsQuery += ` HAVING status = 'present'`;
             } else if (attendanceFilter === 'absent') {
-              studentsQuery += ` HAVING status = 'absent'`;
+              studentsQuery += ` HAVING status = 'absent' OR status IS NULL`;
             }
           } else {
             // کوئری برای نمایش همه دروس
@@ -382,106 +382,97 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         userNationalCode, userFullName, userClassId, userClassName
       });
       
-      // اگر رکورد حضور وجود نداشت، ایجاد کنیم
-      if (id === 0) {
-        // بررسی وجود رکورد برای این روز
-        let checkQuery = `
-          SELECT id FROM attendance 
-          WHERE nationalCode = ? AND jalali_date = ?
-        `;
-        
-        let checkParams = [userNationalCode, useJalaliDate];
-        
-        if (subjectId) {
-          checkQuery += ` AND subjectId = ?`;
-          checkParams.push(subjectId);
-        } else {
-          // اگر درس انتخاب نشده، باید بررسی کنیم که آیا رکوردی بدون درس وجود دارد
-          checkQuery += ` AND (subjectId IS NULL)`;
-        }
-        
-        console.log("Check query:", checkQuery);
-        console.log("Check params:", checkParams);
-        
-        const [existingRows]: any = await pool.execute(checkQuery, checkParams);
-        console.log("Existing rows:", existingRows);
-        
-        if (existingRows.length > 0) {
-          // آپدیت رکورد موجود
-          const updateQuery = `
-            UPDATE attendance 
-            SET status = ? 
-            WHERE id = ?
-          `;
-          await pool.execute(updateQuery, [status, existingRows[0].id]);
-          
-          // اگر درس خاصی انتخاب شده، فقط همان درس را بروزرسانی میکنیم
-          if (subjectId) {
-            console.log(`وضعیت حضور برای درس با آیدی ${subjectId} بروز شد`);
-          }
-          return res.status(200).json({ 
-            message: 'وضعیت با موفقیت به‌روزرسانی شد',
-            id: existingRows[0].id 
-          });
-        } else {
-          // ایجاد رکورد جدید
-          let insertQuery = `
-            INSERT INTO attendance 
-            (nationalCode, fullName, classId, className, jalali_date, gregorian_date, checkin_time, location, dayOfWeek, status
-          `;
-          
-          if (subjectId) {
-            insertQuery += `, subjectId`;
-          }
-          
-          insertQuery += `) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?`;
-          
-          if (subjectId) {
-            insertQuery += `, ?`;
-          }
-          
-          insertQuery += `)`;
-          
-          const insertParams = [
-            userNationalCode,
-            userFullName,
-            userClassId || null,
-            userClassName || null,
-            useJalaliDate,
-            formattedGregorianDate,
-            currentTime,
-            'سیستم مدیریت',
-            useDayOfWeek,
-            status
-          ];
-          
-          if (subjectId) {
-            insertParams.push(subjectId);
-            console.log(`ایجاد رکورد حضور برای درس با آیدی ${subjectId}`);
-          }
-          
-          console.log("Insert query:", insertQuery);
-          console.log("Insert params:", insertParams);
-          
-          const [result]: any = await pool.execute(insertQuery, insertParams);
-          let insertedId = result.insertId;
-          return res.status(201).json({ 
-            message: 'رکورد حضور ایجاد شد',
-            id: insertedId
-          });
-        }
+      // بررسی وجود رکورد برای این روز و درس
+      let checkQuery = `
+        SELECT id FROM attendance 
+        WHERE nationalCode = ? AND jalali_date = ?
+      `;
+      
+      let checkParams = [userNationalCode, useJalaliDate];
+      
+      if (subjectId) {
+        checkQuery += ` AND subjectId = ?`;
+        checkParams.push(subjectId);
       } else {
+        // اگر درس انتخاب نشده، باید بررسی کنیم که آیا رکوردی بدون درس وجود دارد
+        checkQuery += ` AND (subjectId IS NULL)`;
+      }
+      
+      console.log("Check query:", checkQuery);
+      console.log("Check params:", checkParams);
+      
+      const [existingRows]: any = await pool.execute(checkQuery, checkParams);
+      console.log("Existing rows:", existingRows);
+      
+      if (existingRows.length > 0) {
         // آپدیت رکورد موجود
+        const updateQuery = `
+          UPDATE attendance 
+          SET status = ? 
+          WHERE id = ?
+        `;
+        await pool.execute(updateQuery, [status, existingRows[0].id]);
+        
+        console.log(`وضعیت حضور برای رکورد ${existingRows[0].id} به ${status} تغییر کرد`);
+        return res.status(200).json({ 
+          message: 'وضعیت با موفقیت به‌روزرسانی شد',
+          id: existingRows[0].id 
+        });
+      } else if (id && id !== 0) {
+        // آپدیت رکورد موجود با ID مشخص
         const updateQuery = `UPDATE attendance SET status = ? WHERE id = ?`;
         await pool.execute(updateQuery, [status, id]);
         
-        // اگر درس انتخاب شده، فقط همان درس را بروزرسانی میکنیم
-        if (subjectId) {
-          console.log(`بروزرسانی رکورد حضور برای درس با آیدی ${subjectId}`);
-        }
+        console.log(`بروزرسانی رکورد حضور با ID ${id} به وضعیت ${status}`);
         return res.status(200).json({ 
           message: 'وضعیت با موفقیت به‌روزرسانی شد',
           id
+        });
+      } else {
+        // ایجاد رکورد جدید
+        let insertQuery = `
+          INSERT INTO attendance 
+          (nationalCode, fullName, classId, className, jalali_date, gregorian_date, checkin_time, location, dayOfWeek, status
+        `;
+        
+        if (subjectId) {
+          insertQuery += `, subjectId`;
+        }
+        
+        insertQuery += `) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?`;
+        
+        if (subjectId) {
+          insertQuery += `, ?`;
+        }
+        
+        insertQuery += `)`;
+        
+        const insertParams = [
+          userNationalCode,
+          userFullName,
+          userClassId || null,
+          userClassName || null,
+          useJalaliDate,
+          formattedGregorianDate,
+          currentTime,
+          'سیستم مدیریت',
+          useDayOfWeek,
+          status
+        ];
+        
+        if (subjectId) {
+          insertParams.push(subjectId);
+          console.log(`ایجاد رکورد حضور برای درس با آیدی ${subjectId}`);
+        }
+        
+        console.log("Insert query:", insertQuery);
+        console.log("Insert params:", insertParams);
+        
+        const [result]: any = await pool.execute(insertQuery, insertParams);
+        let insertedId = result.insertId;
+        return res.status(201).json({ 
+          message: 'رکورد حضور ایجاد شد',
+          id: insertedId
         });
       }
     } catch (error: unknown) {
