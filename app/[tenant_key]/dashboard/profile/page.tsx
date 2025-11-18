@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,9 @@ interface DailyReport {
 }
 
 export default function ProfilePage() {
+    const params = useParams();
+    const tenantKey = params.tenant_key as string;
+    
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
@@ -91,7 +95,11 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/tenant/profile');
+            const response = await fetch('/api/tenant/profile', {
+                headers: {
+                    'X-Tenant-Key': tenantKey
+                }
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -122,7 +130,11 @@ export default function ProfilePage() {
     const fetchTasks = async () => {
         try {
             setTasksLoading(true);
-            const response = await fetch('/api/tenant/tasks');
+            const response = await fetch('/api/tenant/tasks', {
+                headers: {
+                    'X-Tenant-Key': tenantKey
+                }
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -140,7 +152,11 @@ export default function ProfilePage() {
     const fetchTodayReport = async () => {
         try {
             setReportLoading(true);
-            const response = await fetch('/api/tenant/reports/today');
+            const response = await fetch('/api/tenant/reports/today', {
+                headers: {
+                    'X-Tenant-Key': tenantKey
+                }
+            });
             const data = await response.json();
 
             if (data.success && data.data) {
@@ -164,8 +180,10 @@ export default function ProfilePage() {
         try {
             const response = await fetch('/api/tenant/profile', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json',
-        'X-Tenant-Key': params?.tenant_key || tenantKey},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Tenant-Key': tenantKey
+                },
                 body: JSON.stringify(editForm),
             });
 
@@ -230,6 +248,9 @@ export default function ProfilePage() {
 
             const response = await fetch('/api/tenant/profile/avatar', {
                 method: 'POST',
+                headers: {
+                    'X-Tenant-Key': tenantKey
+                },
                 body: formData,
             });
 
@@ -272,8 +293,10 @@ export default function ProfilePage() {
             setReportSaving(true);
             const response = await fetch('/api/tenant/reports', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json',
-        'X-Tenant-Key': params?.tenant_key || tenantKey},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Tenant-Key': tenantKey
+                },
                 body: JSON.stringify(dailyReport),
             });
 
@@ -308,8 +331,10 @@ export default function ProfilePage() {
         try {
             const response = await fetch('/api/tenant/tasks', {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json',
-        'X-Tenant-Key': params?.tenant_key || tenantKey},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Tenant-Key': tenantKey
+                },
                 body: JSON.stringify({
                     taskId,
                     status: 'completed'

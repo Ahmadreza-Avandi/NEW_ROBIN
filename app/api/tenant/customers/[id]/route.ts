@@ -72,9 +72,8 @@ export async function GET(
           s.payment_status, 
           s.sale_date, 
           s.invoice_number,
-          u.name as sales_person_name
+          s.sales_person_name
         FROM sales s 
-        LEFT JOIN users u ON s.assigned_to = u.id
         WHERE s.customer_id = ? 
         ORDER BY s.sale_date DESC 
         LIMIT 10`,
