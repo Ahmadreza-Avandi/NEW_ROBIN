@@ -52,10 +52,10 @@ if [ "$TOTAL_MEM" -lt 2048 ]; then
         sudo sysctl vm.swappiness=10
     fi
     
-    COMPOSE_FILE="docker compose.memory-optimized.yml"
+    COMPOSE_FILE="docker-compose.memory-optimized.yml"
     NGINX_CONFIG="nginx/low-memory.conf"
 else
-    COMPOSE_FILE="docker compose.yml"
+    COMPOSE_FILE="docker-compose.yml"
     NGINX_CONFIG="nginx/default.conf"
 fi
 
@@ -780,7 +780,7 @@ fi
 
 # تنظیم docker compose موقت برای SSL
 echo "🔧 تنظیم nginx موقت برای SSL..."
-cat > docker compose.temp.yml << EOF
+cat > docker-compose.temp.yml << EOF
 version: '3.8'
 
 services:
@@ -829,7 +829,7 @@ fi
 
 # راه‌اندازی nginx موقت
 echo "🌐 راه‌اندازی nginx موقت..."
-docker compose -f docker compose.temp.yml up -d
+docker compose -f docker-compose.temp.yml up -d
 
 # انتظار برای آماده شدن nginx
 sleep 10
@@ -858,10 +858,10 @@ fi
 
 # متوقف کردن nginx موقت
 echo "🛑 متوقف کردن nginx موقت..."
-docker compose -f docker compose.temp.yml down
+docker compose -f docker-compose.temp.yml down
 
 # پاک کردن فایل‌های موقت
-rm -f nginx/temp.conf docker compose.temp.yml
+rm -f nginx/temp.conf docker-compose.temp.yml
 
 # تنظیم nginx config نهایی
 echo "📝 تنظیم nginx config..."
@@ -1024,16 +1024,16 @@ fi
 echo "✅ همه فایل‌های SQL آماده هستند"
 
 # تنظیم docker compose برای استفاده از nginx config فعال
-echo "🔧 تنظیم docker compose..."
-cp $COMPOSE_FILE docker compose.deploy.yml
+echo "🔧 تنظیم docker-compose..."
+cp $COMPOSE_FILE docker-compose.deploy.yml
 
 # تنظیم nginx volume در فایل deploy
-sed -i 's|./nginx/default.conf:/etc/nginx/conf.d/default.conf|./nginx/active.conf:/etc/nginx/conf.d/default.conf|g' docker compose.deploy.yml
-sed -i 's|./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro|./nginx/active.conf:/etc/nginx/conf.d/default.conf:ro|g' docker compose.deploy.yml
-sed -i 's|./nginx/simple.conf:/etc/nginx/conf.d/default.conf|./nginx/active.conf:/etc/nginx/conf.d/default.conf|g' docker compose.deploy.yml
-sed -i 's|./nginx/low-memory.conf:/etc/nginx/conf.d/default.conf|./nginx/active.conf:/etc/nginx/conf.d/default.conf|g' docker compose.deploy.yml
+sed -i 's|./nginx/default.conf:/etc/nginx/conf.d/default.conf|./nginx/active.conf:/etc/nginx/conf.d/default.conf|g' docker-compose.deploy.yml
+sed -i 's|./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro|./nginx/active.conf:/etc/nginx/conf.d/default.conf:ro|g' docker-compose.deploy.yml
+sed -i 's|./nginx/simple.conf:/etc/nginx/conf.d/default.conf|./nginx/active.conf:/etc/nginx/conf.d/default.conf|g' docker-compose.deploy.yml
+sed -i 's|./nginx/low-memory.conf:/etc/nginx/conf.d/default.conf|./nginx/active.conf:/etc/nginx/conf.d/default.conf|g' docker-compose.deploy.yml
 
-COMPOSE_FILE="docker compose.deploy.yml"
+COMPOSE_FILE="docker-compose.deploy.yml"
 
 # Build و راه‌اندازی
 if [ "$FORCE_CLEAN" = true ]; then
