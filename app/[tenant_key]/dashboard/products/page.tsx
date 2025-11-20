@@ -137,7 +137,7 @@ export default function ProductsPage() {
                         بروزرسانی
                     </Button>
                     <Button
-                        onClick={() => window.location.href = '/dashboard/products/new'}
+                        onClick={() => window.location.href = `/${tenantKey}/dashboard/products/new`}
                         className="bg-gradient-to-r from-primary via-secondary to-accent hover:from-primary/90 hover:via-secondary/90 hover:to-accent/90 font-vazir"
                     >
                         <Plus className="h-4 w-4 ml-2" />
@@ -273,7 +273,7 @@ export default function ProductsPage() {
                             }
                         </p>
                         <Button
-                            onClick={() => window.location.href = '/dashboard/products/new'}
+                            onClick={() => window.location.href = `/${tenantKey}/dashboard/products/new`}
                             className="font-vazir"
                         >
                             <Plus className="h-4 w-4 ml-2" />
@@ -322,10 +322,20 @@ export default function ProductsPage() {
                                     </div>
 
                                     <div className="flex space-x-2 space-x-reverse pt-2">
-                                        <Button variant="outline" size="sm" className="flex-1 font-vazir">
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            className="flex-1 font-vazir"
+                                            onClick={() => window.location.href = `/${tenantKey}/dashboard/products/${product.id}/edit`}
+                                        >
                                             ویرایش
                                         </Button>
-                                        <Button variant="outline" size="sm" className="flex-1 font-vazir">
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            className="flex-1 font-vazir"
+                                            onClick={() => window.location.href = `/${tenantKey}/dashboard/products/${product.id}`}
+                                        >
                                             مشاهده
                                         </Button>
                                     </div>
