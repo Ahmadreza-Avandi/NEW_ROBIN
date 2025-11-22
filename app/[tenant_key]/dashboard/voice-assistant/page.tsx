@@ -11,15 +11,15 @@ function isSpeechRecognitionSupported(): boolean {
 // تابع فعال‌سازی صدا
 async function enableAudio(): Promise<void> {
   if (typeof window === 'undefined') return;
-  
+
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     const audioContext = new AudioContext();
-    
+
     if (audioContext.state === 'suspended') {
       await audioContext.resume();
     }
-    
+
     console.log('Audio enabled successfully');
   } catch (error) {
     console.error('Failed to enable audio:', error);
@@ -40,16 +40,16 @@ function startListening(callbacks: {
 
   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   const recognition = new SpeechRecognition();
-  
+
   recognition.lang = 'fa-IR';
   recognition.continuous = false;
   recognition.interimResults = true;
-  
+
   let finalTranscript = '';
-  
+
   recognition.onresult = (event: any) => {
     let interimTranscript = '';
-    
+
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const transcript = event.results[i][0].transcript;
       if (event.results[i].isFinal) {
@@ -58,18 +58,18 @@ function startListening(callbacks: {
         interimTranscript += transcript;
       }
     }
-    
+
     callbacks.onResult(finalTranscript + interimTranscript);
   };
-  
+
   recognition.onend = () => {
     callbacks.onEnd(finalTranscript.trim());
   };
-  
+
   recognition.onerror = (event: any) => {
     callbacks.onError(`خطا: ${event.error}`);
   };
-  
+
   recognition.start();
   return recognition;
 }
@@ -87,15 +87,15 @@ function splitTextIntoChunks(text: string, maxLength = 500): string[] {
   if (text.length <= maxLength) {
     return [text];
   }
-  
+
   const chunks: string[] = [];
   const sentences = text.split(/([.!?؟۔]\s+)/); // تقسیم بر اساس علائم نقطه‌گذاری
-  
+
   let currentChunk = '';
-  
+
   for (let i = 0; i < sentences.length; i++) {
     const sentence = sentences[i];
-    
+
     // اگر اضافه کردن این جمله از حد مجاز بیشتر شود
     if (currentChunk.length + sentence.length > maxLength && currentChunk.length > 0) {
       chunks.push(currentChunk.trim());
@@ -104,12 +104,12 @@ function splitTextIntoChunks(text: string, maxLength = 500): string[] {
       currentChunk += sentence;
     }
   }
-  
+
   // اضافه کردن آخرین قطعه
   if (currentChunk.trim().length > 0) {
     chunks.push(currentChunk.trim());
   }
-  
+
   console.log(`📝 Text split into ${chunks.length} chunks:`, chunks.map(c => c.length));
   return chunks;
 }
@@ -118,16 +118,16 @@ function splitTextIntoChunks(text: string, maxLength = 500): string[] {
 async function playAudio(text: string, retries = 3): Promise<void> {
   // تقسیم متن به قطعات کوچک‌تر برای متن‌های طولانی
   const chunks = splitTextIntoChunks(text, 500);
-  
+
   console.log(`🎵 Playing audio in ${chunks.length} chunk(s)`);
-  
+
   // پخش هر قطعه به ترتیب
   for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
     const chunk = chunks[chunkIndex];
     console.log(`🎵 Playing chunk ${chunkIndex + 1}/${chunks.length} (${chunk.length} chars)`);
-    
+
     await playAudioChunk(chunk, retries);
-    
+
     // کمی توقف بین قطعات (اختیاری)
     if (chunkIndex < chunks.length - 1) {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -138,11 +138,11 @@ async function playAudio(text: string, retries = 3): Promise<void> {
 // تابع پخش یک قطعه صدا
 async function playAudioChunk(text: string, retries = 3): Promise<void> {
   let lastError: Error | null = null;
-  
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(`🎵 Attempt ${attempt}/${retries} - Requesting TTS for text length: ${text.length}`);
-      
+
       const response = await fetch('/api/voice-assistant/tts', {
         method: 'POST',
         headers: {
@@ -157,7 +157,7 @@ async function playAudioChunk(text: string, retries = 3): Promise<void> {
       }
 
       const data = await response.json();
-      
+
       if (!data.success || !data.audioUrl) {
         throw new Error(data.error || 'پاسخ نامعتبر از سرور');
       }
@@ -171,7 +171,7 @@ async function playAudioChunk(text: string, retries = 3): Promise<void> {
 
       // اولویت: base64 > directUrl > audioUrl
       let audioSrc = '';
-      
+
       if (data.base64) {
         // استفاده از base64 برای قابلیت اطمینان بیشتر
         audioSrc = `data:audio/mpeg;base64,${data.base64}`;
@@ -183,64 +183,64 @@ async function playAudioChunk(text: string, retries = 3): Promise<void> {
         audioSrc = data.audioUrl;
         console.log('🎵 Using audioUrl:', audioSrc);
       }
-      
+
       // ایجاد audio element با تنظیمات بهتر
       const audio = new Audio();
       audio.preload = 'auto';
-      
+
       // فقط برای URL های خارجی از crossOrigin استفاده کن
       if (!audioSrc.startsWith('data:')) {
         audio.crossOrigin = 'anonymous';
       }
-      
+
       // تنظیم src
       audio.src = audioSrc;
-      
+
       console.log('🔊 Loading audio from:', audioSrc.substring(0, 100) + (audioSrc.length > 100 ? '...' : ''));
-      
+
       // منتظر بارگذاری کامل صدا
       await new Promise<void>((resolve, reject) => {
         const loadTimeout = setTimeout(() => {
           reject(new Error('Timeout loading audio'));
         }, 15000); // 15 second timeout for loading
-        
+
         audio.oncanplaythrough = () => {
           clearTimeout(loadTimeout);
           console.log('✅ Audio loaded and ready to play');
           resolve();
         };
-        
+
         audio.onerror = (e) => {
           clearTimeout(loadTimeout);
           console.error('❌ Audio loading error:', e);
           reject(new Error('خطا در بارگذاری صدا'));
         };
-        
+
         // شروع بارگذاری
         audio.load();
       });
-      
+
       // پخش صدا
       console.log('▶️ Starting audio playback...');
       await audio.play();
-      
+
       // منتظر پایان پخش
       return new Promise((resolve, reject) => {
         audio.onended = () => {
           console.log('✅ Audio playback completed');
           resolve();
         };
-        
+
         audio.onerror = (e) => {
           console.error('❌ Audio playback error:', e);
           reject(new Error('خطا در پخش صدا'));
         };
       });
-      
+
     } catch (error: any) {
       lastError = error;
       console.error(`❌ Attempt ${attempt}/${retries} failed:`, error.message);
-      
+
       // اگر آخرین تلاش نبود، کمی صبر کن قبل از تلاش مجدد
       if (attempt < retries) {
         const waitTime = attempt * 1000; // 1s, 2s, 3s
@@ -249,7 +249,7 @@ async function playAudioChunk(text: string, retries = 3): Promise<void> {
       }
     }
   }
-  
+
   // اگر همه تلاش‌ها ناموفق بودند
   console.error('❌ All audio playback attempts failed');
   throw lastError || new Error('خطا در پخش صدا پس از چند تلاش');
@@ -317,7 +317,7 @@ const initialState: State = {
 
 export default function VoiceAssistantPage({ params }: { params: { tenant_key: string } }) {
   const tenantKey = params.tenant_key || 'rabin';
-  
+
   // بارگذاری تاریخچه از localStorage
   const loadHistoryFromStorage = () => {
     if (typeof window === 'undefined') return [];
@@ -358,7 +358,7 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
   useEffect(() => {
     const handleVisibilityChange = () => {
       isPageActiveRef.current = !document.hidden;
-      
+
       if (document.hidden) {
         // صفحه مخفی شد - توقف همه چیز
         console.log('🔇 Page hidden - stopping all voice activities');
@@ -387,7 +387,7 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       // پاکسازی در unmount
@@ -399,11 +399,6 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
       }
     };
   }, [state.microphonePermission, state.isProcessing, state.isPlaying]);
-
-  // مدیریت visibility change برای توقف voice recognition وقتی کاربر از صفحه خارج میشه
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      isPageActiveRef.current = !document.
 
   // ذخیره تاریخچه در localStorage هر بار که تغییر می‌کنه
   useEffect(() => {
@@ -424,10 +419,10 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(track => track.stop());
         dispatch({ type: 'SET_MIC_PERMISSION', payload: true });
-        
+
         // Auto-enable audio
         await enableAudio();
-        
+
         // Auto-start listening
         dispatch({ type: 'SET_LISTENING', payload: true });
       } catch (error) {
@@ -448,6 +443,7 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
     }
   }, [state.microphonePermission, state.isListening]);
 
+  // تابع startListeningProcess باید اینجا تعریف شود
   const startListeningProcess = async () => {
     // بررسی اینکه صفحه فعال باشه
     if (!isPageActiveRef.current) {
@@ -488,7 +484,7 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
             try {
               // استفاده از historyRef برای دریافت آخرین هیستوری
               const currentHistory = historyRef.current;
-              
+
               console.log('📤 Sending to AI:', {
                 message: messageToSend.substring(0, 50),
                 historyCount: currentHistory.length
@@ -555,16 +551,13 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
                   message: audioError.message,
                   stack: audioError.stack
                 });
-                
 
-
-                
                 // نمایش پیام خطا به کاربر
                 dispatch({
                   type: 'SET_ERROR',
                   payload: `پخش صدا ناموفق بود. پاسخ: "${responseText.substring(0, 80)}..."`
                 });
-                
+
                 // نمایش پاسخ متنی در console برای debug
                 console.log('📝 Full response text:', responseText);
               }
@@ -581,15 +574,15 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
 
             } catch (error: any) {
               console.error('❌ Error processing message:', error);
-              
+
               let errorMessage = 'خطا در پردازش پیام. لطفاً دوباره تلاش کنید.';
-              
+
               if (error.name === 'AbortError') {
                 errorMessage = 'درخواست طولانی شد و قطع شد. لطفاً دوباره تلاش کنید.';
               } else if (error.message) {
                 errorMessage = error.message;
               }
-              
+
               dispatch({
                 type: 'SET_ERROR',
                 payload: errorMessage
@@ -636,7 +629,7 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
   const handleMicrophoneClick = async () => {
     // Enable audio on first user interaction
     await enableAudio();
-    
+
     if (state.isListening) {
       // Stop listening
       stopListening(recognitionRef.current);
@@ -703,7 +696,7 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
         <p className="text-lg text-green-600">
           دستیار هوشمند صوتی شما
         </p>
-        
+
         {/* History Toggle Button */}
         <button
           onClick={() => setShowHistory(!showHistory)}
@@ -750,12 +743,10 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
 
               {/* Simple Status */}
               <div className="text-center">
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs ${
-                  state.microphonePermission ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  <div className={`w-2 h-2 rounded-full ml-2 ${
-                    state.microphonePermission ? 'bg-green-500' : 'bg-red-500'
-                  }`}></div>
+                <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs ${state.microphonePermission ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                  <div className={`w-2 h-2 rounded-full ml-2 ${state.microphonePermission ? 'bg-green-500' : 'bg-red-500'
+                    }`}></div>
                   {state.microphonePermission ? 'آماده برای گفتگو' : 'میکروفون غیرفعال'}
                 </div>
               </div>
