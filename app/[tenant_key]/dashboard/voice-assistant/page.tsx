@@ -346,11 +346,64 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
   const recognitionRef = useRef<any>(null);
   const autoStartRef = useRef<boolean>(false);
   const historyRef = useRef<Message[]>(state.history); // نگه‌داری هیستوری در ref
+  const isPageActiveRef = useRef<boolean>(true); // ترک کردن فعال بودن صفحه
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null); // ترک کردن صدای فعلی
 
   // به‌روزرسانی historyRef هر بار که state.history تغییر می‌کنه
   useEffect(() => {
     historyRef.current = state.history;
   }, [state.history]);
+
+  // مدیریت فعال/غیرفعال بودن صفحه
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      isPageActiveRef.current = !document.hidden;
+      
+      if (document.hidden) {
+        // صفحه مخفی شد - توقف همه چیز
+        console.log('🔇 Page hidden - stopping all voice activities');
+        if (recognitionRef.current) {
+          stopListening(recognitionRef.current);
+        }
+        if (currentAudioRef.current) {
+          currentAudioRef.current.pause();
+          currentAudioRef.current = null;
+        }
+        dispatch({ type: 'SET_LISTENING', payload: false });
+        dispatch({ type: 'SET_PLAYING', payload: false });
+        dispatch({ type: 'SET_PROCESSING', payload: false });
+        setButtonText('شروع گفتگو');
+        autoStartRef.current = false;
+      } else {
+        // صفحه فعال شد - شروع مجدد اگر مجوز داشته باشیم
+        console.log('🔊 Page visible - checking if should restart');
+        if (state.microphonePermission && !state.isProcessing && !state.isPlaying) {
+          setTimeout(() => {
+            dispatch({ type: 'SET_LISTENING', payload: true });
+            startListeningProcess();
+          }, 1000);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      // پاکسازی در unmount
+      if (recognitionRef.current) {
+        stopListening(recognitionRef.current);
+      }
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+      }
+    };
+  }, [state.microphonePermission, state.isProcessing, state.isPlaying]);
+
+  // مدیریت visibility change برای توقف voice recognition وقتی کاربر از صفحه خارج میشه
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      isPageActiveRef.current = !document.
 
   // ذخیره تاریخچه در localStorage هر بار که تغییر می‌کنه
   useEffect(() => {
@@ -396,6 +449,18 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
   }, [state.microphonePermission, state.isListening]);
 
   const startListeningProcess = async () => {
+    // بررسی اینکه صفحه فعال باشه
+    if (!isPageActiveRef.current) {
+      console.log('🔇 Page not active - skipping listening');
+      return;
+    }
+
+    // بررسی اینکه در حال پخش صدا نباشیم
+    if (state.isPlaying || state.isProcessing) {
+      console.log('🔇 Currently playing or processing - skipping listening');
+      return;
+    }
+
     if (!state.microphonePermission) {
       dispatch({
         type: 'SET_ERROR',
@@ -468,6 +533,12 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
                 },
               });
 
+              // توقف گوش دادن قبل از پخش صدا
+              if (recognitionRef.current) {
+                stopListening(recognitionRef.current);
+              }
+              dispatch({ type: 'SET_LISTENING', payload: false });
+
               // Play audio response with retry
               dispatch({ type: 'SET_PLAYING', payload: true });
               setButtonText('در حال پخش...');
@@ -485,6 +556,9 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
                   stack: audioError.stack
                 });
                 
+
+
+                
                 // نمایش پیام خطا به کاربر
                 dispatch({
                   type: 'SET_ERROR',
@@ -497,9 +571,9 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
 
               dispatch({ type: 'SET_PLAYING', payload: false });
 
-              // Auto-restart listening after response
+              // Auto-restart listening after response فقط اگر صفحه فعال باشه
               setTimeout(() => {
-                if (state.microphonePermission) {
+                if (state.microphonePermission && isPageActiveRef.current && !document.hidden) {
                   dispatch({ type: 'SET_LISTENING', payload: true });
                   startListeningProcess();
                 }
@@ -526,9 +600,9 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
               dispatch({ type: 'SET_CURRENT_MESSAGE', payload: '' });
             }
           } else {
-            // Auto-restart listening if no speech detected
+            // Auto-restart listening if no speech detected فقط اگر صفحه فعال باشه
             setTimeout(() => {
-              if (state.microphonePermission) {
+              if (state.microphonePermission && isPageActiveRef.current && !document.hidden) {
                 dispatch({ type: 'SET_LISTENING', payload: true });
                 startListeningProcess();
               }
@@ -540,10 +614,12 @@ export default function VoiceAssistantPage({ params }: { params: { tenant_key: s
           dispatch({ type: 'SET_ERROR', payload: error });
           setButtonText('شروع گفتگو');
 
-          // Auto-restart listening after error
+          // Auto-restart listening after error فقط اگر صفحه فعال باشه
           setTimeout(() => {
-            dispatch({ type: 'SET_LISTENING', payload: true });
-            startListeningProcess();
+            if (isPageActiveRef.current && !document.hidden) {
+              dispatch({ type: 'SET_LISTENING', payload: true });
+              startListeningProcess();
+            }
           }, 2000);
         },
       });
