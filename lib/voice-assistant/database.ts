@@ -201,3 +201,26 @@ export async function getProjects(tenantKey: string = 'rabin') {
         return [];
     }
 }
+
+export async function getProducts(tenantKey: string = 'rabin') {
+    try {
+        console.log('📦 getProducts called for tenant:', tenantKey);
+        const query = `
+            SELECT id, name, description, category, price, currency, 
+                   status, sku, tags, specifications, created_at
+            FROM products 
+            WHERE status = 'active' AND tenant_key = ?
+            ORDER BY name
+            LIMIT 50
+        `;
+        const result = await executeQuery(query, [tenantKey]);
+        console.log(`✅ Found ${result.length} products for tenant ${tenantKey}`);
+        if (result.length > 0) {
+            console.log('📋 Sample product names:', result.slice(0, 3).map(p => p.name).join(', '));
+        }
+        return result;
+    } catch (error: any) {
+        console.error('❌ خطا در دریافت اطلاعات محصولات:', error.message);
+        return [];
+    }
+}

@@ -3,7 +3,8 @@ import {
   getCustomers, 
   getSalesReport, 
   getTasks, 
-  getProjects 
+  getProjects,
+  getProducts 
 } from './database';
 
 const KEYWORD_MAPPINGS: Record<string, any> = {
@@ -60,7 +61,17 @@ const KEYWORD_MAPPINGS: Record<string, any> = {
     'پروژه ها': { action: 'getProjects', description: 'دریافت اطلاعات پروژه‌ها' },
     'پروژها': { action: 'getProjects', description: 'دریافت اطلاعات پروژه‌ها' },
     'دیل': { action: 'getProjects', description: 'دریافت اطلاعات دیل‌ها' },
-    'دیل‌ها': { action: 'getProjects', description: 'دریافت اطلاعات دیل‌ها' }
+    'دیل‌ها': { action: 'getProjects', description: 'دریافت اطلاعات دیل‌ها' },
+
+    // کلمات کلیدی محصولات
+    'محصولات': { action: 'getProducts', description: 'دریافت اطلاعات محصولات' },
+    'محصول': { action: 'getProducts', description: 'دریافت اطلاعات محصولات' },
+    'کالا': { action: 'getProducts', description: 'دریافت اطلاعات کالاها' },
+    'کالاها': { action: 'getProducts', description: 'دریافت اطلاعات کالاها' },
+    'کالاهای': { action: 'getProducts', description: 'دریافت اطلاعات کالاها' },
+    'آیتم': { action: 'getProducts', description: 'دریافت اطلاعات آیتم‌ها' },
+    'آیتم‌ها': { action: 'getProducts', description: 'دریافت اطلاعات آیتم‌ها' },
+    'آیتمها': { action: 'getProducts', description: 'دریافت اطلاعات آیتم‌ها' }
 };
 
 export function detectKeywords(text: string) {
@@ -117,6 +128,11 @@ export async function executeAction(action: string, params: any[] = [], tenantKe
             case 'getProjects':
                 console.log('📁 Fetching projects for tenant:', tenantKey);
                 result = await getProjects(tenantKey);
+                break;
+
+            case 'getProducts':
+                console.log('📦 Fetching products for tenant:', tenantKey);
+                result = await getProducts(tenantKey);
                 break;
 
             default:
@@ -247,6 +263,16 @@ function generateDataSummary(results: any[]) {
             case 'getProjects':
                 summary += `${result.count} پروژه/معامله یافت شد. `;
                 break;
+
+            case 'getProducts':
+                summary += `${result.count} محصول فعال یافت شد. `;
+                if (result.data && result.data.length > 0) {
+                    const names = result.data.slice(0, 3).map((prod: any) => prod.name).filter(Boolean);
+                    if (names.length > 0) {
+                        summary += `نمونه: ${names.join(', ')}. `;
+                    }
+                }
+                break;
         }
     }
 
@@ -302,6 +328,21 @@ export function formatDataForAI(results: any[]) {
                     `• ${proj.name} - مشتری: ${proj.customer_name || 'نامشخص'} - ارزش: ${(proj.total_value || 0).toLocaleString('fa-IR')} تومان`
                 ).join('\n');
                 if (result.count > 5) formattedData += `\n... و ${result.count - 5} پروژه دیگر`;
+                break;
+
+            case 'getProducts':
+                formattedData += result.data.slice(0, 10).map((prod: any) => {
+                    let productInfo = `• ${prod.name}`;
+                    if (prod.category) productInfo += ` - دسته: ${prod.category}`;
+                    if (prod.price) {
+                        const price = parseFloat(prod.price) || 0;
+                        productInfo += ` - قیمت: ${price.toLocaleString('fa-IR')} ${prod.currency || 'IRR'}`;
+                    }
+                    if (prod.sku) productInfo += ` - کد: ${prod.sku}`;
+                    if (prod.status) productInfo += ` - وضعیت: ${prod.status}`;
+                    return productInfo;
+                }).join('\n');
+                if (result.count > 10) formattedData += `\n... و ${result.count - 10} محصول دیگر`;
                 break;
         }
 
