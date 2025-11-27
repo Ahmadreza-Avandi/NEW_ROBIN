@@ -1128,7 +1128,8 @@ docker images | grep -E "rabin-last|mariadb|nginx|phpmyadmin" || echo "⚠️  �
 
 echo ""
 echo "⏳ مرحله 8: انتظار برای آماده شدن سرویس‌ها..."
-sleep 30
+echo "⏳ منتظر اجرای init scripts دیتابیس..."
+sleep 45
 
 # بررسی وضعیت سرویس‌ها
 echo "📊 وضعیت سرویس‌ها:"
@@ -1184,9 +1185,10 @@ echo "🧪 تست سرویس‌ها..."
 # تست دیتابیس
 echo "🗄️ تست اتصال دیتابیس..."
 
-# انتظار اضافی برای آماده شدن دیتابیس
-echo "⏳ انتظار برای آماده شدن کامل دیتابیس..."
-sleep 15
+# انتظار اضافی برای آماده شدن دیتابیس و اجرای init scripts
+echo "⏳ انتظار برای آماده شدن کامل دیتابیس و اجرای init scripts..."
+echo "   (init scripts ممکن است 30-60 ثانیه طول بکشد)"
+sleep 30
 
 # تست اتصال root (رمز عبور root همیشه 1234 است طبق docker compose)
 ROOT_PASSWORD="1234"
@@ -1197,11 +1199,15 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
     echo "🔍 بررسی دیتابیس‌ها..."
     DATABASES=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "SHOW DATABASES;" 2>/dev/null | grep -E "(crm_system|saas_master)" || echo "")
     
+    # بررسی crm_system
+    CRM_EXISTS=false
+    CRM_TABLE_COUNT=0
     if echo "$DATABASES" | grep -q "crm_system"; then
         echo "✅ دیتابیس crm_system موجود است"
+        CRM_EXISTS=true
         
         # شمارش جداول crm_system
-        CRM_TABLE_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
+        CRM_TABLE_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
         if [ "$CRM_TABLE_COUNT" -gt 1 ]; then
             echo "✅ دیتابیس crm_system آماده است - تعداد جداول: $((CRM_TABLE_COUNT - 1))"
         else
@@ -1209,13 +1215,19 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         fi
     else
         echo "❌ دیتابیس crm_system موجود نیست!"
+        CRM_EXISTS=false
+        CRM_TABLE_COUNT=0
     fi
     
+    # بررسی saas_master
+    SAAS_EXISTS=false
+    SAAS_TABLE_COUNT=0
     if echo "$DATABASES" | grep -q "saas_master"; then
         echo "✅ دیتابیس saas_master موجود است"
+        SAAS_EXISTS=true
         
         # شمارش جداول saas_master
-        SAAS_TABLE_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
+        SAAS_TABLE_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
         if [ "$SAAS_TABLE_COUNT" -gt 1 ]; then
             echo "✅ دیتابیس saas_master آماده است - تعداد جداول: $((SAAS_TABLE_COUNT - 1))"
         else
@@ -1223,6 +1235,8 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         fi
     else
         echo "❌ دیتابیس saas_master موجود نیست!"
+        SAAS_EXISTS=false
+        SAAS_TABLE_COUNT=0
     fi
     
     # تست اتصال با کاربر crm_user (مطابق lib/database.ts)
@@ -1298,8 +1312,9 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
     echo ""
     echo "🔧 بررسی و اصلاح دیتابیس‌های خالی..."
     
-    # اگر crm_system خالی است، تلاش برای ایمپورت مجدد
-    if [ "$CRM_TABLE_COUNT" -le 1 ] && [ -f "database/crm_system.sql" ]; then
+    # اگر crm_system موجود نیست یا خالی است، تلاش برای ایمپورت
+    if [ "$CRM_EXISTS" = "false" ] || [ "$CRM_TABLE_COUNT" -le 1 ]; then
+        if [ -f "database/crm_system.sql" ]; then
         echo "🔧 ایمپورت مجدد crm_system..."
         echo "📋 کپی فایل به کانتینر..."
         
@@ -1321,18 +1336,28 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
             if [ "$NEW_CRM_COUNT" -gt 1 ]; then
                 echo "✅ crm_system با موفقیت ایمپورت شد - جداول: $((NEW_CRM_COUNT - 1))"
             else
-                echo "❌ ایمپورت crm_system ناموفق - احتمالاً نیاز به rebuild کامل دارید"
-                echo "💡 راه‌حل: ./deploy-server.sh --clean"
-                echo "   یا دستی: docker cp database/crm_system.sql \$(docker compose -f $COMPOSE_FILE ps -q mysql):/tmp/import.sql"
-                echo "   سپس: docker compose -f $COMPOSE_FILE exec mysql mariadb -u root -p1234 crm_system < /tmp/import.sql"
+                echo "❌ ایمپورت crm_system ناموفق - تلاش مجدد..."
+                # تلاش مجدد با روش دیگر
+                sleep 2
+                docker compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} crm_system < /tmp/crm_import.sql" 2>&1 | grep -v "Warning" || true
+                sleep 3
+                FINAL_CRM_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
+                if [ "$FINAL_CRM_COUNT" -gt 1 ]; then
+                    echo "✅ crm_system با موفقیت ایمپورت شد (تلاش مجدد) - جداول: $((FINAL_CRM_COUNT - 1))"
+                else
+                    echo "❌ ایمپورت crm_system ناموفق - نیاز به بررسی دستی"
+                fi
             fi
         else
             echo "❌ کانتینر MySQL یافت نشد!"
         fi
+        else
+            echo "⚠️  فایل database/crm_system.sql یافت نشد!"
+        fi
     fi
     
-    # اگر saas_master خالی است، تلاش برای ایمپورت مجدد
-    if [ "$SAAS_TABLE_COUNT" -le 1 ]; then
+    # اگر saas_master موجود نیست یا خالی است، تلاش برای ایمپورت
+    if [ "$SAAS_EXISTS" = "false" ] || [ "$SAAS_TABLE_COUNT" -le 1 ]; then
         echo "🔧 ایمپورت مجدد saas_master..."
         
         # اطمینان از وجود دیتابیس
@@ -1351,10 +1376,13 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
                 docker cp database/02-saas_master.sql $MYSQL_CONTAINER:/tmp/saas_import.sql
                 
                 # ایمپورت با روش مطمئن
+                echo "⏳ در حال ایمپورت... (ممکن است چند دقیقه طول بکشد)"
                 docker compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
             elif [ -f "database/saas_master.sql" ]; then
                 echo "📥 ایمپورت مستقیم از database/saas_master.sql..."
+                echo "📋 کپی فایل به کانتینر..."
                 docker cp database/saas_master.sql $MYSQL_CONTAINER:/tmp/saas_import.sql
+                echo "⏳ در حال ایمپورت... (ممکن است چند دقیقه طول بکشد)"
                 docker compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
             else
                 echo "⚠️  فایل saas_master یافت نشد - ایجاد ساختار پایه..."
@@ -1403,15 +1431,25 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         sleep 5
         
         # بررسی مجدد
-        NEW_SAAS_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l)
+        NEW_SAAS_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
         if [ "$NEW_SAAS_COUNT" -gt 1 ]; then
             echo "✅ saas_master با موفقیت ایمپورت شد - جداول: $((NEW_SAAS_COUNT - 1))"
             
             # بررسی جدول super_admins
-            ADMIN_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SELECT COUNT(*) FROM super_admins;" 2>/dev/null | tail -1)
+            ADMIN_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SELECT COUNT(*) FROM super_admins;" 2>/dev/null | tail -1 || echo "0")
             echo "   👑 Super Admins: $ADMIN_COUNT"
         else
-            echo "❌ ایمپورت saas_master ناموفق"
+            echo "❌ ایمپورت saas_master ناموفق - تلاش مجدد..."
+            # تلاش مجدد
+            sleep 2
+            docker compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
+            sleep 3
+            FINAL_SAAS_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
+            if [ "$FINAL_SAAS_COUNT" -gt 1 ]; then
+                echo "✅ saas_master با موفقیت ایمپورت شد (تلاش مجدد) - جداول: $((FINAL_SAAS_COUNT - 1))"
+            else
+                echo "❌ ایمپورت saas_master ناموفق - نیاز به بررسی دستی"
+            fi
         fi
     fi
     
@@ -1781,14 +1819,33 @@ echo "👑 اطلاعات لاگین:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🔐 CRM System (مهندس کریمی):"
 echo "   ایمیل: Robintejarat@gmail.com"
-echo "   رمز عبور: [رمز موجود در دیتابیس]"
+echo "   رمز عبور: 1234"
 echo "   لینک: http://$DOMAIN/login"
 echo ""
 echo "👑 SaaS Admin Panel (احمدرضا اوندی):"
 echo "   نام کاربری: Ahmadreza.avandi"
 echo "   ایمیل: ahmadrezaavandi@gmail.com"
-echo "   رمز عبور: [رمز موجود در دیتابیس]"
+echo "   رمز عبور: 1234"
 echo "   لینک: http://$DOMAIN/secret-zone-789/login"
+echo ""
+echo "🔐 phpMyAdmin:"
+if [ -f ".phpmyadmin_credentials" ]; then
+    PHPMYADMIN_USER=$(grep "^Username:" .phpmyadmin_credentials 2>/dev/null | cut -d: -f2 | tr -d ' ' || echo "")
+    PHPMYADMIN_PASS=$(grep "^Password:" .phpmyadmin_credentials 2>/dev/null | head -1 | cut -d: -f2 | tr -d ' ' || echo "")
+    if [ -n "$PHPMYADMIN_USER" ] && [ -n "$PHPMYADMIN_PASS" ]; then
+        echo "   URL: https://$DOMAIN/db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/"
+        echo "   Basic Auth Username: $PHPMYADMIN_USER"
+        echo "   Basic Auth Password: $PHPMYADMIN_PASS"
+        echo "   MySQL Username: crm_user"
+        echo "   MySQL Password: 1234"
+    else
+        echo "   ⚠️  اطلاعات در فایل .phpmyadmin_credentials موجود است"
+        echo "   برای مشاهده: cat .phpmyadmin_credentials"
+    fi
+else
+    echo "   ⚠️  فایل .phpmyadmin_credentials یافت نشد"
+    echo "   اطلاعات در فایل nginx/.htpasswd موجود است"
+fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "�️ خلارصه وضعیت دیتابیس:"
