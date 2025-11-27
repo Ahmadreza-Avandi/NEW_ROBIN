@@ -541,6 +541,7 @@ DB_HOST=mysql
 DB_USER=crm_user
 DB_PASSWORD=1234
 DATABASE_URL=mysql://crm_user:1234@mysql:3306/crm_system
+DOCKER_CONTAINER=true
 JWT_SECRET=g45YtsLm1gFe1Hy1MBSXLHMbVcfIogiRE4m41iEvELGNJMwkaHP2ALvIMkPfs
 NEXTAUTH_SECRET=lwGfffrnAc9Y4ZCMgyvuYsew97UQjLsITqWVLC1Id7uq70NVYbe4MCiLtyNzArF
 VPS_MODE=true
@@ -574,6 +575,21 @@ sed -i "s|DB_USER=.*|DB_USER=crm_user|g" .env
 sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=1234|g" .env
 sed -i "s|VPS_MODE=.*|VPS_MODE=true|g" .env
 sed -i "s|NODE_ENV=.*|NODE_ENV=production|g" .env
+
+# اطمینان از وجود DOCKER_CONTAINER برای تشخیص محیط
+if ! grep -q "^DOCKER_CONTAINER=" .env; then
+    echo "DOCKER_CONTAINER=true" >> .env
+else
+    sed -i "s|DOCKER_CONTAINER=.*|DOCKER_CONTAINER=true|g" .env
+fi
+
+# اطمینان از DATABASE_URL درست
+if ! grep -q "^DATABASE_URL=" .env || grep -q "^DATABASE_URL=$" .env; then
+    sed -i "s|^DATABASE_URL=.*|DATABASE_URL=mysql://crm_user:1234@mysql:3306/crm_system|g" .env || echo "DATABASE_URL=mysql://crm_user:1234@mysql:3306/crm_system" >> .env
+else
+    sed -i "s|DATABASE_URL=.*|DATABASE_URL=mysql://crm_user:1234@mysql:3306/crm_system|g" .env
+fi
+
 echo "🔧 تنظیمات سرور اعمال شد"
 
 # بارگذاری متغیرهای محیطی (با روش امن)
@@ -756,23 +772,26 @@ server {
     
     # phpMyAdmin - Secured with Basic Auth
     location /db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/ {
-        # Basic Authentication
+        # Basic Authentication - First layer of security
         auth_basic "Database Management - Restricted Access";
         auth_basic_user_file /etc/nginx/.htpasswd;
         
         proxy_pass http://phpmyadmin/;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         
-        # Security headers
+        # Enhanced Security headers
         add_header X-Frame-Options "DENY" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "no-referrer" always;
+        add_header X-XSS-Protection "1; mode=block" always;
         
         # Disable caching for security
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        add_header Pragma "no-cache" always;
     }
 }
 EOF
@@ -892,23 +911,26 @@ server {
     
     # phpMyAdmin - Secured with Basic Auth
     location /db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/ {
-        # Basic Authentication
+        # Basic Authentication - First layer of security
         auth_basic "Database Management - Restricted Access";
         auth_basic_user_file /etc/nginx/.htpasswd;
         
         proxy_pass http://phpmyadmin/;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         
-        # Security headers
+        # Enhanced Security headers
         add_header X-Frame-Options "DENY" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "no-referrer" always;
+        add_header X-XSS-Protection "1; mode=block" always;
         
         # Disable caching for security
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        add_header Pragma "no-cache" always;
     }
     
     location /api/ {
@@ -955,23 +977,26 @@ server {
     
     # phpMyAdmin - Secured with Basic Auth
     location /db-mgmt-a8f3e9c2b1d4f7e6a5c8b9d2e1f4a7b3/ {
-        # Basic Authentication
+        # Basic Authentication - First layer of security
         auth_basic "Database Management - Restricted Access";
         auth_basic_user_file /etc/nginx/.htpasswd;
         
         proxy_pass http://phpmyadmin/;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
         
-        # Security headers
+        # Enhanced Security headers
         add_header X-Frame-Options "DENY" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "no-referrer" always;
+        add_header X-XSS-Protection "1; mode=block" always;
         
         # Disable caching for security
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        add_header Pragma "no-cache" always;
     }
     
     location /api/ {
