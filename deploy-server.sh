@@ -792,9 +792,30 @@ if ! docker volume ls | grep -q "mysql_data"; then
 else
     echo "📦 Volume دیتابیس موجود است"
     
+    # بررسی اینکه آیا دیتابیس‌ها در volume موجود هستند
+    echo "🔍 بررسی محتوای volume دیتابیس..."
+    if docker ps --format '{{.Names}}' | grep -qE "(mysql|mariadb)"; then
+        MYSQL_CONTAINER_CHECK=$(docker ps --format '{{.Names}}' | grep -E "(mysql|mariadb)" | head -1)
+        if [ -n "$MYSQL_CONTAINER_CHECK" ]; then
+            sleep 5  # منتظر آماده شدن MySQL
+            DATABASES_CHECK=$(docker exec $MYSQL_CONTAINER_CHECK mariadb -u root -p1234 -e "SHOW DATABASES;" 2>/dev/null | grep -E "(crm_system|saas_master)" || echo "")
+            if [ -z "$DATABASES_CHECK" ] || ! echo "$DATABASES_CHECK" | grep -q "crm_system"; then
+                echo "⚠️  Volume موجود است ولی دیتابیس‌ها خالی هستند - حذف volume برای init مجدد..."
+                docker compose -f $COMPOSE_FILE down 2>/dev/null || true
+                docker volume rm rabin-last_mysql_data 2>/dev/null || true
+                docker volume rm mysql_data 2>/dev/null || true
+                DB_NEEDS_INIT=true
+                echo "✅ Volume دیتابیس حذف شد - init scripts اجرا خواهند شد"
+            else
+                echo "✅ دیتابیس‌ها در volume موجود هستند"
+            fi
+        fi
+    fi
+    
     # اگر --clean استفاده شده، volume رو پاک کن
     if [ "$FORCE_CLEAN" = true ]; then
         echo "🧹 حذف volume دیتابیس برای rebuild کامل..."
+        docker compose -f $COMPOSE_FILE down 2>/dev/null || true
         docker volume rm rabin-last_mysql_data 2>/dev/null || true
         docker volume rm mysql_data 2>/dev/null || true
         DB_NEEDS_INIT=true
@@ -1503,8 +1524,9 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
             sleep 5
             
             # بررسی مجدد
-            NEW_CRM_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l)
-            if [ "$NEW_CRM_COUNT" -gt 1 ]; then
+            NEW_CRM_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
+            NEW_CRM_COUNT=$(echo "$NEW_CRM_COUNT" | tr -d ' ' | grep -E "^[0-9]+$" || echo "0")
+            if [ "$NEW_CRM_COUNT" -gt 1 ] && [ "$NEW_CRM_COUNT" != "0" ]; then
                 echo "✅ crm_system با موفقیت ایمپورت شد - جداول: $((NEW_CRM_COUNT - 1))"
             else
                 echo "❌ ایمپورت crm_system ناموفق - تلاش مجدد..."
@@ -1513,7 +1535,8 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
                 docker compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} crm_system < /tmp/crm_import.sql" 2>&1 | grep -v "Warning" || true
                 sleep 3
                 FINAL_CRM_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
-                if [ "$FINAL_CRM_COUNT" -gt 1 ]; then
+                FINAL_CRM_COUNT=$(echo "$FINAL_CRM_COUNT" | tr -d ' ' | grep -E "^[0-9]+$" || echo "0")
+                if [ "$FINAL_CRM_COUNT" -gt 1 ] && [ "$FINAL_CRM_COUNT" != "0" ]; then
                     echo "✅ crm_system با موفقیت ایمپورت شد (تلاش مجدد) - جداول: $((FINAL_CRM_COUNT - 1))"
                 else
                     echo "❌ ایمپورت crm_system ناموفق - نیاز به بررسی دستی"
@@ -1539,25 +1562,36 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         # ایمپورت فایل اگر موجود باشد
         MYSQL_CONTAINER=$(docker compose -f $COMPOSE_FILE ps -q mysql)
         if [ -n "$MYSQL_CONTAINER" ]; then
+            # بررسی فایل‌های ممکن
+            SAAS_FILE=""
             if [ -f "database/saas_master.sql" ]; then
-                echo "📥 ایمپورت از database/saas_master.sql..."
+                SAAS_FILE="database/saas_master.sql"
+                echo "✅ فایل database/saas_master.sql یافت شد"
+            elif [ -f "database/02-saas_master.sql" ]; then
+                SAAS_FILE="database/02-saas_master.sql"
+                echo "✅ فایل database/02-saas_master.sql یافت شد"
+            else
+                echo "🔍 بررسی فایل‌های موجود در database/:"
+                ls -la database/*saas*.sql 2>/dev/null || echo "   هیچ فایل saas یافت نشد"
+            fi
+            
+            if [ -n "$SAAS_FILE" ] && [ -f "$SAAS_FILE" ]; then
+                echo "📥 ایمپورت از $SAAS_FILE..."
                 echo "📋 کپی فایل به کانتینر..."
                 
                 # کپی فایل به کانتینر
-                docker cp database/02-saas_master.sql $MYSQL_CONTAINER:/tmp/saas_import.sql
-                
-                # ایمپورت با روش مطمئن
-                echo "⏳ در حال ایمپورت... (ممکن است چند دقیقه طول بکشد)"
-                docker compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
-            elif [ -f "database/saas_master.sql" ]; then
-                echo "📥 ایمپورت مستقیم از database/saas_master.sql..."
-                echo "📋 کپی فایل به کانتینر..."
-                docker cp database/saas_master.sql $MYSQL_CONTAINER:/tmp/saas_import.sql
-                echo "⏳ در حال ایمپورت... (ممکن است چند دقیقه طول بکشد)"
-                docker compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
+                if docker cp "$SAAS_FILE" $MYSQL_CONTAINER:/tmp/saas_import.sql; then
+                    echo "✅ فایل با موفقیت کپی شد"
+                    
+                    # ایمپورت با روش مطمئن
+                    echo "⏳ در حال ایمپورت... (ممکن است چند دقیقه طول بکشد)"
+                    docker compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
+                else
+                    echo "❌ خطا در کپی فایل!"
+                fi
             else
                 echo "⚠️  فایل saas_master یافت نشد - ایجاد ساختار پایه..."
-            docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
+                docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
             USE saas_master;
             
             CREATE TABLE IF NOT EXISTS \`super_admins\` (
@@ -1603,7 +1637,8 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
         
         # بررسی مجدد
         NEW_SAAS_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
-        if [ "$NEW_SAAS_COUNT" -gt 1 ]; then
+        NEW_SAAS_COUNT=$(echo "$NEW_SAAS_COUNT" | tr -d ' ' | grep -E "^[0-9]+$" || echo "0")
+        if [ "$NEW_SAAS_COUNT" -gt 1 ] && [ "$NEW_SAAS_COUNT" != "0" ]; then
             echo "✅ saas_master با موفقیت ایمپورت شد - جداول: $((NEW_SAAS_COUNT - 1))"
             
             # بررسی جدول super_admins
@@ -1616,7 +1651,8 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
             docker compose -f $COMPOSE_FILE exec -T mysql sh -c "mariadb -u root -p${ROOT_PASSWORD} saas_master < /tmp/saas_import.sql" 2>&1 | grep -v "Warning" || true
             sleep 3
             FINAL_SAAS_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE saas_master; SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
-            if [ "$FINAL_SAAS_COUNT" -gt 1 ]; then
+            FINAL_SAAS_COUNT=$(echo "$FINAL_SAAS_COUNT" | tr -d ' ' | grep -E "^[0-9]+$" || echo "0")
+            if [ "$FINAL_SAAS_COUNT" -gt 1 ] && [ "$FINAL_SAAS_COUNT" != "0" ]; then
                 echo "✅ saas_master با موفقیت ایمپورت شد (تلاش مجدد) - جداول: $((FINAL_SAAS_COUNT - 1))"
             else
                 echo "❌ ایمپورت saas_master ناموفق - نیاز به بررسی دستی"
