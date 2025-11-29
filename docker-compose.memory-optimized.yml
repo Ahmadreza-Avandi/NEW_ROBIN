@@ -22,8 +22,9 @@ services:
       - ./database/crm_system.sql:/docker-entrypoint-initdb.d/01-crm_system.sql:ro
       - ./database/saas_master.sql:/docker-entrypoint-initdb.d/02-saas_master.sql:ro
       - ./database/03-admin-users.sql:/docker-entrypoint-initdb.d/03-admin-users.sql:ro
+    # Expose MySQL port ONLY to localhost for security (not exposed to internet)
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     command: --innodb-buffer-pool-size=128M --max-connections=50
     healthcheck:
       test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p1234"]

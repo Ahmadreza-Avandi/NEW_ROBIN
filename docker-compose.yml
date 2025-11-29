@@ -63,9 +63,9 @@ services:
       # Default user to create (MariaDB will create this automatically)
       MYSQL_USER: "${DATABASE_USER:-crm_user}"
       MYSQL_PASSWORD: "${DATABASE_PASSWORD:-1234}"
-    # Expose MySQL port for local development
+    # Expose MySQL port ONLY to localhost for security (not exposed to internet)
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     expose:
       - "3306"
     volumes:

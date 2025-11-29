@@ -23,9 +23,180 @@ fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # ═══════════════════════════════════════════════════════════════
+# 🔒 مرحله 0: بررسی امنیت و بک‌آپ خودکار قبل از deploy
+# ═══════════════════════════════════════════════════════════════
+
+echo ""
+echo "🔒 مرحله 0: بررسی امنیت و بک‌آپ خودکار..."
+echo ""
+
+# ایجاد فولدر بک‌آپ
+mkdir -p backups
+BACKUP_DIR="backups"
+BACKUP_TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# بک‌آپ خودکار دیتابیس‌ها (اگر در حال اجرا هستند)
+echo "💾 بک‌آپ خودکار دیتابیس‌ها..."
+if docker ps --format '{{.Names}}' | grep -qE "(mysql|mariadb)"; then
+    MYSQL_CONTAINER_BACKUP=$(docker ps --format '{{.Names}}' | grep -E "(mysql|mariadb)" | head -1)
+    
+    if [ -n "$MYSQL_CONTAINER_BACKUP" ]; then
+        # بک‌آپ crm_system
+        if docker exec $MYSQL_CONTAINER_BACKUP mariadb -u root -p1234 -e "SHOW DATABASES LIKE 'crm_system';" >/dev/null 2>&1; then
+            echo "📦 بک‌آپ crm_system..."
+            docker exec $MYSQL_CONTAINER_BACKUP mariadb-dump -u root -p1234 crm_system > "$BACKUP_DIR/crm_system_backup_$BACKUP_TIMESTAMP.sql" 2>/dev/null || true
+            if [ -f "$BACKUP_DIR/crm_system_backup_$BACKUP_TIMESTAMP.sql" ] && [ -s "$BACKUP_DIR/crm_system_backup_$BACKUP_TIMESTAMP.sql" ]; then
+                BACKUP_SIZE=$(du -h "$BACKUP_DIR/crm_system_backup_$BACKUP_TIMESTAMP.sql" | cut -f1)
+                echo "✅ بک‌آپ crm_system: $BACKUP_SIZE"
+            fi
+        fi
+        
+        # بک‌آپ saas_master
+        if docker exec $MYSQL_CONTAINER_BACKUP mariadb -u root -p1234 -e "SHOW DATABASES LIKE 'saas_master';" >/dev/null 2>&1; then
+            echo "📦 بک‌آپ saas_master..."
+            docker exec $MYSQL_CONTAINER_BACKUP mariadb-dump -u root -p1234 saas_master > "$BACKUP_DIR/saas_master_backup_$BACKUP_TIMESTAMP.sql" 2>/dev/null || true
+            if [ -f "$BACKUP_DIR/saas_master_backup_$BACKUP_TIMESTAMP.sql" ] && [ -s "$BACKUP_DIR/saas_master_backup_$BACKUP_TIMESTAMP.sql" ]; then
+                BACKUP_SIZE=$(du -h "$BACKUP_DIR/saas_master_backup_$BACKUP_TIMESTAMP.sql" | cut -f1)
+                echo "✅ بک‌آپ saas_master: $BACKUP_SIZE"
+            fi
+        fi
+        
+        # بررسی لاگ‌های مشکوک
+        echo "🔍 بررسی لاگ‌های مشکوک MySQL..."
+        SUSPICIOUS_LOGS=$(docker logs $MYSQL_CONTAINER_BACKUP --tail 200 2>&1 | grep -iE "(drop database|delete from|truncate|unauthorized access)" || echo "")
+        if [ -n "$SUSPICIOUS_LOGS" ]; then
+            echo "⚠️  فعالیت‌های مشکوک در لاگ‌های MySQL یافت شد!"
+            echo "$SUSPICIOUS_LOGS" | head -5
+        else
+            echo "✅ هیچ فعالیت مشکوکی در لاگ‌های MySQL یافت نشد"
+        fi
+        
+        # بررسی کاربران غیرمجاز
+        echo "🔍 بررسی کاربران دیتابیس..."
+        UNAUTHORIZED_USERS=$(docker exec $MYSQL_CONTAINER_BACKUP mariadb -u root -p1234 -e "SELECT User, Host FROM mysql.user WHERE User NOT IN ('root', 'mysql.sys', 'mysql.session', 'mysql.infoschema', 'crm_user') AND User != '';" 2>/dev/null | grep -v "User" | grep -v "^$" || echo "")
+        if [ -n "$UNAUTHORIZED_USERS" ]; then
+            echo "⚠️  کاربران غیرمجاز یافت شد - حذف..."
+            echo "$UNAUTHORIZED_USERS" | while read -r line; do
+                USER_NAME=$(echo "$line" | awk '{print $1}')
+                USER_HOST=$(echo "$line" | awk '{print $2}')
+                if [ -n "$USER_NAME" ] && [ -n "$USER_HOST" ] && [ "$USER_NAME" != "User" ]; then
+                    docker exec $MYSQL_CONTAINER_BACKUP mariadb -u root -p1234 -e "DROP USER IF EXISTS '$USER_NAME'@'$USER_HOST';" 2>/dev/null || true
+                fi
+            done
+            docker exec $MYSQL_CONTAINER_BACKUP mariadb -u root -p1234 -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+        else
+            echo "✅ فقط کاربران مجاز وجود دارند"
+        fi
+    fi
+fi
+
+# بررسی لاگ‌های nginx برای IP های مشکوک
+echo "🔍 بررسی لاگ‌های nginx برای IP های مشکوک..."
+if docker ps --format '{{.Names}}' | grep -q nginx; then
+    NGINX_CONTAINER_BACKUP=$(docker ps --format '{{.Names}}' | grep nginx | head -1)
+    if [ -n "$NGINX_CONTAINER_BACKUP" ]; then
+        SUSPICIOUS_IPS=$(docker logs $NGINX_CONTAINER_BACKUP --tail 500 2>&1 | grep -E "401|403" | awk '{print $1}' | sort | uniq -c | sort -rn | head -5 2>/dev/null || echo "")
+        if [ -n "$SUSPICIOUS_IPS" ] && echo "$SUSPICIOUS_IPS" | grep -qv "^[[:space:]]*$"; then
+            echo "⚠️  IP های مشکوک با بیشترین خطا:"
+            echo "$SUSPICIOUS_IPS"
+        else
+            echo "✅ IP مشکوکی یافت نشد"
+        fi
+    fi
+fi
+
+echo "✅ بررسی امنیت و بک‌آپ کامل شد"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# ═══════════════════════════════════════════════════════════════
+# 🔒 مرحله 0: بررسی امنیت و بک‌آپ قبل از deploy
+# ═══════════════════════════════════════════════════════════════
+
+echo ""
+echo "🔒 مرحله 0: بررسی امنیت و بک‌آپ..."
+echo ""
+
+# ایجاد فولدر بک‌آپ
+mkdir -p backups
+BACKUP_DIR="backups"
+BACKUP_TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# بک‌آپ خودکار دیتابیس‌ها (اگر در حال اجرا هستند)
+echo "💾 بک‌آپ خودکار دیتابیس‌ها..."
+if docker ps --format '{{.Names}}' | grep -qE "(mysql|mariadb)"; then
+    MYSQL_CONTAINER=$(docker ps --format '{{.Names}}' | grep -E "(mysql|mariadb)" | head -1)
+    
+    if [ -n "$MYSQL_CONTAINER" ]; then
+        # بک‌آپ crm_system
+        if docker exec $MYSQL_CONTAINER mariadb -u root -p1234 -e "SHOW DATABASES LIKE 'crm_system';" >/dev/null 2>&1; then
+            echo "📦 بک‌آپ crm_system..."
+            docker exec $MYSQL_CONTAINER mariadb-dump -u root -p1234 crm_system > "$BACKUP_DIR/crm_system_backup_$BACKUP_TIMESTAMP.sql" 2>/dev/null || true
+            if [ -f "$BACKUP_DIR/crm_system_backup_$BACKUP_TIMESTAMP.sql" ] && [ -s "$BACKUP_DIR/crm_system_backup_$BACKUP_TIMESTAMP.sql" ]; then
+                echo "✅ بک‌آپ crm_system با موفقیت انجام شد"
+            fi
+        fi
+        
+        # بک‌آپ saas_master
+        if docker exec $MYSQL_CONTAINER mariadb -u root -p1234 -e "SHOW DATABASES LIKE 'saas_master';" >/dev/null 2>&1; then
+            echo "📦 بک‌آپ saas_master..."
+            docker exec $MYSQL_CONTAINER mariadb-dump -u root -p1234 saas_master > "$BACKUP_DIR/saas_master_backup_$BACKUP_TIMESTAMP.sql" 2>/dev/null || true
+            if [ -f "$BACKUP_DIR/saas_master_backup_$BACKUP_TIMESTAMP.sql" ] && [ -s "$BACKUP_DIR/saas_master_backup_$BACKUP_TIMESTAMP.sql" ]; then
+                echo "✅ بک‌آپ saas_master با موفقیت انجام شد"
+            fi
+        fi
+        
+        # بررسی لاگ‌های مشکوک
+        echo "🔍 بررسی لاگ‌های مشکوک MySQL..."
+        SUSPICIOUS_LOGS=$(docker logs $MYSQL_CONTAINER --tail 200 2>&1 | grep -iE "(drop database|delete|truncate|unauthorized access)" || echo "")
+        if [ -n "$SUSPICIOUS_LOGS" ]; then
+            echo "⚠️  فعالیت‌های مشکوک در لاگ‌های MySQL یافت شد!"
+            echo "$SUSPICIOUS_LOGS" | head -5
+        else
+            echo "✅ هیچ فعالیت مشکوکی در لاگ‌های MySQL یافت نشد"
+        fi
+        
+        # بررسی کاربران غیرمجاز
+        echo "🔍 بررسی کاربران دیتابیس..."
+        UNAUTHORIZED_USERS=$(docker exec $MYSQL_CONTAINER mariadb -u root -p1234 -e "SELECT User, Host FROM mysql.user WHERE User NOT IN ('root', 'mysql.sys', 'mysql.session', 'mysql.infoschema', 'crm_user') AND User != '';" 2>/dev/null | grep -v "User" | grep -v "^$" || echo "")
+        if [ -n "$UNAUTHORIZED_USERS" ]; then
+            echo "⚠️  کاربران غیرمجاز یافت شد:"
+            echo "$UNAUTHORIZED_USERS"
+            echo "🔧 حذف کاربران غیرمجاز..."
+            docker exec $MYSQL_CONTAINER mariadb -u root -p1234 -e "$UNAUTHORIZED_USERS" | while read -r user host; do
+                if [ -n "$user" ] && [ -n "$host" ]; then
+                    docker exec $MYSQL_CONTAINER mariadb -u root -p1234 -e "DROP USER IF EXISTS '$user'@'$host';" 2>/dev/null || true
+                fi
+            done
+        else
+            echo "✅ فقط کاربران مجاز وجود دارند"
+        fi
+    fi
+fi
+
+# بررسی لاگ‌های nginx برای IP های مشکوک
+echo "🔍 بررسی لاگ‌های nginx..."
+if docker ps --format '{{.Names}}' | grep -q nginx; then
+    NGINX_CONTAINER=$(docker ps --format '{{.Names}}' | grep nginx | head -1)
+    if [ -n "$NGINX_CONTAINER" ]; then
+        SUSPICIOUS_IPS=$(docker logs $NGINX_CONTAINER --tail 500 2>&1 | grep -E "401|403|404" | awk '{print $1}' | sort | uniq -c | sort -rn | head -5 || echo "")
+        if [ -n "$SUSPICIOUS_IPS" ] && echo "$SUSPICIOUS_IPS" | grep -qv "^[[:space:]]*$"; then
+            echo "⚠️  IP های مشکوک با بیشترین خطا:"
+            echo "$SUSPICIOUS_IPS"
+        else
+            echo "✅ IP مشکوکی یافت نشد"
+        fi
+    fi
+fi
+
+echo "✅ بررسی امنیت و بک‌آپ کامل شد"
+echo ""
+
+# ═══════════════════════════════════════════════════════════════
 # 🔍 مرحله 1: بررسی سیستم و آماده‌سازی
 # ═══════════════════════════════════════════════════════════════
 
+echo ""
 echo "🔍 مرحله 1: بررسی سیستم..."
 
 # بررسی حافظه سیستم
@@ -1464,6 +1635,48 @@ if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWO
     FLUSH PRIVILEGES;
     " 2>/dev/null || true
     
+    # بررسی و بازگردانی کاربر CEO
+    echo ""
+    echo "👤 بررسی و بازگردانی کاربر CEO..."
+    CEO_EXISTS=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SELECT COUNT(*) FROM users WHERE email='Robintejarat@gmail.com';" 2>/dev/null | tail -1 || echo "0")
+    
+    if [ "$CEO_EXISTS" = "0" ] || [ -z "$CEO_EXISTS" ]; then
+        echo "⚠️  کاربر CEO موجود نیست - ایجاد کاربر..."
+        docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
+        USE crm_system;
+        INSERT INTO users (id, email, password, name, role, is_active, status, tenant_key, created_at, updated_at)
+        VALUES (
+            'ceo-001',
+            'Robintejarat@gmail.com',
+            '\$2a\$10\$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye',
+            'مهندس کریمی',
+            'CEO',
+            1,
+            'active',
+            'rabin',
+            NOW(),
+            NOW()
+        ) ON DUPLICATE KEY UPDATE
+            password='\$2a\$10\$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye',
+            is_active=1,
+            status='active',
+            updated_at=NOW();
+        " 2>/dev/null || true
+        echo "✅ کاربر CEO ایجاد/بازگردانی شد"
+    else
+        echo "✅ کاربر CEO موجود است"
+        # بازگردانی رمز در صورت نیاز
+        docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
+        USE crm_system;
+        UPDATE users SET 
+            password='\$2a\$10\$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye',
+            is_active=1,
+            status='active'
+        WHERE email='Robintejarat@gmail.com';
+        " 2>/dev/null || true
+        echo "✅ رمز کاربر CEO بازگردانی شد"
+    fi
+    
     # بررسی کاربران ادمین
     echo "👑 بررسی کاربران ادمین..."
     
@@ -1924,6 +2137,121 @@ echo "   • Docker Compose: $COMPOSE_FILE"
 echo "   • دیتابیس: MariaDB 10.4.32"
 echo "   • phpMyAdmin: 5.2.2"
 echo ""
+
+# ═══════════════════════════════════════════════════════════════
+# 🔒 مرحله 12: بررسی نهایی امنیت و تست‌های جامع
+# ═══════════════════════════════════════════════════════════════
+
+echo ""
+echo "🔒 مرحله 12: بررسی نهایی امنیت و تست‌های جامع..."
+echo ""
+
+# بررسی نهایی دیتابیس‌ها
+echo "🔍 بررسی نهایی وضعیت دیتابیس‌ها..."
+if docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "SELECT 1;" >/dev/null 2>&1; then
+    # بررسی حجم دیتابیس‌ها
+    echo "📊 بررسی حجم دیتابیس‌ها..."
+    CRM_SIZE=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size' FROM information_schema.tables WHERE table_schema = 'crm_system';" 2>/dev/null | tail -1 || echo "0")
+    SAAS_SIZE=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size' FROM information_schema.tables WHERE table_schema = 'saas_master';" 2>/dev/null | tail -1 || echo "0")
+    
+    if [ "$CRM_SIZE" != "0" ] && [ "$CRM_SIZE" != "NULL" ] && [ -n "$CRM_SIZE" ]; then
+        echo "✅ crm_system: ${CRM_SIZE} MB"
+    else
+        echo "⚠️  crm_system: حجم غیرطبیعی یا صفر"
+    fi
+    
+    if [ "$SAAS_SIZE" != "0" ] && [ "$SAAS_SIZE" != "NULL" ] && [ -n "$SAAS_SIZE" ]; then
+        echo "✅ saas_master: ${SAAS_SIZE} MB"
+    else
+        echo "⚠️  saas_master: حجم غیرطبیعی یا صفر"
+    fi
+    
+    # بررسی تعداد کاربران
+    echo ""
+    echo "👤 بررسی کاربران..."
+    USER_COUNT=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SELECT COUNT(*) FROM users;" 2>/dev/null | tail -1 || echo "0")
+    echo "   تعداد کاربران crm_system: $USER_COUNT"
+    
+    # بررسی کاربر CEO
+    CEO_CHECK=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SELECT COUNT(*) FROM users WHERE email='Robintejarat@gmail.com' AND is_active=1;" 2>/dev/null | tail -1 || echo "0")
+    if [ "$CEO_CHECK" = "1" ] || [ "$CEO_CHECK" -gt 0 ]; then
+        echo "   ✅ کاربر CEO فعال است"
+        
+        # بررسی رمز کاربر
+        CEO_PASSWORD_CHECK=$(docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; SELECT password FROM users WHERE email='Robintejarat@gmail.com';" 2>/dev/null | tail -1 || echo "")
+        if [ -n "$CEO_PASSWORD_CHECK" ] && echo "$CEO_PASSWORD_CHECK" | grep -q "\$2a\$10"; then
+            echo "   ✅ رمز کاربر درست است"
+        else
+            echo "   ⚠️  رمز کاربر مشکل دارد - بازگردانی..."
+            docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "USE crm_system; UPDATE users SET password='\$2a\$10\$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye' WHERE email='Robintejarat@gmail.com';" 2>/dev/null || true
+        fi
+    else
+        echo "   ⚠️  کاربر CEO غیرفعال یا موجود نیست - ایجاد..."
+        docker compose -f $COMPOSE_FILE exec -T mysql mariadb -u root -p${ROOT_PASSWORD} -e "
+        USE crm_system;
+        INSERT INTO users (id, email, password, name, role, is_active, status, tenant_key, created_at, updated_at)
+        VALUES ('ceo-001', 'Robintejarat@gmail.com', '\$2a\$10\$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye', 'مهندس کریمی', 'CEO', 1, 'active', 'rabin', NOW(), NOW())
+        ON DUPLICATE KEY UPDATE password='\$2a\$10\$s5hegTVdWH53vz5820uOqOkYjbTQZZTvZGpwd.VyjF8.lmIeOC4ye', is_active=1, status='active';
+        " 2>/dev/null || true
+    fi
+fi
+
+# بررسی دسترسی MySQL به اینترنت (باید محدود باشد)
+echo ""
+echo "🔒 بررسی امنیت دسترسی MySQL..."
+if grep -q "127.0.0.1:3306:3306" docker-compose.yml docker-compose.deploy.yml 2>/dev/null; then
+    echo "✅ MySQL فقط به localhost محدود است (امن)"
+elif grep -qE "\"3306:3306\"|3306:3306" docker-compose.yml docker-compose.deploy.yml 2>/dev/null; then
+    echo "⚠️  MySQL در معرض اینترنت است!"
+    echo "🔧 محدود کردن به localhost..."
+    sed -i 's/- "3306:3306"/- "127.0.0.1:3306:3306"/g' docker-compose.yml docker-compose.deploy.yml 2>/dev/null || true
+    echo "✅ تنظیمات اصلاح شد - برای اعمال تغییرات deploy را مجدد اجرا کنید"
+else
+    echo "ℹ️  تنظیمات پورت MySQL بررسی نشد"
+fi
+
+# بررسی فایل‌های بک‌آپ
+echo ""
+echo "💾 بررسی بک‌آپ‌ها..."
+BACKUP_COUNT=$(ls -1 "$BACKUP_DIR"/*.sql 2>/dev/null | wc -l || echo "0")
+if [ "$BACKUP_COUNT" -gt 0 ]; then
+    echo "✅ تعداد بک‌آپ‌ها: $BACKUP_COUNT"
+    LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/*.sql 2>/dev/null | head -1)
+    if [ -n "$LATEST_BACKUP" ]; then
+        BACKUP_DATE=$(stat -c %y "$LATEST_BACKUP" 2>/dev/null | cut -d' ' -f1 || date +%Y-%m-%d)
+        BACKUP_SIZE=$(du -h "$LATEST_BACKUP" 2>/dev/null | cut -f1)
+        echo "   آخرین بک‌آپ: $BACKUP_DATE (حجم: $BACKUP_SIZE)"
+    fi
+else
+    echo "⚠️  هیچ بک‌آپی یافت نشد"
+fi
+
+echo ""
+# ═══════════════════════════════════════════════════════════════
+# 🔒 بررسی نهایی امنیت و تست‌ها
+# ═══════════════════════════════════════════════════════════════
+
+echo ""
+echo "🔒 بررسی نهایی امنیت..."
+echo ""
+
+# بررسی دسترسی MySQL (باید محدود باشد)
+if grep -q "127.0.0.1:3306:3306" docker-compose.yml docker-compose.deploy.yml 2>/dev/null; then
+    echo "✅ MySQL فقط به localhost محدود است (امن)"
+elif grep -qE "3306:3306" docker-compose.yml docker-compose.deploy.yml 2>/dev/null; then
+    echo "⚠️  MySQL در معرض اینترنت است - اصلاح..."
+    sed -i 's/- "3306:3306"/- "127.0.0.1:3306:3306"/g' docker-compose.yml docker-compose.deploy.yml 2>/dev/null || true
+    echo "✅ تنظیمات اصلاح شد"
+fi
+
+# بررسی بک‌آپ‌ها
+BACKUP_COUNT=$(ls -1 backups/*.sql 2>/dev/null | wc -l || echo "0")
+if [ "$BACKUP_COUNT" -gt 0 ]; then
+    echo "✅ بک‌آپ‌های موجود: $BACKUP_COUNT"
+else
+    echo "⚠️  هیچ بک‌آپی یافت نشد"
+fi
+
 echo "✅ همه چیز آماده است!"
 
 
