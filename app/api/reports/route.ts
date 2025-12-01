@@ -23,8 +23,11 @@ export async function GET(req: NextRequest) {
         const date = searchParams.get('date') || '';
         const user_id = searchParams.get('user_id') || '';
 
-        // Check if user is manager/CEO
-        const isManager = ['ceo', 'مدیر', 'sales_manager', 'مدیر فروش'].includes(currentUser.role);
+        // Only CEO can view all reports
+        const isManager = currentUser.role === 'ceo';
+
+        console.log('Reports API - User role:', currentUser.role);
+        console.log('Reports API - Is CEO:', isManager);
 
         let whereClause = 'WHERE 1=1';
         const params: any[] = [];

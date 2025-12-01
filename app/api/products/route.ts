@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const search = searchParams.get('search') || '';
     const category = searchParams.get('category') || '';
-    const status = searchParams.get('status') || 'active';
+    const status = searchParams.get('status') || '';
 
     const offset = (page - 1) * limit;
 
@@ -32,14 +32,15 @@ export async function GET(req: NextRequest) {
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
-    if (category) {
+    if (category && category !== 'all') {
       whereClause += ' AND category = ?';
       params.push(category);
     }
 
-    if (status) {
-      whereClause += ' AND status = ?';
-      params.push(status);
+    if (status && status !== 'all') {
+      const isActive = status === 'active' ? 1 : 0;
+      whereClause += ' AND is_active = ?';
+      params.push(isActive);
     }
 
     // دریافت محصولات
@@ -49,10 +50,10 @@ export async function GET(req: NextRequest) {
         name,
         description,
         category,
-        price,
+        base_price as price,
         currency,
-        status,
-        sku,
+        CASE WHEN is_active = 1 THEN 'active' ELSE 'inactive' END as status,
+        '' as sku,
         created_at,
         updated_at
       FROM products
@@ -124,9 +125,9 @@ export async function POST(req: NextRequest) {
 
     await executeSingle(`
       INSERT INTO products (
-        id, name, description, category, price, currency, 
-        sku, tags, specifications, created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        id, name, description, category, base_price, currency, 
+        specifications, is_active, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
     `, [
       productId,
       name,
@@ -134,10 +135,7 @@ export async function POST(req: NextRequest) {
       category || null,
       price || null,
       currency,
-      sku || null,
-      tags ? JSON.stringify(tags) : null,
-      specifications ? JSON.stringify(specifications) : null,
-      user.id
+      specifications ? JSON.stringify(specifications) : null
     ]);
 
     return NextResponse.json({

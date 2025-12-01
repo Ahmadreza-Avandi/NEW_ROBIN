@@ -186,13 +186,16 @@ export default function ReportsPage() {
 
   console.log('Current user in reports:', currentUser);
   console.log('Current user role:', currentUser?.role);
+  console.log('Role type:', typeof currentUser?.role);
+  console.log('Role length:', currentUser?.role?.length);
+  console.log('Role char codes:', currentUser?.role?.split('').map(c => c.charCodeAt(0)));
 
-  const isManager = currentUser && [
-    'ceo', 'مدیر', 'sales_manager', 'مدیر فروش', 'admin', 'manager',
-    'supervisor', 'team_lead', 'مدیر عامل', 'مدیر کل', 'سرپرست'
-  ].includes(currentUser.role);
+  // Only CEO can view reports
+  const isManager = currentUser && currentUser.role === 'ceo';
 
   console.log('Is manager:', isManager);
+  console.log('User role exact:', `"${currentUser?.role}"`);
+  console.log('Manager roles:', managerRoles);
 
   if (!isManager) {
     return (
@@ -205,7 +208,7 @@ export default function ReportsPage() {
             <div className="text-center py-8">
               <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground font-vazir">
-                شما مجوز مشاهده گزارش‌های سایر کاربران را ندارید
+                فقط کاربران با نقش CEO مجوز مشاهده گزارش‌ها را دارند
               </p>
             </div>
           </CardContent>

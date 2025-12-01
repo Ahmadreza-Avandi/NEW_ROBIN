@@ -32,8 +32,28 @@ export default function ProductsPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        loadProducts();
+        loadCategories();
+    }, []);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            loadProducts();
+        }, searchTerm ? 500 : 0); // debounce برای جستجو
+
+        return () => clearTimeout(timeoutId);
     }, [searchTerm, categoryFilter, statusFilter]);
+
+    const loadCategories = async () => {
+        try {
+            const response = await fetch('/api/products/categories');
+            const data = await response.json();
+            if (data.success) {
+                setCategories(data.data || []);
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    };
 
     const loadProducts = async () => {
         try {
@@ -41,9 +61,12 @@ export default function ProductsPage() {
             setError('');
 
             const params = new URLSearchParams();
-            if (searchTerm) params.append('search', searchTerm);
-            if (categoryFilter !== 'all') params.append('category', categoryFilter);
-            if (statusFilter !== 'all') params.append('status', statusFilter);
+            if (searchTerm.trim()) params.append('search', searchTerm.trim());
+            if (categoryFilter && categoryFilter !== 'all') params.append('category', categoryFilter);
+            if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+
+            console.log('Loading products with params:', params.toString());
+            console.log('Filters:', { searchTerm, categoryFilter, statusFilter });
 
             const response = await fetch(`/api/products?${params.toString()}`);
             const data = await response.json();
@@ -52,7 +75,10 @@ export default function ProductsPage() {
                 setProducts(data.data || []);
 
                 // استخراج دسته‌بندی‌های منحصر به فرد
-                const categorySet = new Set(data.data.map((p: Product) => p.category).filter(Boolean));
+                const allCategories = data.data
+                    .map((p: Product) => p.category)
+                    .filter((cat: string | undefined) => cat && cat.trim() !== '');
+                const categorySet = new Set(allCategories);
                 const uniqueCategories = Array.from(categorySet) as string[];
                 setCategories(uniqueCategories);
             } else {
@@ -216,7 +242,10 @@ export default function ProductsPage() {
                             />
                         </div>
 
-                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                        <Select value={categoryFilter} onValueChange={(value) => {
+                            console.log('Category filter changed to:', value);
+                            setCategoryFilter(value);
+                        }}>
                             <SelectTrigger className="font-vazir">
                                 <SelectValue placeholder="دسته‌بندی" />
                             </SelectTrigger>
