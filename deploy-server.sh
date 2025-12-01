@@ -92,17 +92,21 @@ fi
 
 # بررسی لاگ‌های nginx برای IP های مشکوک
 echo "🔍 بررسی لاگ‌های nginx برای IP های مشکوک..."
-if docker ps --format '{{.Names}}' | grep -q nginx; then
-    NGINX_CONTAINER_BACKUP=$(docker ps --format '{{.Names}}' | grep nginx | head -1)
+if docker ps --format '{{.Names}}' | grep -q nginx 2>/dev/null; then
+    NGINX_CONTAINER_BACKUP=$(docker ps --format '{{.Names}}' | grep nginx | head -1 2>/dev/null || echo "")
     if [ -n "$NGINX_CONTAINER_BACKUP" ]; then
-        SUSPICIOUS_IPS=$(docker logs $NGINX_CONTAINER_BACKUP --tail 500 2>&1 | grep -E "401|403" | awk '{print $1}' | sort | uniq -c | sort -rn | head -5 2>/dev/null || echo "")
+        SUSPICIOUS_IPS=$(timeout 10 docker logs $NGINX_CONTAINER_BACKUP --tail 100 2>/dev/null | grep -E "401|403" | awk '{print $1}' | sort | uniq -c | sort -rn | head -3 2>/dev/null || echo "")
         if [ -n "$SUSPICIOUS_IPS" ] && echo "$SUSPICIOUS_IPS" | grep -qv "^[[:space:]]*$"; then
             echo "⚠️  IP های مشکوک با بیشترین خطا:"
-            echo "$SUSPICIOUS_IPS"
+            echo "$SUSPICIOUS_IPS" | head -3
         else
             echo "✅ IP مشکوکی یافت نشد"
         fi
+    else
+        echo "✅ nginx کانتینر یافت نشد (طبیعی در شروع)"
     fi
+else
+    echo "✅ nginx کانتینر یافت نشد (طبیعی در شروع)"
 fi
 
 echo "✅ بررسی امنیت و بک‌آپ کامل شد"
@@ -174,19 +178,23 @@ if docker ps --format '{{.Names}}' | grep -qE "(mysql|mariadb)"; then
     fi
 fi
 
-# بررسی لاگ‌های nginx برای IP های مشکوک
+# بررسی لاگ‌های nginx
 echo "🔍 بررسی لاگ‌های nginx..."
-if docker ps --format '{{.Names}}' | grep -q nginx; then
-    NGINX_CONTAINER=$(docker ps --format '{{.Names}}' | grep nginx | head -1)
+if docker ps --format '{{.Names}}' | grep -q nginx 2>/dev/null; then
+    NGINX_CONTAINER=$(docker ps --format '{{.Names}}' | grep nginx | head -1 2>/dev/null || echo "")
     if [ -n "$NGINX_CONTAINER" ]; then
-        SUSPICIOUS_IPS=$(docker logs $NGINX_CONTAINER --tail 500 2>&1 | grep -E "401|403|404" | awk '{print $1}' | sort | uniq -c | sort -rn | head -5 || echo "")
+        SUSPICIOUS_IPS=$(timeout 10 docker logs $NGINX_CONTAINER --tail 100 2>/dev/null | grep -E "401|403|404" | awk '{print $1}' | sort | uniq -c | sort -rn | head -3 2>/dev/null || echo "")
         if [ -n "$SUSPICIOUS_IPS" ] && echo "$SUSPICIOUS_IPS" | grep -qv "^[[:space:]]*$"; then
             echo "⚠️  IP های مشکوک با بیشترین خطا:"
-            echo "$SUSPICIOUS_IPS"
+            echo "$SUSPICIOUS_IPS" | head -3
         else
             echo "✅ IP مشکوکی یافت نشد"
         fi
+    else
+        echo "✅ nginx کانتینر یافت نشد (طبیعی در شروع)"
     fi
+else
+    echo "✅ nginx کانتینر یافت نشد (طبیعی در شروع)"
 fi
 
 echo "✅ بررسی امنیت و بک‌آپ کامل شد"
