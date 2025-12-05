@@ -30,11 +30,18 @@ export async function POST(request: NextRequest) {
         connection = await pool.getConnection();
 
         const today = new Date().toISOString().split('T')[0];
+        
+        // تبدیل تاریخ میلادی به شمسی
+        const persianDate = new Intl.DateTimeFormat('fa-IR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(new Date()).replace(/\//g, '/');
 
         // بررسی وجود گزارش امروز
         const [existingReports] = await connection.query(
-            'SELECT id FROM daily_reports WHERE user_id = ? AND DATE(report_date) = ?',
-            [session.userId, today]
+            'SELECT id FROM daily_reports WHERE tenant_key = ? AND user_id = ? AND DATE(report_date) = ?',
+            [tenantKey, session.userId, today]
         ) as any[];
 
         if (existingReports && existingReports.length > 0) {
@@ -46,14 +53,17 @@ export async function POST(request: NextRequest) {
                 working_hours = ?, 
                 challenges = ?, 
                 achievements = ?,
+                persian_date = ?,
                 updated_at = NOW()
-                WHERE user_id = ? AND DATE(report_date) = ?`,
+                WHERE tenant_key = ? AND user_id = ? AND DATE(report_date) = ?`,
                 [
                     work_description,
                     JSON.stringify(completed_tasks || []),
                     working_hours || 0,
                     challenges || '',
                     achievements || '',
+                    persianDate,
+                    tenantKey,
                     session.userId,
                     today
                 ]
@@ -67,16 +77,18 @@ export async function POST(request: NextRequest) {
             // ایجاد گزارش جدید
             await connection.query(
                 `INSERT INTO daily_reports 
-                (user_id, work_description, completed_tasks, working_hours, challenges, achievements, report_date) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                (tenant_key, user_id, work_description, completed_tasks, working_hours, challenges, achievements, report_date, persian_date) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
+                    tenantKey,
                     session.userId,
                     work_description,
                     JSON.stringify(completed_tasks || []),
                     working_hours || 0,
                     challenges || '',
                     achievements || '',
-                    today
+                    today,
+                    persianDate
                 ]
             );
 

@@ -14,6 +14,7 @@ interface Product {
     id: string;
     name: string;
     description?: string;
+    image?: string;
     category?: string;
     price?: number;
     currency?: string;
@@ -54,15 +55,23 @@ export default function ProductsPage() {
             if (categoryFilter !== 'all') queryParams.append('category', categoryFilter);
             if (statusFilter !== 'all') queryParams.append('status', statusFilter);
 
-            const response = await fetch(`/api/tenant/products?${queryParams.toString()}`, {
+            const url = `/api/tenant/products?${queryParams.toString()}`;
+            console.log('🔍 Loading products with URL:', url);
+            console.log('📊 Current filters:', { searchTerm, categoryFilter, statusFilter });
+
+            const response = await fetch(url, {
                 headers: {
                     'X-Tenant-Key': tenantKey
                 }
             });
             const data = await response.json();
 
+            console.log('✅ API Response:', data);
+            console.log('📦 Products count:', data.data?.length || 0);
+
             if (data.success) {
                 setProducts(data.data || []);
+                console.log('✨ Products state updated with', data.data?.length || 0, 'items');
 
                 // استخراج دسته‌بندی‌های منحصر به فرد
                 const categorySet = new Set(data.data.map((p: Product) => p.category).filter(Boolean));
@@ -70,9 +79,10 @@ export default function ProductsPage() {
                 setCategories(uniqueCategories);
             } else {
                 setError(data.message || 'خطا در دریافت محصولات');
+                console.error('❌ API Error:', data.message);
             }
         } catch (error) {
-            console.error('Error loading products:', error);
+            console.error('❌ Error loading products:', error);
             setError('خطا در اتصال به سرور');
         } finally {
             setLoading(false);
@@ -232,7 +242,13 @@ export default function ProductsPage() {
                             />
                         </div>
 
-                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                        <Select 
+                            value={categoryFilter} 
+                            onValueChange={(value) => {
+                                console.log('🔄 Category filter changed from', categoryFilter, 'to:', value);
+                                setCategoryFilter(value);
+                            }}
+                        >
                             <SelectTrigger className="font-vazir">
                                 <SelectValue placeholder="دسته‌بندی" />
                             </SelectTrigger>
@@ -246,7 +262,13 @@ export default function ProductsPage() {
                             </SelectContent>
                         </Select>
 
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <Select 
+                            value={statusFilter} 
+                            onValueChange={(value) => {
+                                console.log('🔄 Status filter changed from', statusFilter, 'to:', value);
+                                setStatusFilter(value);
+                            }}
+                        >
                             <SelectTrigger className="font-vazir">
                                 <SelectValue placeholder="وضعیت" />
                             </SelectTrigger>
@@ -282,7 +304,19 @@ export default function ProductsPage() {
                     </div>
                 ) : (
                     products.map((product) => (
-                        <Card key={product.id} className="hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30">
+                        <Card key={product.id} className="hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30 overflow-hidden">
+                            {product.image && (
+                                <div className="relative w-full h-48 bg-gray-100">
+                                    <img
+                                        src={product.image}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                        }}
+                                    />
+                                </div>
+                            )}
                             <CardHeader>
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">

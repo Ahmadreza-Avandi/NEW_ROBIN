@@ -31,6 +31,7 @@ import {
   CalendarDays,
   X
 } from 'lucide-react';
+import '../mobile-responsive.css';
 
 interface Activity {
   id: string;
@@ -278,7 +279,7 @@ export default function ActivitiesPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="dashboard-header flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold font-vazir bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             مدیریت فعالیت‌ها
@@ -286,7 +287,7 @@ export default function ActivitiesPage() {
           <p className="text-muted-foreground font-vazir mt-2">پیگیری و ثبت تمام تعاملات با مشتریان</p>
         </div>
         <div className="flex space-x-2 space-x-reverse">
-          <Button variant="outline" onClick={loadActivities} disabled={loading} className="font-vazir">
+          <Button variant="outline" onClick={loadActivities} disabled={loading} className="font-vazir desktop-only">
             <RefreshCw className={`h-4 w-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
             بروزرسانی
           </Button>
@@ -295,13 +296,14 @@ export default function ActivitiesPage() {
             className="bg-gradient-to-r from-primary via-secondary to-accent hover:from-primary/90 hover:via-secondary/90 hover:to-accent/90 font-vazir"
           >
             <Plus className="h-4 w-4 ml-2" />
-            فعالیت جدید
+            <span className="hidden sm:inline">فعالیت جدید</span>
+            <span className="sm:hidden">افزودن</span>
           </Button>
         </div>
       </div>
 
       {/* آمار کلی */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="stats-grid grid gap-4 md:grid-cols-4">
         <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium font-vazir">کل فعالیت‌ها</CardTitle>
@@ -441,7 +443,7 @@ export default function ActivitiesPage() {
       )}
 
       {/* فیلترها */}
-      <Card className="border-border/50">
+      <Card className="filter-section border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 space-x-reverse font-vazir">
             <Filter className="h-5 w-5" />
@@ -664,14 +666,14 @@ export default function ActivitiesPage() {
 
             return (
               <Card key={activity.id} className="hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30">
-                <CardContent className="p-6">
+                <CardContent className="sales-card-content p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 space-x-reverse flex-1">
-                      <div className={`p-2 rounded-full ${getActivityColor(activity.type)}`}>
+                      <div className={`p-2 rounded-full ${getActivityColor(activity.type)} flex-shrink-0`}>
                         <Icon className="h-4 w-4" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 space-x-reverse mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-3 space-x-reverse mb-2 flex-wrap gap-2">
                           <h4 className="font-medium font-vazir">{activity.title}</h4>
                           <Badge className={`font-vazir ${getActivityColor(activity.type)}`}>
                             {getTypeLabel(activity.type)}
@@ -683,20 +685,20 @@ export default function ActivitiesPage() {
 
                         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 mt-3">
                           <div className="flex items-center space-x-2 space-x-reverse">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-vazir">{activity.customer_name}</span>
+                            <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm font-vazir truncate-mobile">{activity.customer_name}</span>
                           </div>
 
                           <div className="flex items-center space-x-2 space-x-reverse">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             <span className="text-sm font-vazir">
                               {new Date(activity.start_time).toLocaleDateString('fa-IR')}
                             </span>
                           </div>
 
                           <div className="flex items-center space-x-2 space-x-reverse">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-vazir">
+                            <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm font-vazir truncate-mobile">
                               {activity.performed_by_name || 'نامشخص'}
                             </span>
                           </div>
@@ -714,9 +716,10 @@ export default function ActivitiesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDeleteActivity(activity.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 font-vazir"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 font-vazir flex-shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">حذف</span>
                     </Button>
                   </div>
                 </CardContent>

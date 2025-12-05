@@ -9,12 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save, AlertCircle } from 'lucide-react';
+import { ArrowRight, Save, AlertCircle, X, Image as ImageIcon } from 'lucide-react';
 
 interface Product {
     id: string;
     name: string;
     description?: string;
+    image?: string;
     category?: string;
     price?: number;
     currency?: string;
@@ -37,12 +38,17 @@ export default function EditProductPage() {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
+        image: '',
         category: '',
         price: '',
         currency: 'IRR',
         status: 'active' as 'active' | 'inactive',
         sku: ''
     });
+
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string>('');
+    const [uploadingImage, setUploadingImage] = useState(false);
 
     useEffect(() => {
         loadProduct();
@@ -72,12 +78,17 @@ export default function EditProductPage() {
                 setFormData({
                     name: productData.name || '',
                     description: productData.description || '',
+                    image: productData.image || '',
                     category: productData.category || '',
                     price: productData.price?.toString() || '',
                     currency: productData.currency || 'IRR',
                     status: productData.status || 'active',
                     sku: productData.sku || ''
                 });
+                // تنظیم پیش‌نمایش تصویر موجود
+                if (productData.image) {
+                    setImagePreview(productData.image);
+                }
             } else {
                 setError(data.message || 'محصول یافت نشد');
             }
@@ -86,6 +97,57 @@ export default function EditProductPage() {
             setError('خطا در اتصال به سرور');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setImageFile(null);
+        setImagePreview('');
+        setFormData(prev => ({ ...prev, image: '' }));
+    };
+
+    const uploadImage = async (): Promise<string | null> => {
+        if (!imageFile) return null;
+
+        setUploadingImage(true);
+        try {
+            const formData = new FormData();
+            formData.append('image', imageFile);
+
+            const response = await fetch('/api/products/upload-image', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                return data.data.url;
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            toast({
+                title: "خطا",
+                description: "خطا در آپلود تصویر",
+                variant: "destructive",
+            });
+            return null;
+        } finally {
+            setUploadingImage(false);
         }
     };
 
@@ -104,6 +166,15 @@ export default function EditProductPage() {
         try {
             setSaving(true);
 
+            // اگر تصویر جدید انتخاب شده، اول آپلود کن
+            let imageUrl = formData.image;
+            if (imageFile) {
+                const uploadedUrl = await uploadImage();
+                if (uploadedUrl) {
+                    imageUrl = uploadedUrl;
+                }
+            }
+
             const response = await fetch(`/api/tenant/products/${productId}`, {
                 method: 'PUT',
                 headers: {
@@ -111,7 +182,9 @@ export default function EditProductPage() {
                     'X-Tenant-Key': tenantKey
                 },
                 body: JSON.stringify({
+                    id: productId,
                     ...formData,
+                    image: imageUrl,
                     price: parseFloat(formData.price)
                 })
             });
@@ -314,6 +387,76 @@ export default function EditProductPage() {
                             />
                         </div>
 
+                        {/* تصویر محصول */}
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium font-vazir">تصویر محصول</h3>
+                            <div className="space-y-4">
+                                {imagePreview ? (
+                                    <div className="relative w-full max-w-md">
+                                        <img
+                                            src={imagePreview}
+                                            alt="پیش‌نمایش"
+                                            className="w-full h-64 object-cover rounded-lg border-2 border-border"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={handleRemoveImage}
+                                            className="absolute top-2 left-2 font-vazir"
+                                        >
+                                            <X className="h-4 w-4 ml-1" />
+                                            حذف تصویر
+                                        </Button>
+                                        {!imageFile && formData.image && (
+                                            <div className="mt-2">
+                                                <Label htmlFor="image-upload-change" className="cursor-pointer">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="font-vazir w-full"
+                                                        onClick={() => document.getElementById('image-upload-change')?.click()}
+                                                    >
+                                                        <ImageIcon className="h-4 w-4 ml-2" />
+                                                        تغییر تصویر
+                                                    </Button>
+                                                </Label>
+                                                <Input
+                                                    id="image-upload-change"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleImageChange}
+                                                    className="hidden"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                                        <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                        <Label htmlFor="image-upload" className="cursor-pointer">
+                                            <div className="space-y-2">
+                                                <p className="text-sm font-medium font-vazir">
+                                                    برای آپلود تصویر کلیک کنید
+                                                </p>
+                                                <p className="text-xs text-muted-foreground font-vazir">
+                                                    JPG, PNG, WEBP یا GIF (حداکثر 5MB)
+                                                </p>
+                                            </div>
+                                        </Label>
+                                        <Input
+                                            id="image-upload"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="hidden"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         {/* دکمه‌ها */}
                         <div className="flex justify-between pt-6">
                             <Button
@@ -326,10 +469,15 @@ export default function EditProductPage() {
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={saving}
+                                disabled={saving || uploadingImage}
                                 className="font-vazir"
                             >
-                                {saving ? (
+                                {uploadingImage ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></div>
+                                        در حال آپلود تصویر...
+                                    </>
+                                ) : saving ? (
                                     <>
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></div>
                                         در حال ذخیره...

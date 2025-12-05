@@ -27,21 +27,26 @@ export async function GET(req: NextRequest) {
     let whereClause = 'WHERE 1=1';
     const params: any[] = [];
 
-    if (search) {
+    console.log('Filters received:', { search, category, status });
+
+    if (search && search.trim()) {
       whereClause += ' AND (name LIKE ? OR description LIKE ? OR sku LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      const searchPattern = `%${search.trim()}%`;
+      params.push(searchPattern, searchPattern, searchPattern);
     }
 
-    if (category && category !== 'all') {
+    if (category && category !== 'all' && category.trim()) {
       whereClause += ' AND category = ?';
-      params.push(category);
+      params.push(category.trim());
     }
 
     if (status && status !== 'all') {
-      const isActive = status === 'active' ? 1 : 0;
-      whereClause += ' AND is_active = ?';
-      params.push(isActive);
+      whereClause += ' AND status = ?';
+      params.push(status);
     }
+
+    console.log('WHERE clause:', whereClause);
+    console.log('Params:', params);
 
     // دریافت محصولات
     const products = await executeQuery(`
@@ -50,10 +55,10 @@ export async function GET(req: NextRequest) {
         name,
         description,
         category,
-        base_price as price,
+        price,
         currency,
-        CASE WHEN is_active = 1 THEN 'active' ELSE 'inactive' END as status,
-        '' as sku,
+        status,
+        sku,
         created_at,
         updated_at
       FROM products
@@ -125,9 +130,9 @@ export async function POST(req: NextRequest) {
 
     await executeSingle(`
       INSERT INTO products (
-        id, name, description, category, base_price, currency, 
-        specifications, is_active, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
+        id, name, description, category, price, currency, 
+        specifications, status, sku, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())
     `, [
       productId,
       name,
@@ -135,7 +140,8 @@ export async function POST(req: NextRequest) {
       category || null,
       price || null,
       currency,
-      specifications ? JSON.stringify(specifications) : null
+      specifications ? JSON.stringify(specifications) : null,
+      sku || null
     ]);
 
     return NextResponse.json({

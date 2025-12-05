@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { PersianDatePicker } from '@/components/ui/persian-date-picker';
 import { PageWrapper } from '@/components/layout/page-wrapper';
+import { useParams } from 'next/navigation';
 import {
   Filter,
   Users,
@@ -50,13 +51,17 @@ interface User {
 }
 
 export default function ReportsPage() {
+  const params = useParams();
+  const tenantKey = params?.tenant_key as string;
+  
   const [reports, setReports] = useState<DailyReport[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Filters
-  const [selectedDate, setSelectedDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedUser, setSelectedUser] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -70,7 +75,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReports();
-  }, [selectedDate, selectedUser]);
+  }, [startDate, endDate, selectedUser]);
 
   const fetchCurrentUser = async () => {
     try {
@@ -82,7 +87,6 @@ export default function ReportsPage() {
       const response = await fetch('/api/auth/me', {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
-          'X-Tenant-Key': params?.tenant_key || tenantKey,
           'Content-Type': 'application/json',
         },
       });
@@ -106,10 +110,9 @@ export default function ReportsPage() {
         .find(row => row.startsWith('auth-token='))
         ?.split('=')[1];
 
-      const response = await fetch('/api/tenant/users', {
+      const response = await fetch('/api/users', {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
-          'X-Tenant-Key': params?.tenant_key || tenantKey,
           'Content-Type': 'application/json',
         },
       });
@@ -130,10 +133,11 @@ export default function ReportsPage() {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (selectedDate) params.append('date', selectedDate);
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
       if (selectedUser && selectedUser !== 'all') params.append('user_id', selectedUser);
 
-      console.log('fetchReports called with:', { selectedDate, selectedUser });
+      console.log('fetchReports called with:', { startDate, endDate, selectedUser });
       console.log('API URL:', `/api/reports?${params.toString()}`);
 
       const token = document.cookie
@@ -141,10 +145,9 @@ export default function ReportsPage() {
         .find(row => row.startsWith('auth-token='))
         ?.split('=')[1];
 
-      const response = await fetch(`/api/tenant/reports?${params.toString()}`, {
+      const response = await fetch(`/api/reports?${params.toString()}`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
-          'X-Tenant-Key': params?.tenant_key || tenantKey,
           'Content-Type': 'application/json',
         },
       });
@@ -187,15 +190,25 @@ export default function ReportsPage() {
     );
   });
 
-  console.log('Current user in reports:', currentUser);
-  console.log('Current user role:', currentUser?.role);
+  console.log('📊 Current user in reports:', currentUser);
+  console.log('👤 Current user role:', currentUser?.role);
 
-  const isManager = currentUser && [
-    'ceo', 'مدیر', 'sales_manager', 'مدیر فروش', 'admin', 'manager',
-    'supervisor', 'team_lead', 'مدیر عامل', 'مدیر کل', 'سرپرست'
-  ].includes(currentUser.role);
+  const managerRoles = [
+    'ceo', 'مدیر', 'مدیر عامل', 'مدیرعامل',
+    'sales_manager', 'مدیر فروش', 
+    'admin', 'ادمین',
+    'manager', 'مدیر کل',
+    'supervisor', 'سرپرست',
+    'team_lead', 'سرگروه'
+  ];
+  
+  const isManager = currentUser && managerRoles.some(role => 
+    currentUser.role?.toLowerCase().includes(role.toLowerCase())
+  );
 
-  console.log('Is manager:', isManager);
+  console.log('✅ Is manager:', isManager);
+  console.log('🔍 Manager roles:', managerRoles);
+  console.log('🎯 User role lowercase:', currentUser?.role?.toLowerCase());
 
   if (!isManager) {
     return (
@@ -235,27 +248,39 @@ export default function ReportsPage() {
           <CardTitle className="font-vazir">فیلترها</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid md:grid-cols-5 gap-4">
             <div>
-              <label className="text-sm font-medium font-vazir mb-2 block">تاریخ</label>
+              <label className="text-sm font-medium font-vazir mb-2 block">از تاریخ</label>
               <PersianDatePicker
-                value={selectedDate}
+                value={startDate}
                 onChange={(value) => {
-                  console.log('PersianDatePicker onChange:', value);
-                  setSelectedDate(value);
+                  console.log('Start date changed:', value);
+                  setStartDate(value);
                 }}
-                placeholder="انتخاب تاریخ"
+                placeholder="تاریخ شروع"
                 className="font-vazir"
               />
             </div>
             <div>
-              <label className="text-sm font-medium font-vazir mb-2 block">کارمند</label>
+              <label className="text-sm font-medium font-vazir mb-2 block">تا تاریخ</label>
+              <PersianDatePicker
+                value={endDate}
+                onChange={(value) => {
+                  console.log('End date changed:', value);
+                  setEndDate(value);
+                }}
+                placeholder="تاریخ پایان"
+                className="font-vazir"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium font-vazir mb-2 block">همکار</label>
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger className="font-vazir">
-                  <SelectValue placeholder="انتخاب کارمند" />
+                  <SelectValue placeholder="انتخاب همکار" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all" className="font-vazir">همه کارمندان</SelectItem>
+                  <SelectItem value="all" className="font-vazir">همه همکاران</SelectItem>
                   {users.map(user => (
                     <SelectItem key={user.id} value={user.id} className="font-vazir">
                       {user.name} ({user.role})
@@ -279,15 +304,16 @@ export default function ReportsPage() {
             <div className="flex items-end">
               <Button
                 onClick={() => {
-                  setSelectedDate('');
+                  setStartDate('');
+                  setEndDate('');
                   setSelectedUser('all');
                   setSearchTerm('');
                 }}
                 variant="outline"
-                className="font-vazir"
+                className="font-vazir w-full"
               >
                 <Filter className="h-4 w-4 ml-2" />
-                پاک کردن فیلترها
+                پاک کردن
               </Button>
             </div>
           </div>
@@ -307,7 +333,7 @@ export default function ReportsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-vazir">کارمندان فعال</CardTitle>
+            <CardTitle className="text-sm font-medium font-vazir">همکاران فعال</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

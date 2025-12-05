@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import moment from 'moment-jalaali';
+import '../mobile-responsive.css';
 
 // تعریف فیلدهای ایمپورت مشتریان (مطابق با فرمت اکسل)
 // ترتیب فیلدها مطابق با فایل اکسل شما
@@ -520,7 +521,7 @@ export default function CustomersPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="dashboard-header flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold font-vazir bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             مدیریت مشتریان
@@ -528,7 +529,7 @@ export default function CustomersPage() {
           <p className="text-muted-foreground font-vazir mt-2">مدیریت کامل مشتریان و فرآیند فروش</p>
         </div>
         <div className="flex space-x-2 space-x-reverse">
-          <Button variant="outline" onClick={() => { loadCustomers(); loadStats(); }} disabled={loading} className="font-vazir">
+          <Button variant="outline" onClick={() => { loadCustomers(); loadStats(); }} disabled={loading} className="font-vazir desktop-only">
             <RefreshCw className={`h-4 w-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
             بروزرسانی
           </Button>
@@ -536,7 +537,7 @@ export default function CustomersPage() {
             variant="outline"
             onClick={exportToExcel}
             disabled={customers.length === 0}
-            className="font-vazir"
+            className="font-vazir desktop-only"
           >
             <FileSpreadsheet className="h-4 w-4 ml-2" />
             خروجی اکسل
@@ -544,7 +545,7 @@ export default function CustomersPage() {
           <Button
             variant="outline"
             onClick={() => setImportOpen(true)}
-            className="font-vazir"
+            className="font-vazir desktop-only"
           >
             <Upload className="h-4 w-4 ml-2" />
             ایمپورت از اکسل
@@ -552,7 +553,8 @@ export default function CustomersPage() {
           <Link href="/dashboard/customers/new">
             <Button className="bg-gradient-to-r from-primary via-secondary to-accent hover:from-primary/90 hover:via-secondary/90 hover:to-accent/90 font-vazir">
               <Plus className="h-4 w-4 ml-2" />
-              افزودن مشتری
+              <span className="hidden sm:inline">افزودن مشتری</span>
+              <span className="sm:hidden">افزودن</span>
             </Button>
           </Link>
         </div>
@@ -584,7 +586,7 @@ export default function CustomersPage() {
       )}
 
       {/* آمار کلی */}
-      <div className="grid gap-4 md:grid-cols-6">
+      <div className="stats-grid grid gap-4 md:grid-cols-6">
         <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium font-vazir">کل مشتریان</CardTitle>
@@ -649,7 +651,7 @@ export default function CustomersPage() {
       </div>
 
       {/* فیلترها */}
-      <Card className="border-border/50">
+      <Card className="filter-section border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 space-x-reverse font-vazir">
             <Filter className="h-5 w-5" />
@@ -802,7 +804,7 @@ export default function CustomersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="priority-customers-grid grid gap-4 md:grid-cols-2">
               {customers.filter(c => c.priority === 'high').map((customer) => (
                 <div key={customer.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800">
                   <div className="flex items-center space-x-3 space-x-reverse">

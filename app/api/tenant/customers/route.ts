@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireTenantAuth } from '@/lib/tenant-auth';
 import { getTenantConnection } from '@/lib/tenant-database';
+import { logActivity } from '@/lib/activity-logger';
 
 async function handleGetCustomers(request: NextRequest, session: any) {
   let connection;
@@ -108,6 +109,22 @@ async function handleCreateCustomer(request: NextRequest, session: any) {
           priority
         ]
       ) as any;
+
+      // ثبت خودکار فعالیت
+      const userId = session.userId || session.id || 'unknown';
+      const userName = session.user?.name || session.name || 'کاربر';
+      const customerId = result.insertId;
+      
+      await logActivity({
+        tenantKey,
+        userId,
+        userName,
+        type: 'customer',
+        title: `مشتری جدید: ${name}`,
+        description: `مشتری ${name}${company_name ? ` از شرکت ${company_name}` : ''} اضافه شد${phone ? ` - تلفن: ${phone}` : ''}`,
+        customerId: customerId.toString(),
+        customerName: name
+      });
 
       return NextResponse.json({
         success: true,

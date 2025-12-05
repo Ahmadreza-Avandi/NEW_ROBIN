@@ -25,9 +25,9 @@ async function checkTable() {
       console.log('Categories:', categories.map(c => c.category));
       
       // نمونه محصولات
-      const [samples] = await connection.execute('SELECT id, name, category, base_price, is_active FROM products LIMIT 3');
-      console.log('Sample products:');
-      samples.forEach(p => console.log(`- ${p.name} (${p.category}) - ${p.base_price} - Active: ${p.is_active}`));
+      const [samples] = await connection.execute('SELECT id, name, category, price, status FROM products LIMIT 5');
+      console.log('\nSample products:');
+      samples.forEach(p => console.log(`- ${p.name} (${p.category}) - ${p.price} - Status: ${p.status}`));
     }
     
     await connection.end();

@@ -20,6 +20,7 @@ import {
   Trash2,
   Edit
 } from 'lucide-react';
+import '../mobile-responsive.css';
 
 interface Sale {
   id: string;
@@ -150,7 +151,7 @@ export default function SalesPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="dashboard-header flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold font-vazir bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             مدیریت فروش
@@ -160,20 +161,21 @@ export default function SalesPage() {
         <div className="flex space-x-2 space-x-reverse">
           <Button variant="outline" onClick={loadSales} disabled={loading} className="font-vazir">
             <RefreshCw className={`h-4 w-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
-            بروزرسانی
+            <span className="hidden sm:inline">بروزرسانی</span>
           </Button>
           <Button 
             onClick={() => window.location.href = '/dashboard/sales/new'}
             className="bg-gradient-to-r from-primary via-secondary to-accent hover:from-primary/90 hover:via-secondary/90 hover:to-accent/90 font-vazir"
           >
             <Plus className="h-4 w-4 ml-2" />
-            افزودن فروش
+            <span className="hidden sm:inline">افزودن فروش</span>
+            <span className="sm:hidden">افزودن</span>
           </Button>
         </div>
       </div>
 
       {/* آمار کلی */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="stats-grid grid gap-4 md:grid-cols-4">
         <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium font-vazir">کل فروش‌ها</CardTitle>
@@ -222,7 +224,7 @@ export default function SalesPage() {
       </div>
 
       {/* فیلتر جستجو */}
-      <Card className="border-border/50">
+      <Card className="filter-section border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 space-x-reverse font-vazir">
             <Filter className="h-5 w-5" />
@@ -258,10 +260,10 @@ export default function SalesPage() {
         ) : (
           filteredSales.map((sale) => (
             <Card key={sale.id} className="hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30">
-              <CardContent className="p-6">
+              <CardContent className="sales-card-content p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 space-x-reverse mb-2">
+                    <div className="flex items-center space-x-3 space-x-reverse mb-2 flex-wrap">
                       <h3 className="text-lg font-semibold font-vazir">{sale.title}</h3>
                       <Badge className={`font-vazir ${getStageColor(sale.stage)}`}>
                         {sale.stage}
@@ -270,24 +272,24 @@ export default function SalesPage() {
                     
                     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 mt-4">
                       <div className="flex items-center space-x-2 space-x-reverse">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-vazir">{sale.customer_name}</span>
+                        <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm font-vazir truncate-mobile">{sale.customer_name}</span>
                       </div>
                       
                       <div className="flex items-center space-x-2 space-x-reverse">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span className="text-sm font-vazir font-medium text-green-600">
                           {formatPrice(sale.total_value, sale.currency)}
                         </span>
                       </div>
                       
                       <div className="flex items-center space-x-2 space-x-reverse">
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                        <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span className="text-sm font-vazir">احتمال: {sale.probability}%</span>
                       </div>
                       
                       <div className="flex items-center space-x-2 space-x-reverse">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span className="text-sm font-vazir">
                           {new Date(sale.expected_close_date).toLocaleDateString('fa-IR')}
                         </span>
@@ -298,6 +300,7 @@ export default function SalesPage() {
                   <div className="flex space-x-2 space-x-reverse">
                     <Button variant="outline" size="sm" className="font-vazir">
                       <Edit className="h-4 w-4" />
+                      <span className="sr-only">ویرایش</span>
                     </Button>
                     <Button 
                       variant="outline" 
@@ -306,6 +309,7 @@ export default function SalesPage() {
                       className="font-vazir text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">حذف</span>
                     </Button>
                   </div>
                 </div>

@@ -120,17 +120,30 @@ export async function getCustomers(tenantKey: string = 'rabin') {
 
 export async function getSalesReport(period: string = 'today', tenantKey: string = 'rabin') {
     try {
+        console.log('💰 getSalesReport called with:', { period, tenantKey });
+        
         let dateCondition = '';
 
         switch (period) {
             case 'today':
                 dateCondition = 'DATE(created_at) = CURDATE()';
+                console.log('⏰ Filtering sales for TODAY');
+                break;
+            case 'yesterday':
+                dateCondition = 'DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
+                console.log('⏰ Filtering sales for YESTERDAY');
                 break;
             case 'week':
                 dateCondition = 'created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+                console.log('⏰ Filtering sales for THIS WEEK');
                 break;
             case 'month':
                 dateCondition = 'created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+                console.log('⏰ Filtering sales for THIS MONTH');
+                break;
+            case 'year':
+                dateCondition = 'YEAR(created_at) = YEAR(NOW())';
+                console.log('⏰ Filtering sales for THIS YEAR');
                 break;
             default:
                 dateCondition = 'DATE(created_at) = CURDATE()';
@@ -149,53 +162,118 @@ export async function getSalesReport(period: string = 'today', tenantKey: string
             ORDER BY deal_date DESC
         `;
 
-        return await executeQuery(query, [tenantKey]);
+        const result = await executeQuery(query, [tenantKey]);
+        console.log(`✅ Found ${result.length} sales records for tenant ${tenantKey} (${period})`);
+        return result;
     } catch (error: any) {
         console.error('خطا در دریافت گزارش فروش:', error.message);
         return [];
     }
 }
 
-export async function getTasks(assignee: string | null = null, tenantKey: string = 'rabin') {
+export async function getTasks(assignee: string | null = null, tenantKey: string = 'rabin', timeFilter: string | null = null) {
     try {
+        console.log('📋 getTasks called with:', { assignee, tenantKey, timeFilter });
+        
         let query = `
             SELECT a.id, a.title, a.description, a.type, a.start_time, a.end_time,
                    a.performed_by, a.outcome, a.notes, a.created_at,
                    c.name as customer_name
             FROM activities a
             LEFT JOIN customers c ON a.customer_id = c.id
-            WHERE a.outcome IN ('completed', 'successful', 'follow_up_needed') AND a.tenant_key = ?
+            WHERE a.tenant_key = ?
         `;
 
         const params: any[] = [tenantKey];
+
+        // اضافه کردن فیلتر زمانی
+        if (timeFilter) {
+            switch (timeFilter) {
+                case 'today':
+                    query += ' AND DATE(a.created_at) = CURDATE()';
+                    console.log('⏰ Filtering activities for TODAY');
+                    break;
+                case 'yesterday':
+                    query += ' AND DATE(a.created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
+                    console.log('⏰ Filtering activities for YESTERDAY');
+                    break;
+                case 'week':
+                    query += ' AND a.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+                    console.log('⏰ Filtering activities for THIS WEEK');
+                    break;
+                case 'month':
+                    query += ' AND a.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+                    console.log('⏰ Filtering activities for THIS MONTH');
+                    break;
+                case 'year':
+                    query += ' AND YEAR(a.created_at) = YEAR(NOW())';
+                    console.log('⏰ Filtering activities for THIS YEAR');
+                    break;
+            }
+        }
 
         if (assignee) {
             query += ' AND a.performed_by LIKE ?';
             params.push(`%${assignee}%`);
         }
 
-        query += ' ORDER BY a.created_at DESC LIMIT 20';
+        query += ' ORDER BY a.created_at DESC LIMIT 50';
 
-        return await executeQuery(query, params);
+        const result = await executeQuery(query, params);
+        console.log(`✅ Found ${result.length} activities for tenant ${tenantKey}${timeFilter ? ` (${timeFilter})` : ''}`);
+        return result;
     } catch (error: any) {
         console.error('خطا در دریافت فعالیت‌ها:', error.message);
         return [];
     }
 }
 
-export async function getProjects(tenantKey: string = 'rabin') {
+export async function getProjects(tenantKey: string = 'rabin', timeFilter: string | null = null) {
     try {
-        const query = `
+        console.log('📁 getProjects called with:', { tenantKey, timeFilter });
+        
+        let query = `
             SELECT d.id, d.title as name, d.description, d.total_value, 
                    d.probability, d.expected_close_date, d.assigned_to,
                    d.created_at, c.name as customer_name
             FROM deals d
             LEFT JOIN customers c ON d.customer_id = c.id
             WHERE d.probability > 0 AND d.tenant_key = ?
-            ORDER BY d.created_at DESC
-            LIMIT 10
         `;
-        return await executeQuery(query, [tenantKey]);
+
+        const params: any[] = [tenantKey];
+
+        // اضافه کردن فیلتر زمانی
+        if (timeFilter) {
+            switch (timeFilter) {
+                case 'today':
+                    query += ' AND DATE(d.created_at) = CURDATE()';
+                    console.log('⏰ Filtering projects for TODAY');
+                    break;
+                case 'yesterday':
+                    query += ' AND DATE(d.created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
+                    console.log('⏰ Filtering projects for YESTERDAY');
+                    break;
+                case 'week':
+                    query += ' AND d.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+                    console.log('⏰ Filtering projects for THIS WEEK');
+                    break;
+                case 'month':
+                    query += ' AND d.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+                    console.log('⏰ Filtering projects for THIS MONTH');
+                    break;
+                case 'year':
+                    query += ' AND YEAR(d.created_at) = YEAR(NOW())';
+                    console.log('⏰ Filtering projects for THIS YEAR');
+                    break;
+            }
+        }
+
+        query += ' ORDER BY d.created_at DESC LIMIT 20';
+
+        const result = await executeQuery(query, params);
+        console.log(`✅ Found ${result.length} projects for tenant ${tenantKey}${timeFilter ? ` (${timeFilter})` : ''}`);
+        return result;
     } catch (error: any) {
         console.error('خطا در دریافت معاملات:', error.message);
         return [];

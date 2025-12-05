@@ -17,6 +17,7 @@ import {
   Search, UserPlus, Mail, Phone, Building, Calendar, Activity,
   Eye, Edit, Trash2, Users, Star, MapPin, Linkedin, Twitter, Filter, Upload
 } from 'lucide-react';
+import '../mobile-responsive.css';
 
 interface Contact {
   id: string;
@@ -333,7 +334,7 @@ export default function ContactsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="dashboard-header flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
             <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg">
@@ -353,7 +354,8 @@ export default function ContactsPage() {
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
                 <UserPlus className="h-4 w-4 ml-2" />
-                افزودن مخاطب
+                <span className="hidden sm:inline">افزودن مخاطب</span>
+                <span className="sm:hidden">افزودن</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
@@ -561,6 +563,7 @@ export default function ContactsPage() {
           <Button
             variant="outline"
             onClick={() => setImportOpen(true)}
+            className="desktop-only"
           >
             <Upload className="h-4 w-4 ml-2" />
             ایمپورت از اکسل
@@ -579,7 +582,7 @@ export default function ContactsPage() {
       </div>
 
       {/* آمار کلی */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="stats-grid grid gap-4 md:grid-cols-4">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-teal-50 to-teal-100">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-teal-700">کل مخاطبین</CardTitle>
@@ -636,7 +639,7 @@ export default function ContactsPage() {
       </div>
 
       {/* Filters */}
-      <Card className="border-0 shadow-lg">
+      <Card className="filter-section border-0 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -748,7 +751,7 @@ export default function ContactsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="contacts-list space-y-2">
               {filteredContacts.map((contact, index) => (
                 <div
                   key={contact.id}

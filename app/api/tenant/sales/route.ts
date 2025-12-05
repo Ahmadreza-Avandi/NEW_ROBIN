@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantSessionFromRequest } from '@/lib/tenant-auth';
 import { getTenantConnection } from '@/lib/tenant-database';
+import { logActivity } from '@/lib/activity-logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -155,6 +156,18 @@ export async function POST(request: NextRequest) {
           salesPersonName
         ]
       ) as any;
+
+      // ثبت خودکار فعالیت
+      await logActivity({
+        tenantKey,
+        userId: salesPersonId,
+        userName: salesPersonName,
+        type: 'sale',
+        title: `فروش جدید به ${customer_name}`,
+        description: `فروش به مبلغ ${total_amount.toLocaleString('fa-IR')} ${currency} ثبت شد${invoice_number ? ` - شماره فاکتور: ${invoice_number}` : ''}`,
+        customerId: customer_id,
+        customerName: customer_name
+      });
 
       return NextResponse.json({
         success: true,

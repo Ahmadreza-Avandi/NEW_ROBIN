@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save, X, AlertCircle } from 'lucide-react';
+import { ArrowRight, Save, X, AlertCircle, Upload, Image as ImageIcon } from 'lucide-react';
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -23,6 +23,7 @@ export default function NewProductPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    image: '',
     category: '',
     price: '',
     currency: 'IRR',
@@ -30,8 +31,64 @@ export default function NewProductPage() {
     sku: '',
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      // نمایش پیش‌نمایش
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, image: '' }));
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return null;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      const response = await fetch('/api/products/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        return data.data.url;
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "خطا",
+        description: "خطا در آپلود تصویر",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,6 +103,15 @@ export default function NewProductPage() {
     setError('');
 
     try {
+      // اول عکس رو آپلود کن (اگر وجود داره)
+      let imageUrl = formData.image;
+      if (imageFile) {
+        const uploadedUrl = await uploadImage();
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+
       const response = await fetch('/api/tenant/products', {
         method: 'POST',
         headers: {
@@ -54,6 +120,7 @@ export default function NewProductPage() {
         },
         body: JSON.stringify({
           ...formData,
+          image: imageUrl,
           price: formData.price ? parseFloat(formData.price) : null,
         }),
       });
@@ -188,6 +255,53 @@ export default function NewProductPage() {
               </div>
             </div>
 
+            {/* تصویر محصول */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium font-vazir">تصویر محصول</h3>
+              <div className="space-y-4">
+                {imagePreview ? (
+                  <div className="relative w-full max-w-md">
+                    <img
+                      src={imagePreview}
+                      alt="پیش‌نمایش"
+                      className="w-full h-64 object-cover rounded-lg border-2 border-border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 left-2 font-vazir"
+                    >
+                      <X className="h-4 w-4 ml-1" />
+                      حذف تصویر
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                    <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <Label htmlFor="image-upload" className="cursor-pointer">
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium font-vazir">
+                          برای آپلود تصویر کلیک کنید
+                        </p>
+                        <p className="text-xs text-muted-foreground font-vazir">
+                          JPG, PNG, WEBP یا GIF (حداکثر 5MB)
+                        </p>
+                      </div>
+                    </Label>
+                    <Input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* قیمت‌گذاری */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium font-vazir">قیمت‌گذاری</h3>
@@ -247,11 +361,11 @@ export default function NewProductPage() {
             <div className="flex items-center space-x-4 space-x-reverse">
               <Button
                 type="submit"
-                disabled={submitting || !formData.name}
+                disabled={submitting || uploadingImage || !formData.name}
                 className="bg-gradient-to-r from-primary via-secondary to-accent hover:from-primary/90 hover:via-secondary/90 hover:to-accent/90 font-vazir"
               >
                 <Save className="h-4 w-4 ml-2" />
-                {submitting ? 'در حال ذخیره...' : 'ذخیره محصول'}
+                {uploadingImage ? 'در حال آپلود تصویر...' : submitting ? 'در حال ذخیره...' : 'ذخیره محصول'}
               </Button>
               <Button
                 type="button"

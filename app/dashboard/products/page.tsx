@@ -32,10 +32,12 @@ export default function ProductsPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        loadCategories();
+        console.log('🚀 Component mounted, loading initial data');
+        loadProducts(); // بارگذاری اولیه محصولات
     }, []);
 
     useEffect(() => {
+        console.log('useEffect triggered - Filters changed:', { searchTerm, categoryFilter, statusFilter });
         const timeoutId = setTimeout(() => {
             loadProducts();
         }, searchTerm ? 500 : 0); // debounce برای جستجو
@@ -45,13 +47,16 @@ export default function ProductsPage() {
 
     const loadCategories = async () => {
         try {
+            console.log('📂 Loading categories...');
             const response = await fetch('/api/products/categories');
             const data = await response.json();
+            console.log('📂 Categories response:', data);
             if (data.success) {
                 setCategories(data.data || []);
+                console.log('📂 Categories loaded:', data.data?.length || 0);
             }
         } catch (error) {
-            console.error('Error loading categories:', error);
+            console.error('❌ Error loading categories:', error);
         }
     };
 
@@ -65,14 +70,19 @@ export default function ProductsPage() {
             if (categoryFilter && categoryFilter !== 'all') params.append('category', categoryFilter);
             if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
 
-            console.log('Loading products with params:', params.toString());
-            console.log('Filters:', { searchTerm, categoryFilter, statusFilter });
+            const url = `/api/products?${params.toString()}`;
+            console.log('🔍 Loading products with URL:', url);
+            console.log('📊 Current filters:', { searchTerm, categoryFilter, statusFilter });
 
-            const response = await fetch(`/api/products?${params.toString()}`);
+            const response = await fetch(url);
             const data = await response.json();
+
+            console.log('✅ API Response:', data);
+            console.log('📦 Products count:', data.data?.length || 0);
 
             if (data.success) {
                 setProducts(data.data || []);
+                console.log('✨ Products state updated with', data.data?.length || 0, 'items');
 
                 // استخراج دسته‌بندی‌های منحصر به فرد
                 const allCategories = data.data
@@ -83,9 +93,10 @@ export default function ProductsPage() {
                 setCategories(uniqueCategories);
             } else {
                 setError(data.message || 'خطا در دریافت محصولات');
+                console.error('❌ API Error:', data.message);
             }
         } catch (error) {
-            console.error('Error loading products:', error);
+            console.error('❌ Error loading products:', error);
             setError('خطا در اتصال به سرور');
         } finally {
             setLoading(false);
@@ -242,10 +253,13 @@ export default function ProductsPage() {
                             />
                         </div>
 
-                        <Select value={categoryFilter} onValueChange={(value) => {
-                            console.log('Category filter changed to:', value);
-                            setCategoryFilter(value);
-                        }}>
+                        <Select 
+                            value={categoryFilter} 
+                            onValueChange={(value) => {
+                                console.log('🔄 Category filter changed from', categoryFilter, 'to:', value);
+                                setCategoryFilter(value);
+                            }}
+                        >
                             <SelectTrigger className="font-vazir">
                                 <SelectValue placeholder="دسته‌بندی" />
                             </SelectTrigger>
@@ -259,7 +273,13 @@ export default function ProductsPage() {
                             </SelectContent>
                         </Select>
 
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <Select 
+                            value={statusFilter} 
+                            onValueChange={(value) => {
+                                console.log('🔄 Status filter changed from', statusFilter, 'to:', value);
+                                setStatusFilter(value);
+                            }}
+                        >
                             <SelectTrigger className="font-vazir">
                                 <SelectValue placeholder="وضعیت" />
                             </SelectTrigger>

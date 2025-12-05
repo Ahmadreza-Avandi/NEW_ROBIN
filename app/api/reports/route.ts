@@ -20,14 +20,26 @@ export async function GET(req: NextRequest) {
         }
 
         const { searchParams } = new URL(req.url);
-        const date = searchParams.get('date') || '';
+        const start_date = searchParams.get('start_date') || '';
+        const end_date = searchParams.get('end_date') || '';
         const user_id = searchParams.get('user_id') || '';
 
-        // Only CEO can view all reports
-        const isManager = currentUser.role === 'ceo';
+        // Managers can view all reports
+        const managerRoles = [
+            'ceo', 'مدیر', 'مدیر عامل', 'مدیرعامل',
+            'sales_manager', 'مدیر فروش', 
+            'admin', 'ادمین',
+            'manager', 'مدیر کل',
+            'supervisor', 'سرپرست',
+            'team_lead', 'سرگروه'
+        ];
+        
+        const isManager = managerRoles.some(role => 
+            currentUser.role?.toLowerCase().includes(role.toLowerCase())
+        );
 
-        console.log('Reports API - User role:', currentUser.role);
-        console.log('Reports API - Is CEO:', isManager);
+        console.log('📊 Reports API - User role:', currentUser.role);
+        console.log('✅ Reports API - Is Manager:', isManager);
 
         let whereClause = 'WHERE 1=1';
         const params: any[] = [];
@@ -42,10 +54,18 @@ export async function GET(req: NextRequest) {
             params.push(user_id);
         }
 
-        if (date) {
-            whereClause += ' AND dr.report_date = ?';
-            params.push(date);
+        // Date range filter
+        if (start_date) {
+            whereClause += ' AND dr.report_date >= ?';
+            params.push(start_date);
         }
+        
+        if (end_date) {
+            whereClause += ' AND dr.report_date <= ?';
+            params.push(end_date);
+        }
+
+        console.log('📅 Date range filter:', { start_date, end_date });
 
         const reports = await executeQuery(`
       SELECT 

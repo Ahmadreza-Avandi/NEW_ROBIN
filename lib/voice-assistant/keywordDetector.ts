@@ -74,25 +74,65 @@ const KEYWORD_MAPPINGS: Record<string, any> = {
     'آیتمها': { action: 'getProducts', description: 'دریافت اطلاعات آیتم‌ها' }
 };
 
+// تشخیص کلمات زمانی در متن
+function detectTimeKeywords(text: string): string | null {
+    const normalizedText = text.toLowerCase().trim();
+    
+    // کلمات کلیدی زمانی
+    const timeKeywords = {
+        'امروز': 'today',
+        'دیروز': 'yesterday',
+        'این هفته': 'week',
+        'هفته': 'week',
+        'این ماه': 'month',
+        'ماه': 'month',
+        'امسال': 'year',
+        'سال': 'year'
+    };
+    
+    for (const [persianKeyword, englishValue] of Object.entries(timeKeywords)) {
+        if (normalizedText.includes(persianKeyword)) {
+            console.log(`⏰ Time keyword detected: ${persianKeyword} -> ${englishValue}`);
+            return englishValue;
+        }
+    }
+    
+    return null;
+}
+
 export function detectKeywords(text: string) {
     const foundKeywords: any[] = [];
     const normalizedText = text.toLowerCase().trim();
 
     console.log('🔍 Detecting keywords in:', normalizedText);
 
+    // تشخیص کلمات زمانی
+    const timeFilter = detectTimeKeywords(normalizedText);
+
     for (const [keyword, config] of Object.entries(KEYWORD_MAPPINGS)) {
         if (normalizedText.includes(keyword)) {
             console.log('✅ Keyword detected:', keyword);
+            
+            // اگر کلمه زمانی پیدا شد، به params اضافه کن
+            const params = [...(config.params || [])];
+            if (timeFilter) {
+                params.push(timeFilter);
+            }
+            
             foundKeywords.push({
                 keyword,
                 action: config.action,
-                params: config.params || [],
-                description: config.description
+                params: params,
+                description: config.description,
+                timeFilter: timeFilter
             });
         }
     }
 
     console.log(`📊 Total keywords found: ${foundKeywords.length}`);
+    if (timeFilter) {
+        console.log(`⏰ Time filter applied: ${timeFilter}`);
+    }
     return foundKeywords;
 }
 
@@ -101,6 +141,11 @@ export async function executeAction(action: string, params: any[] = [], tenantKe
         console.log(`⚡ Executing action: ${action}`, { params, tenantKey });
 
         let result;
+        
+        // استخراج فیلتر زمانی از params (آخرین پارامتر)
+        const timeFilter = params.length > 0 && ['today', 'yesterday', 'week', 'month', 'year'].includes(params[params.length - 1]) 
+            ? params[params.length - 1] 
+            : null;
 
         switch (action) {
             case 'getEmployees':
@@ -114,20 +159,20 @@ export async function executeAction(action: string, params: any[] = [], tenantKe
                 break;
 
             case 'getSalesReport':
-                const period = params[0] || 'today';
+                const period = timeFilter || params[0] || 'today';
                 console.log('💰 Fetching sales report for period:', period, 'tenant:', tenantKey);
                 result = await getSalesReport(period, tenantKey);
                 break;
 
             case 'getTasks':
-                const assignee = params[0] || null;
-                console.log('📋 Fetching tasks for tenant:', tenantKey, 'assignee:', assignee);
-                result = await getTasks(assignee, tenantKey);
+                const assignee = !timeFilter && params[0] ? params[0] : null;
+                console.log('📋 Fetching tasks for tenant:', tenantKey, 'assignee:', assignee, 'timeFilter:', timeFilter);
+                result = await getTasks(assignee, tenantKey, timeFilter);
                 break;
 
             case 'getProjects':
-                console.log('📁 Fetching projects for tenant:', tenantKey);
-                result = await getProjects(tenantKey);
+                console.log('📁 Fetching projects for tenant:', tenantKey, 'timeFilter:', timeFilter);
+                result = await getProjects(tenantKey, timeFilter);
                 break;
 
             case 'getProducts':
@@ -142,7 +187,8 @@ export async function executeAction(action: string, params: any[] = [], tenantKe
 
         console.log(`✅ Action ${action} completed successfully`, { 
             recordCount: result.length,
-            tenant: tenantKey 
+            tenant: tenantKey,
+            timeFilter: timeFilter || 'none'
         });
 
         return {
@@ -150,6 +196,7 @@ export async function executeAction(action: string, params: any[] = [], tenantKe
             action,
             data: result,
             count: result.length,
+            timeFilter: timeFilter,
             timestamp: new Date().toISOString()
         };
 
@@ -222,10 +269,26 @@ function generateDataSummary(results: any[]) {
     }
 
     let summary = '';
+    
+    // تبدیل فیلتر زمانی به فارسی
+    const getTimePeriodText = (timeFilter: string | null) => {
+        if (!timeFilter) return '';
+        const timeMap: Record<string, string> = {
+            'today': 'امروز',
+            'yesterday': 'دیروز',
+            'week': 'این هفته',
+            'month': 'این ماه',
+            'year': 'امسال'
+        };
+        return timeMap[timeFilter] || '';
+    };
 
     for (const result of results) {
+        const timePeriod = getTimePeriodText(result.timeFilter);
+        const timeText = timePeriod ? ` ${timePeriod}` : '';
+        
         if (result.count === 0) {
-            summary += `${result.description}: هیچ رکوردی یافت نشد. `;
+            summary += `${result.description}${timeText}: هیچ رکوردی یافت نشد. `;
             continue;
         }
 
@@ -252,16 +315,16 @@ function generateDataSummary(results: any[]) {
                 if (result.data && result.data.length > 0) {
                     const totalAmount = result.data.reduce((sum: number, sale: any) => sum + (parseFloat(sale.total_amount) || 0), 0);
                     const totalDeals = result.data.reduce((sum: number, sale: any) => sum + (parseInt(sale.total_deals) || 0), 0);
-                    summary += `${totalDeals} معامله به ارزش ${totalAmount.toLocaleString('fa-IR')} تومان. `;
+                    summary += `${timeText ? timeText + ' ' : ''}${totalDeals} معامله به ارزش ${totalAmount.toLocaleString('fa-IR')} تومان. `;
                 }
                 break;
 
             case 'getTasks':
-                summary += `${result.count} فعالیت یافت شد. `;
+                summary += `${timeText ? timeText + ' ' : ''}${result.count} فعالیت یافت شد. `;
                 break;
 
             case 'getProjects':
-                summary += `${result.count} پروژه/معامله یافت شد. `;
+                summary += `${timeText ? timeText + ' ' : ''}${result.count} پروژه/معامله یافت شد. `;
                 break;
 
             case 'getProducts':
@@ -285,14 +348,30 @@ export function formatDataForAI(results: any[]) {
     }
 
     let formattedData = '';
+    
+    // تبدیل فیلتر زمانی به فارسی
+    const getTimePeriodText = (timeFilter: string | null) => {
+        if (!timeFilter) return '';
+        const timeMap: Record<string, string> = {
+            'today': 'امروز',
+            'yesterday': 'دیروز',
+            'week': 'این هفته',
+            'month': 'این ماه',
+            'year': 'امسال'
+        };
+        return timeMap[timeFilter] || '';
+    };
 
     for (const result of results) {
+        const timePeriod = getTimePeriodText(result.timeFilter);
+        const timeText = timePeriod ? ` (${timePeriod})` : '';
+        
         if (!result.success || !result.data || result.data.length === 0) {
-            formattedData += `${result.description}: هیچ رکوردی یافت نشد\n\n`;
+            formattedData += `${result.description}${timeText}: هیچ رکوردی یافت نشد\n\n`;
             continue;
         }
 
-        formattedData += `${result.description} (${result.count} رکورد):\n`;
+        formattedData += `${result.description}${timeText} (${result.count} رکورد):\n`;
 
         switch (result.action) {
             case 'getEmployees':

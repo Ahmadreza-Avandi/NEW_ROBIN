@@ -12,6 +12,7 @@ interface Product {
     id: string;
     name: string;
     description?: string;
+    image?: string;
     category?: string;
     price?: number;
     currency?: string;
@@ -160,7 +161,21 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Product Details */}
-            <Card className="shadow-lg">
+            <Card className="shadow-lg overflow-hidden">
+                {/* تصویر محصول */}
+                {product.image && (
+                    <div className="relative w-full h-96 bg-gray-100">
+                        <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                        />
+                    </div>
+                )}
+                
                 <CardHeader>
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
