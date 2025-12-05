@@ -27,11 +27,13 @@ export async function logActivity(params: ActivityLogParams): Promise<void> {
   } = params;
 
   try {
+    console.log('📝 شروع ثبت فعالیت:', { tenantKey, userId, type, title });
+    
     const pool = await getTenantConnection(tenantKey);
     const conn = await pool.getConnection();
 
     try {
-      await conn.query(
+      const [result] = await conn.query(
         `INSERT INTO activities (
           id, 
           tenant_key, 
@@ -54,14 +56,18 @@ export async function logActivity(params: ActivityLogParams): Promise<void> {
           new Date().toISOString(),
           userId
         ]
-      );
+      ) as any;
 
-      console.log(`✅ فعالیت ثبت شد: ${title} توسط ${userName || userId}`);
+      console.log(`✅ فعالیت ثبت شد: ${title} توسط ${userName || userId} - ID: ${result.insertId}`);
     } finally {
       conn.release();
     }
   } catch (error) {
     // لاگ خطا ولی عملیات اصلی رو متوقف نکن
     console.error('❌ خطا در ثبت خودکار فعالیت:', error);
+    console.error('❌ جزئیات خطا:', {
+      message: error instanceof Error ? error.message : String(error),
+      params: { tenantKey, userId, type, title }
+    });
   }
 }

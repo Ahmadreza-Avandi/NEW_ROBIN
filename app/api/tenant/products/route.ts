@@ -231,7 +231,10 @@ export async function POST(request: NextRequest) {
     const conn = await pool.getConnection();
 
     try {
-      const userId = session.userId || session.id;
+      // استخراج userId با روش‌های مختلف
+      const userId = session.userId || session.id || session.user?.id || 'unknown';
+      
+      console.log('📝 Adding product:', { name, price: productPrice, userId, tenantKey });
       
       const image = body.image || null;
 
@@ -264,6 +267,8 @@ export async function POST(request: NextRequest) {
           userId
         ]
       ) as any;
+      
+      console.log('✅ Product added successfully, ID:', result.insertId);
 
       // ثبت خودکار فعالیت
       const userName = session.user?.name || 'کاربر';

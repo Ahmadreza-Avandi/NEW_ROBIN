@@ -146,5 +146,59 @@ async function handleCreateCustomer(request: NextRequest, session: any) {
   }
 }
 
+async function handleDeleteCustomer(request: NextRequest, session: any) {
+  try {
+    const tenantKey = session.tenantKey || session.tenant_key;
+    const { searchParams } = new URL(request.url);
+    const customerId = searchParams.get('id');
+
+    if (!customerId) {
+      return NextResponse.json(
+        { success: false, message: 'شناسه مشتری الزامی است' },
+        { status: 400 }
+      );
+    }
+
+    const pool = await getTenantConnection(tenantKey);
+    const conn = await pool.getConnection();
+
+    try {
+      // حذف مشتری
+      await conn.query(
+        'DELETE FROM customers WHERE id = ? AND tenant_key = ?',
+        [customerId, tenantKey]
+      );
+
+      // ثبت فعالیت حذف
+      const userId = session.userId || session.id || 'unknown';
+      const userName = session.user?.name || session.name || 'کاربر';
+      
+      await logActivity({
+        tenantKey,
+        userId,
+        userName,
+        type: 'customer',
+        title: `حذف مشتری`,
+        description: `مشتری با شناسه ${customerId} حذف شد`
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'مشتری با موفقیت حذف شد'
+      });
+    } finally {
+      conn.release();
+    }
+
+  } catch (error) {
+    console.error('❌ خطا در حذف مشتری:', error);
+    return NextResponse.json(
+      { success: false, message: 'خطای سرور' },
+      { status: 500 }
+    );
+  }
+}
+
 export const GET = requireTenantAuth(handleGetCustomers);
 export const POST = requireTenantAuth(handleCreateCustomer);
+export const DELETE = requireTenantAuth(handleDeleteCustomer);
