@@ -120,6 +120,45 @@ export default function ProductsPage() {
         }
     };
 
+    const handleDeleteProduct = async (product: Product) => {
+        if (!confirm(`آیا از حذف محصول "${product.name}" اطمینان دارید؟`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/tenant/products?id=${product.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Tenant-Key': tenantKey
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                toast({
+                    title: "موفقیت",
+                    description: "محصول با موفقیت حذف شد",
+                });
+                loadProducts(); // بارگذاری مجدد لیست
+            } else {
+                toast({
+                    title: "خطا",
+                    description: data.message || "خطا در حذف محصول",
+                    variant: "destructive"
+                });
+            }
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            toast({
+                title: "خطا",
+                description: "خطا در حذف محصول",
+                variant: "destructive"
+            });
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-96">
@@ -371,6 +410,14 @@ export default function ProductsPage() {
                                             onClick={() => window.location.href = `/${tenantKey}/dashboard/products/${product.id}`}
                                         >
                                             مشاهده
+                                        </Button>
+                                        <Button 
+                                            variant="destructive" 
+                                            size="sm" 
+                                            className="font-vazir"
+                                            onClick={() => handleDeleteProduct(product)}
+                                        >
+                                            حذف
                                         </Button>
                                     </div>
                                 </div>

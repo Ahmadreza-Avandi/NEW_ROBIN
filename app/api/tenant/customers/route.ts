@@ -14,9 +14,13 @@ async function handleGetCustomers(request: NextRequest, session: any) {
     connection = await pool.getConnection();
 
     try {
-      // دریافت لیست مشتریان (فقط داده‌های این tenant)
+      // دریافت لیست مشتریان با نام کاربر اضافه کننده
       const [customers] = await connection.query(
-        'SELECT * FROM customers WHERE tenant_key = ? ORDER BY created_at DESC LIMIT 100',
+        `SELECT c.*, u.name as assigned_user_name 
+         FROM customers c 
+         LEFT JOIN users u ON c.created_by = u.id AND c.tenant_key = u.tenant_key
+         WHERE c.tenant_key = ? 
+         ORDER BY c.created_at DESC LIMIT 100`,
         [tenantKey]
       ) as any[];
 
@@ -88,9 +92,10 @@ async function handleCreateCustomer(request: NextRequest, session: any) {
           annual_revenue,
           segment,
           priority,
+          created_by,
           created_at,
           updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [
           tenantKey,
           name,
@@ -106,7 +111,8 @@ async function handleCreateCustomer(request: NextRequest, session: any) {
           company_size || null,
           annual_revenue || null,
           segment || null,
-          priority
+          priority,
+          session.userId || session.id || null
         ]
       ) as any;
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 05, 2025 at 09:30 PM
+-- Generation Time: Dec 07, 2025 at 06:21 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -30,7 +30,7 @@ SET time_zone = "+00:00";
 CREATE TABLE `activities` (
   `id` varchar(36) NOT NULL DEFAULT uuid(),
   `tenant_key` varchar(50) DEFAULT 'rabin',
-  `customer_id` varchar(36) NOT NULL,
+  `customer_id` varchar(36) DEFAULT NULL,
   `deal_id` varchar(36) DEFAULT NULL,
   `type` varchar(50) NOT NULL DEFAULT 'call',
   `title` varchar(255) NOT NULL,
@@ -51,7 +51,10 @@ CREATE TABLE `activities` (
 --
 
 INSERT INTO `activities` (`id`, `tenant_key`, `customer_id`, `deal_id`, `type`, `title`, `description`, `start_time`, `end_time`, `duration`, `performed_by`, `outcome`, `location`, `notes`, `created_at`, `updated_at`) VALUES
-('763f8be6-bc9b-11f0-8607-581122e4f0be', 'rabin', '2cbd912e-bc9b-11f0-8607-581122e4f0be', NULL, 'meeting', 'جلسه با مشتری رابین', '.', '2025-11-08 12:07:13', NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-11-08 12:07:13', '2025-11-08 12:07:13');
+('763f8be6-bc9b-11f0-8607-581122e4f0be', 'rabin', '2cbd912e-bc9b-11f0-8607-581122e4f0be', NULL, 'meeting', 'جلسه با مشتری رابین', '.', '2025-11-08 12:07:13', NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-11-08 12:07:13', '2025-11-08 12:07:13'),
+('659a3a8c-d386-11f0-8d2c-581122e4f0be', 'rabin', '2cbd912e-bc9b-11f0-8607-581122e4f0be', NULL, 'meeting', 'هیچی', '.', '2025-12-07 16:04:23', NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-12-07 16:04:23', '2025-12-07 16:04:23'),
+('98dd8315-d387-11f0-8d2c-581122e4f0be', 'rabin', '0', NULL, 'customer', 'مشتری جدید: رابین', 'مشتری رابین اضافه شد', '2025-12-07 16:12:58', NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-12-07 16:12:58', '2025-12-07 16:12:58'),
+('1deaddf7-d38e-11f0-8d2c-581122e4f0be', 'rabin', NULL, NULL, 'product', 'محصول جدید: رابین', 'محصول رابین با قیمت ۱٬۹۹۹٬۹۹۹ IRR اضافه شد - دسته‌بندی: رابین', '2025-12-07 16:59:38', NULL, NULL, 'ceo-001', 'completed', NULL, NULL, '2025-12-07 16:59:38', '2025-12-07 16:59:38');
 
 -- --------------------------------------------------------
 
@@ -406,6 +409,7 @@ CREATE TABLE `customers` (
   `status` enum('active','inactive','follow_up','rejected','prospect','customer') DEFAULT 'prospect',
   `segment` enum('enterprise','small_business','individual') DEFAULT 'small_business',
   `priority` enum('low','medium','high') DEFAULT 'medium',
+  `created_by` varchar(255) DEFAULT NULL,
   `assigned_to` varchar(36) DEFAULT NULL,
   `total_tickets` int(11) DEFAULT 0,
   `satisfaction_score` decimal(3,2) DEFAULT NULL,
@@ -428,10 +432,10 @@ CREATE TABLE `customers` (
 -- Dumping data for table `customers`
 --
 
-INSERT INTO `customers` (`id`, `tenant_key`, `first_name`, `last_name`, `company_name`, `name`, `email`, `phone`, `website`, `address`, `city`, `state`, `country`, `postal_code`, `industry`, `company_size`, `annual_revenue`, `status`, `segment`, `priority`, `assigned_to`, `total_tickets`, `satisfaction_score`, `potential_value`, `actual_value`, `created_at`, `updated_at`, `last_interaction`, `last_contact_date`, `contact_attempts`, `source`, `tags`, `custom_fields`, `last_activity_date`, `lead_score`, `lifecycle_stage`) VALUES
-('2cbd912e-bc9b-11f0-8607-581122e4f0be', 'rabin', NULL, NULL, NULL, 'مشتری رابین', NULL, NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'individual', 'medium', NULL, 0, NULL, NULL, 0.00, '2025-11-08 12:05:10', '2025-11-19 14:56:48', '2025-11-19 14:56:48', NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
-('d1bcae7e-ce70-11f0-8238-d2bc93e1fc48', 'rabin', NULL, NULL, NULL, 'محمدامین بهادری', NULL, '09392742949', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', NULL, 'medium', NULL, 0, NULL, NULL, 0.00, '2025-12-01 04:47:19', '2025-12-01 04:47:19', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
-('fd3ef871-ce85-11f0-8238-d2bc93e1fc48', 'rabin', NULL, NULL, NULL, 'ارشاد قربانی', NULL, '09183836642', NULL, NULL, 'سنندج', 'کردستان', 'Iran', NULL, NULL, NULL, NULL, 'prospect', NULL, 'medium', NULL, 0, NULL, NULL, 0.00, '2025-12-01 07:18:52', '2025-12-01 07:18:52', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead');
+INSERT INTO `customers` (`id`, `tenant_key`, `first_name`, `last_name`, `company_name`, `name`, `email`, `phone`, `website`, `address`, `city`, `state`, `country`, `postal_code`, `industry`, `company_size`, `annual_revenue`, `status`, `segment`, `priority`, `created_by`, `assigned_to`, `total_tickets`, `satisfaction_score`, `potential_value`, `actual_value`, `created_at`, `updated_at`, `last_interaction`, `last_contact_date`, `contact_attempts`, `source`, `tags`, `custom_fields`, `last_activity_date`, `lead_score`, `lifecycle_stage`) VALUES
+('d1bcae7e-ce70-11f0-8238-d2bc93e1fc48', 'rabin', NULL, NULL, NULL, 'محمدامین بهادری', NULL, '09392742949', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', NULL, 'medium', 'ceo-001', NULL, 0, NULL, NULL, 0.00, '2025-12-01 04:47:19', '2025-12-07 16:24:57', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
+('fd3ef871-ce85-11f0-8238-d2bc93e1fc48', 'rabin', NULL, NULL, NULL, 'ارشاد قربانی', NULL, '09183836642', NULL, NULL, 'سنندج', 'کردستان', 'Iran', NULL, NULL, NULL, NULL, 'prospect', NULL, 'medium', 'ceo-001', NULL, 0, NULL, NULL, 0.00, '2025-12-01 07:18:52', '2025-12-07 16:24:57', '2025-12-05 20:40:25', NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead'),
+('98dad6eb-d387-11f0-8d2c-581122e4f0be', 'rabin', NULL, NULL, NULL, 'رابین', NULL, NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'individual', 'medium', 'ceo-001', NULL, 0, NULL, NULL, 0.00, '2025-12-07 16:12:58', '2025-12-07 16:24:57', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'lead');
 
 -- --------------------------------------------------------
 
@@ -465,7 +469,8 @@ INSERT INTO `customer_current_stage` (`id`, `customer_id`, `current_stage_id`, `
 ('d5000da1-91a7-11f0-9190-581122e4f0be', '92df42e9-f691-4167-9358-2f9dfe41566d', 'stage-002', '2025-09-14 20:17:26', '2025-09-14 20:17:52'),
 ('a90ffd2e-9e96-11f0-9ce7-66471fedf601', '82ccda6c-5b96-49d5-a010-6446468f4cc3', 'stage-001', '2025-10-01 07:17:16', '2025-10-01 07:17:16'),
 ('41e4f021-a7a7-11f0-b1c0-581122e4f0be', 'f8d09c82-82bc-49f1-98c3-e4266bd2d765', 'stage-001', '2025-10-12 20:08:45', '2025-10-12 20:08:45'),
-('f94eff7d-c557-11f0-adb4-7a654ee49283', '2cbd912e-bc9b-11f0-8607-581122e4f0be', 'stage-001', '2025-11-19 14:56:48', '2025-11-19 14:56:48');
+('f94eff7d-c557-11f0-adb4-7a654ee49283', '2cbd912e-bc9b-11f0-8607-581122e4f0be', 'stage-001', '2025-11-19 14:56:48', '2025-11-19 14:56:48'),
+('a081df48-d21a-11f0-a2a4-581122e4f0be', 'fd3ef871-ce85-11f0-8238-d2bc93e1fc48', 'stage-001', '2025-12-05 20:40:25', '2025-12-05 20:40:25');
 
 -- --------------------------------------------------------
 
@@ -557,7 +562,8 @@ INSERT INTO `customer_pipeline_progress` (`id`, `customer_id`, `stage_id`, `is_c
 ('e4967d53-91a7-11f0-9190-581122e4f0be', '92df42e9-f691-4167-9358-2f9dfe41566d', 'stage-002', 1, '2025-09-14 20:17:52', 'ceo-001', '', '2025-09-14 20:17:52', '2025-09-14 20:17:52'),
 ('a90cd510-9e96-11f0-9ce7-66471fedf601', '82ccda6c-5b96-49d5-a010-6446468f4cc3', 'stage-001', 0, NULL, NULL, '', '2025-10-01 07:17:16', '2025-10-01 07:17:57'),
 ('41e1c86a-a7a7-11f0-b1c0-581122e4f0be', 'f8d09c82-82bc-49f1-98c3-e4266bd2d765', 'stage-001', 1, '2025-10-12 20:08:45', 'ceo-001', '', '2025-10-12 20:08:45', '2025-10-12 20:08:45'),
-('f94b153b-c557-11f0-adb4-7a654ee49283', '2cbd912e-bc9b-11f0-8607-581122e4f0be', 'stage-001', 1, '2025-11-19 14:56:48', 'ceo-001', '', '2025-11-19 14:56:48', '2025-11-19 14:56:48');
+('f94b153b-c557-11f0-adb4-7a654ee49283', '2cbd912e-bc9b-11f0-8607-581122e4f0be', 'stage-001', 1, '2025-11-19 14:56:48', 'ceo-001', '', '2025-11-19 14:56:48', '2025-11-19 14:56:48'),
+('a07cb2da-d21a-11f0-a2a4-581122e4f0be', 'fd3ef871-ce85-11f0-8238-d2bc93e1fc48', 'stage-001', 1, '2025-12-05 20:40:25', 'ceo-001', '', '2025-12-05 20:40:25', '2025-12-05 20:40:25');
 
 -- --------------------------------------------------------
 
@@ -1702,9 +1708,9 @@ INSERT INTO `products` (`id`, `tenant_key`, `name`, `description`, `image`, `cat
 ('05f357d8-cf49-11f0-b141-c274cc12da08', 'rabin', 'خردکن', NULL, NULL, 'ماشین آلات', 2.00, 'IRR', 'inactive', 'RMcu001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-02 06:34:58', '2025-12-02 06:34:58'),
 ('0b3199ca-cf48-11f0-b141-c274cc12da08', 'rabin', 'میز کار', NULL, NULL, 'میز کارگاهی', 1.00, 'IRR', 'inactive', 'RTw001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-02 06:27:58', '2025-12-02 06:27:58'),
 ('146bdbbf-bc9b-11f0-8607-581122e4f0be', 'rabin', 'محصول رابین', 'نزیز', NULL, 'رابین', 20000000.00, 'IRR', 'active', '432', NULL, NULL, 'ceo-001', '2025-11-08 12:04:29', '2025-11-08 12:04:29'),
+('1de8e64c-d38e-11f0-8d2c-581122e4f0be', 'rabin', 'رابین', NULL, '/uploads/products/54c55e9d-ae4d-423d-b969-1d3fb6a0bfa4.png', 'رابین', 1999999.00, 'IRR', 'active', NULL, NULL, NULL, 'ceo-001', '2025-12-07 16:59:38', '2025-12-07 16:59:38'),
 ('281bdfb9-cf47-11f0-b141-c274cc12da08', 'rabin', 'خمیرکن', NULL, NULL, 'ماشین آلات', 1.00, 'IRR', 'inactive', 'RMb001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-02 06:21:37', '2025-12-02 06:21:37'),
 ('2bae6a08-cf49-11f0-b141-c274cc12da08', 'rabin', 'سرخ کن', NULL, NULL, 'ماشین آلات', -1.00, 'IRR', 'inactive', 'RMf001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-02 06:36:02', '2025-12-02 06:36:02'),
-('2e20b337-d153-11f0-a59d-581122e4f0be', 'rabin', 'تست محصول با عکس', 'تستی ', '/uploads/products/40c28fe4-f6ff-4f50-b687-7f912013ed2d.jpg', 'تستی', 4999999.00, 'IRR', 'active', NULL, NULL, NULL, 'ceo-001', '2025-12-04 20:52:43', '2025-12-04 20:52:43'),
 ('345b82aa-cf8a-11f0-b141-c274cc12da08', 'rabin', 'پهپاد s20 پلاس بیست لیتری ', '1 میلیارد و 375 میلیون \nهر باتری 93 میلیون تومان', NULL, 'پهپاد کشاورزی', 1375000000.00, 'IRR', 'active', NULL, NULL, NULL, '3cbba416-c557-11f0-adb4-7a654ee49283', '2025-12-02 14:21:33', '2025-12-02 14:21:33'),
 ('37a9326c-c5cc-11f0-adb4-7a654ee49283', 'rabin', 'میز کار الکترونیک', NULL, NULL, 'میز کارگاهی', 2.00, 'IRR', 'inactive', 'RTe01', NULL, NULL, 'ceo-001', '2025-11-20 04:48:54', '2025-12-01 09:00:21'),
 ('46cc89fb-ce1b-11f0-8238-d2bc93e1fc48', 'rabin', 'پلت زن', 'دستگاه پلت زن مخصوص خوراک دام و طیور\nبا ظرفیت تحویل یک تن در ساعت', NULL, 'ماشین آلات', 2900000000.00, 'IRR', 'active', 'RMc010', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-11-30 18:34:59', '2025-12-01 09:22:24'),
@@ -2249,7 +2255,7 @@ CREATE TABLE `ticket_updates` (
 --
 
 CREATE TABLE `users` (
-  `id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
   `username` varchar(100) DEFAULT NULL,
   `full_name` varchar(255) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
@@ -2269,7 +2275,7 @@ CREATE TABLE `users` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `created_by` varchar(36) DEFAULT NULL,
   `tenant_key` varchar(100) DEFAULT 'rabin' COMMENT 'کلید tenant که کاربر به آن تعلق دارد'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`

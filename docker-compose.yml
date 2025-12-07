@@ -5,6 +5,8 @@ services:
   nextjs:
     build: .
     container_name: crm-nextjs
+    # Run as root to ensure write permissions on mounted volumes
+    user: "0:0"
     env_file:
       - .env
     environment:

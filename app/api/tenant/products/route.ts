@@ -186,7 +186,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   try {
     const tenantKey = request.headers.get('X-Tenant-Key');
 
@@ -206,7 +206,109 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const productId = searchParams.get('id');
+
+    if (!productId) {
+      return NextResponse.json(
+        { success: false, message: 'شناسه محصول الزامی است' },
+        { status: 400 }
+      );
+    }
+
+    const pool = await getTenantConnection(tenantKey);
+    const conn = await pool.getConnection();
+
+    try {
+      // ابتدا نام محصول را برای لاگ دریافت کنیم
+      const [existingProducts] = await conn.query(
+        'SELECT name FROM products WHERE id = ? AND tenant_key = ?',
+        [productId, tenantKey]
+      ) as any[];
+
+      if (existingProducts.length === 0) {
+        return NextResponse.json(
+          { success: false, message: 'محصول یافت نشد' },
+          { status: 404 }
+        );
+      }
+
+      const productName = existingProducts[0].name;
+
+      // حذف محصول
+      const [result] = await conn.query(
+        'DELETE FROM products WHERE id = ? AND tenant_key = ?',
+        [productId, tenantKey]
+      ) as any;
+
+      if (result.affectedRows === 0) {
+        return NextResponse.json(
+          { success: false, message: 'محصول یافت نشد یا قبلاً حذف شده' },
+          { status: 404 }
+        );
+      }
+
+      // ثبت فعالیت حذف
+      const userId = session.userId || session.id || 'unknown';
+      const userName = session.user?.name || session.name || 'کاربر';
+      
+      await logActivity({
+        tenantKey,
+        userId,
+        userName,
+        type: 'product',
+        title: `حذف محصول: ${productName}`,
+        description: `محصول ${productName} با شناسه ${productId} حذف شد`
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'محصول با موفقیت حذف شد'
+      });
+    } finally {
+      conn.release();
+    }
+
+  } catch (error) {
+    console.error('❌ خطا در حذف محصول:', error);
+    return NextResponse.json(
+      { success: false, message: 'خطای سرور' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  console.log('🚀 [API Products POST] درخواست جدید دریافت شد');
+  
+  try {
+    const tenantKey = request.headers.get('X-Tenant-Key');
+    console.log('🔑 [API Products POST] Tenant Key:', tenantKey);
+
+    if (!tenantKey) {
+      console.error('❌ [API Products POST] Tenant key یافت نشد');
+      return NextResponse.json(
+        { success: false, message: 'Tenant key یافت نشد' },
+        { status: 400 }
+      );
+    }
+
+    console.log('🔐 [API Products POST] بررسی احراز هویت...');
+    const session = getTenantSessionFromRequest(request, tenantKey);
+
+    if (!session) {
+      console.error('❌ [API Products POST] دسترسی غیرمجاز - session یافت نشد');
+      return NextResponse.json(
+        { success: false, message: 'دسترسی غیرمجاز' },
+        { status: 401 }
+      );
+    }
+
+    console.log('✅ [API Products POST] احراز هویت موفق - User:', session.userId || session.id);
+
     const body = await request.json();
+    console.log('📦 [API Products POST] داده‌های دریافتی:', body);
+
     const {
       name,
       description,
@@ -219,14 +321,17 @@ export async function POST(request: NextRequest) {
     } = body;
 
     const productPrice = price || unit_price;
+    console.log('💰 [API Products POST] قیمت محصول:', productPrice);
 
     if (!name || !productPrice) {
+      console.error('❌ [API Products POST] اطلاعات ناقص:', { name, productPrice });
       return NextResponse.json(
         { success: false, message: 'نام محصول و قیمت الزامی است' },
         { status: 400 }
       );
     }
 
+    console.log('🔌 [API Products POST] اتصال به دیتابیس...');
     const pool = await getTenantConnection(tenantKey);
     const conn = await pool.getConnection();
 
@@ -234,10 +339,20 @@ export async function POST(request: NextRequest) {
       // استخراج userId با روش‌های مختلف
       const userId = session.userId || session.id || session.user?.id || 'unknown';
       
-      console.log('📝 Adding product:', { name, price: productPrice, userId, tenantKey });
+      console.log('📝 [API Products POST] آماده‌سازی داده‌ها برای درج:', {
+        name,
+        price: productPrice,
+        userId,
+        tenantKey,
+        category,
+        sku,
+        currency: currency || 'IRR',
+        status: status || 'active'
+      });
       
       const image = body.image || null;
 
+      console.log('💾 [API Products POST] درج در دیتابیس...');
       const [result] = await conn.query(
         `INSERT INTO products (
           id,
@@ -268,9 +383,10 @@ export async function POST(request: NextRequest) {
         ]
       ) as any;
       
-      console.log('✅ Product added successfully, ID:', result.insertId);
+      console.log('✅ [API Products POST] محصول با موفقیت ثبت شد - ID:', result.insertId);
 
       // ثبت خودکار فعالیت
+      console.log('📝 [API Products POST] ثبت فعالیت...');
       const userName = session.user?.name || 'کاربر';
       await logActivity({
         tenantKey,
@@ -281,6 +397,8 @@ export async function POST(request: NextRequest) {
         description: `محصول ${name} با قیمت ${productPrice.toLocaleString('fa-IR')} ${currency || 'IRR'} اضافه شد${category ? ` - دسته‌بندی: ${category}` : ''}`
       });
 
+      console.log('✅ [API Products POST] فعالیت ثبت شد');
+
       return NextResponse.json({
         success: true,
         message: 'محصول با موفقیت افزودن شد',
@@ -288,12 +406,23 @@ export async function POST(request: NextRequest) {
       });
     } finally {
       conn.release();
+      console.log('🔌 [API Products POST] اتصال دیتابیس آزاد شد');
     }
 
   } catch (error) {
-    console.error('❌ خطا در افزودن product:', error);
+    console.error('💥 [API Products POST] خطای غیرمنتظره:', error);
+    console.error('💥 [API Products POST] جزئیات خطا:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
+    
     return NextResponse.json(
-      { success: false, message: 'خطای سرور' },
+      { 
+        success: false, 
+        message: 'خطای سرور',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

@@ -48,6 +48,8 @@ services:
       args:
         - NODE_ENV=production
     container_name: nextjs
+    # Run as root to ensure write permissions on mounted volumes
+    user: "0:0"
     restart: unless-stopped
     env_file:
       - .env

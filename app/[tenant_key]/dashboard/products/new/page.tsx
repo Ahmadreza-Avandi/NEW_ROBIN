@@ -61,25 +61,39 @@ export default function NewProductPage() {
   const uploadImage = async (): Promise<string | null> => {
     if (!imageFile) return null;
 
+    console.log('📸 [Image Upload] شروع آپلود تصویر...');
+    console.log('📸 [Image Upload] نام فایل:', imageFile.name);
+    console.log('📸 [Image Upload] حجم فایل:', (imageFile.size / 1024).toFixed(2), 'KB');
+    console.log('📸 [Image Upload] نوع فایل:', imageFile.type);
+
     setUploadingImage(true);
     try {
       const formData = new FormData();
       formData.append('image', imageFile);
 
+      console.log('📤 [Image Upload] ارسال درخواست آپلود...');
       const response = await fetch('/api/products/upload-image', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('📥 [Image Upload] پاسخ دریافت شد - Status:', response.status);
       const data = await response.json();
+      console.log('📊 [Image Upload] داده‌های پاسخ:', data);
 
       if (data.success) {
+        console.log('✅ [Image Upload] تصویر با موفقیت آپلود شد:', data.data.url);
         return data.data.url;
       } else {
+        console.error('❌ [Image Upload] خطا در آپلود:', data.message);
         throw new Error(data.message);
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('💥 [Image Upload] خطای غیرمنتظره:', error);
+      console.error('💥 [Image Upload] جزئیات خطا:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       toast({
         title: "خطا",
         description: "خطا در آپلود تصویر",
@@ -88,13 +102,19 @@ export default function NewProductPage() {
       return null;
     } finally {
       setUploadingImage(false);
+      console.log('🏁 [Image Upload] پایان فرآیند آپلود');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('🚀 [Product Form] شروع ثبت محصول...');
+    console.log('📋 [Product Form] داده‌های فرم:', formData);
+    console.log('🔑 [Product Form] Tenant Key:', tenantKey);
+
     if (!formData.name) {
+      console.error('❌ [Product Form] نام محصول خالی است');
       setError('نام محصول الزامی است');
       return;
     }
@@ -106,11 +126,24 @@ export default function NewProductPage() {
       // اول عکس رو آپلود کن (اگر وجود داره)
       let imageUrl = formData.image;
       if (imageFile) {
+        console.log('📸 [Product Form] شروع آپلود تصویر...');
         const uploadedUrl = await uploadImage();
         if (uploadedUrl) {
           imageUrl = uploadedUrl;
+          console.log('✅ [Product Form] تصویر آپلود شد:', uploadedUrl);
+        } else {
+          console.warn('⚠️ [Product Form] آپلود تصویر ناموفق بود');
         }
       }
+
+      const requestBody = {
+        ...formData,
+        image: imageUrl,
+        price: formData.price ? parseFloat(formData.price) : null,
+      };
+
+      console.log('📤 [Product Form] ارسال درخواست به API...');
+      console.log('📦 [Product Form] Body:', requestBody);
 
       const response = await fetch('/api/tenant/products', {
         method: 'POST',
@@ -118,29 +151,35 @@ export default function NewProductPage() {
           'Content-Type': 'application/json',
           'X-Tenant-Key': tenantKey
         },
-        body: JSON.stringify({
-          ...formData,
-          image: imageUrl,
-          price: formData.price ? parseFloat(formData.price) : null,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('📥 [Product Form] پاسخ دریافت شد - Status:', response.status);
+
       const data = await response.json();
+      console.log('📊 [Product Form] داده‌های پاسخ:', data);
 
       if (data.success) {
+        console.log('✅ [Product Form] محصول با موفقیت ثبت شد');
         toast({
           title: "موفقیت",
           description: "محصول جدید با موفقیت اضافه شد",
         });
         router.push(`/${tenantKey}/dashboard/products`);
       } else {
+        console.error('❌ [Product Form] خطا در ثبت محصول:', data.message);
         setError(data.message || 'خطا در ایجاد محصول');
       }
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('💥 [Product Form] خطای غیرمنتظره:', error);
+      console.error('💥 [Product Form] جزئیات خطا:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       setError('خطا در اتصال به سرور');
     } finally {
       setSubmitting(false);
+      console.log('🏁 [Product Form] پایان فرآیند ثبت محصول');
     }
   };
 

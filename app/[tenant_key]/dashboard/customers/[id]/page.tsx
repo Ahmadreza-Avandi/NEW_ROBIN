@@ -330,7 +330,7 @@ export default function CustomerDetailPage() {
                     <div className="flex items-center gap-4">
                         <Avatar className="h-16 w-16">
                             <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-xl">
-                                {customer.name.split(' ').map(n => n[0]).join('')}
+                                {customer?.name ? customer.name.split(' ').map(n => n[0]).join('') : 'N/A'}
                             </AvatarFallback>
                         </Avatar>
                         <div>

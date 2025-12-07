@@ -5,14 +5,20 @@ import { v4 as uuidv4 } from 'uuid';
 
 // GET /api/products - دریافت محصولات
 export async function GET(req: NextRequest) {
+  console.log('🚀 [API Products GET] درخواست جدید دریافت شد');
+  
   try {
+    console.log('🔐 [API Products GET] بررسی احراز هویت...');
     const user = await getUserFromToken(req);
     if (!user) {
+      console.error('❌ [API Products GET] توکن نامعتبر');
       return NextResponse.json(
         { success: false, message: 'توکن نامعتبر است' },
         { status: 401 }
       );
     }
+
+    console.log('✅ [API Products GET] احراز هویت موفق - User:', user.id);
 
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -21,34 +27,44 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get('category') || '';
     const status = searchParams.get('status') || '';
 
+    console.log('🔍 [API Products GET] فیلترهای دریافتی:', { 
+      page, 
+      limit, 
+      search, 
+      category, 
+      status 
+    });
+
     const offset = (page - 1) * limit;
 
     // ساخت WHERE clause
     let whereClause = 'WHERE 1=1';
     const params: any[] = [];
 
-    console.log('Filters received:', { search, category, status });
-
     if (search && search.trim()) {
       whereClause += ' AND (name LIKE ? OR description LIKE ? OR sku LIKE ?)';
       const searchPattern = `%${search.trim()}%`;
       params.push(searchPattern, searchPattern, searchPattern);
+      console.log('🔎 [API Products GET] فیلتر جستجو اعمال شد:', search);
     }
 
     if (category && category !== 'all' && category.trim()) {
       whereClause += ' AND category = ?';
       params.push(category.trim());
+      console.log('📂 [API Products GET] فیلتر دسته‌بندی اعمال شد:', category);
     }
 
     if (status && status !== 'all') {
       whereClause += ' AND status = ?';
       params.push(status);
+      console.log('🏷️ [API Products GET] فیلتر وضعیت اعمال شد:', status);
     }
 
-    console.log('WHERE clause:', whereClause);
-    console.log('Params:', params);
+    console.log('📝 [API Products GET] WHERE clause:', whereClause);
+    console.log('📝 [API Products GET] Params:', params);
 
     // دریافت محصولات
+    console.log('💾 [API Products GET] اجرای کوئری دریافت محصولات...');
     const products = await executeQuery(`
       SELECT 
         id,
@@ -67,7 +83,10 @@ export async function GET(req: NextRequest) {
       LIMIT ? OFFSET ?
     `, [...params, limit, offset]);
 
+    console.log('✅ [API Products GET] محصولات دریافت شد - تعداد:', products?.length || 0);
+
     // شمارش کل
+    console.log('🔢 [API Products GET] شمارش کل محصولات...');
     const countResult = await executeQuery(`
       SELECT COUNT(*) as total 
       FROM products 
@@ -75,6 +94,7 @@ export async function GET(req: NextRequest) {
     `, params);
 
     const total = countResult && countResult.length > 0 ? countResult[0].total : 0;
+    console.log('📊 [API Products GET] کل محصولات:', total);
 
     return NextResponse.json({
       success: true,
@@ -88,7 +108,11 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('خطا در دریافت محصولات:', error);
+    console.error('💥 [API Products GET] خطای غیرمنتظره:', error);
+    console.error('💥 [API Products GET] جزئیات خطا:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json(
       { success: false, message: 'خطا در دریافت محصولات' },
       { status: 500 }
@@ -98,16 +122,24 @@ export async function GET(req: NextRequest) {
 
 // POST /api/products - ایجاد محصول جدید
 export async function POST(req: NextRequest) {
+  console.log('🚀 [API Products POST] درخواست جدید دریافت شد');
+  
   try {
+    console.log('🔐 [API Products POST] بررسی احراز هویت...');
     const user = await getUserFromToken(req);
     if (!user) {
+      console.error('❌ [API Products POST] توکن نامعتبر');
       return NextResponse.json(
         { success: false, message: 'توکن نامعتبر است' },
         { status: 401 }
       );
     }
 
+    console.log('✅ [API Products POST] احراز هویت موفق - User:', user.id);
+
     const body = await req.json();
+    console.log('📦 [API Products POST] داده‌های دریافتی:', body);
+
     const {
       name,
       description,
@@ -120,6 +152,7 @@ export async function POST(req: NextRequest) {
     } = body;
 
     if (!name) {
+      console.error('❌ [API Products POST] نام محصول خالی است');
       return NextResponse.json(
         { success: false, message: 'نام محصول الزامی است' },
         { status: 400 }
@@ -127,7 +160,9 @@ export async function POST(req: NextRequest) {
     }
 
     const productId = uuidv4();
+    console.log('🆔 [API Products POST] ID محصول جدید:', productId);
 
+    console.log('💾 [API Products POST] درج در دیتابیس...');
     await executeSingle(`
       INSERT INTO products (
         id, name, description, category, price, currency, 
@@ -144,6 +179,8 @@ export async function POST(req: NextRequest) {
       sku || null
     ]);
 
+    console.log('✅ [API Products POST] محصول با موفقیت ثبت شد');
+
     return NextResponse.json({
       success: true,
       message: 'محصول با موفقیت ایجاد شد',
@@ -151,9 +188,14 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('خطا در ایجاد محصول:', error);
+    console.error('💥 [API Products POST] خطای غیرمنتظره:', error);
+    console.error('💥 [API Products POST] جزئیات خطا:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     
     if (error instanceof Error && error.message.includes('Duplicate entry')) {
+      console.error('⚠️ [API Products POST] SKU تکراری');
       return NextResponse.json(
         { success: false, message: 'SKU محصول تکراری است' },
         { status: 400 }

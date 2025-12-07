@@ -68,29 +68,37 @@ COPY --from=builder /app/public ./public
 
 # Create necessary directories and uploads folders with proper permissions
 RUN mkdir -p /app/debug /app/logs /app/scripts /app/uploads /app/public/uploads \
-    /app/uploads/documents /app/uploads/avatars /app/uploads/chat /app/uploads/temp \
-    /app/public/uploads/documents /app/public/uploads/avatars /app/public/uploads/chat
+    /app/uploads/documents /app/uploads/avatars /app/uploads/chat /app/uploads/temp /app/uploads/products \
+    /app/public/uploads/documents /app/public/uploads/avatars /app/public/uploads/chat /app/public/uploads/products
 
 # کپی standalone build
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Set correct permissions for all directories
+# Set correct permissions for all directories - use 777 for mounted volumes
 RUN chown -R nextjs:nodejs /app/debug /app/logs /app/scripts /app/uploads /app/public/uploads && \
-    chmod -R 755 /app/uploads && \
-    chmod -R 755 /app/public/uploads && \
-    chmod -R 775 /app/uploads/documents && \
-    chmod -R 775 /app/uploads/avatars && \
-    chmod -R 775 /app/uploads/chat && \
-    chmod -R 775 /app/uploads/temp
+    chmod -R 777 /app/uploads && \
+    chmod -R 777 /app/public/uploads && \
+    chmod -R 777 /app/uploads/documents && \
+    chmod -R 777 /app/uploads/avatars && \
+    chmod -R 777 /app/uploads/chat && \
+    chmod -R 777 /app/uploads/temp && \
+    chmod -R 777 /app/uploads/products && \
+    chmod -R 777 /app/public/uploads/products && \
+    chmod -R 777 /app/public/uploads/documents && \
+    chmod -R 777 /app/public/uploads/avatars && \
+    chmod -R 777 /app/public/uploads/chat
 
 # Make debug scripts executable
 RUN chmod +x *.sh 2>/dev/null || true
 
-USER nextjs
+# Copy entrypoint script
+COPY --chmod=755 docker-entrypoint.sh /app/docker-entrypoint.sh
 
 EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+# Use entrypoint script to fix permissions at runtime
+# Note: user is set in docker-compose.yml for proper volume permissions
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

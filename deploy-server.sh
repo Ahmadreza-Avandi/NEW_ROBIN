@@ -467,8 +467,8 @@ mkdir -p database/migrations
 
 # ایجاد فولدرهای آپلود
 echo "📁 ایجاد فولدرهای آپلود..."
-mkdir -p uploads/{documents,avatars,chat,temp}
-mkdir -p public/uploads/{documents,avatars,chat}
+mkdir -p uploads/{documents,avatars,chat,temp,products}
+mkdir -p public/uploads/{documents,avatars,chat,products}
 mkdir -p logs
 
 # تنظیم مجوزها برای فولدرهای آپلود - مجوزهای مناسب برای Docker
@@ -490,14 +490,16 @@ echo "# Keep this folder in git" > uploads/documents/.gitkeep
 echo "# Keep this folder in git" > uploads/avatars/.gitkeep
 echo "# Keep this folder in git" > uploads/chat/.gitkeep
 echo "# Keep this folder in git" > uploads/temp/.gitkeep
+echo "# Keep this folder in git" > uploads/products/.gitkeep
 echo "# Keep this folder in git" > public/uploads/.gitkeep
 echo "# Keep this folder in git" > public/uploads/documents/.gitkeep
 echo "# Keep this folder in git" > public/uploads/avatars/.gitkeep
 echo "# Keep this folder in git" > public/uploads/chat/.gitkeep
+echo "# Keep this folder in git" > public/uploads/products/.gitkeep
 
 echo "✅ فولدرهای آپلود ایجاد شدند:"
-echo "   📁 uploads/{documents,avatars,chat,temp}"
-echo "   📁 public/uploads/{documents,avatars,chat}"
+echo "   📁 uploads/{documents,avatars,chat,temp,products}"
+echo "   📁 public/uploads/{documents,avatars,chat,products}"
 
 # آماده‌سازی فایل‌های دیتابیس
 echo "🗄️ آماده‌سازی فایل‌های دیتابیس..."
