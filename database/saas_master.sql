@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 07, 2025 at 06:20 PM
+-- Generation Time: Dec 21, 2025 at 11:58 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -39,6 +39,25 @@ CREATE TABLE `active_tenants_summary` (
 ,`max_users` int(11)
 ,`created_at` timestamp
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `api_key_usage_logs`
+--
+
+CREATE TABLE `api_key_usage_logs` (
+  `id` bigint(20) NOT NULL,
+  `api_key_id` int(11) NOT NULL,
+  `endpoint` varchar(255) NOT NULL,
+  `method` varchar(10) NOT NULL,
+  `status_code` int(11) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `request_body_size` int(11) DEFAULT 0,
+  `response_time_ms` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -80,10 +99,8 @@ CREATE TABLE `subscription_history` (
 --
 
 INSERT INTO `subscription_history` (`id`, `tenant_id`, `plan_key`, `subscription_type`, `start_date`, `end_date`, `amount`, `status`, `notes`, `created_at`, `created_by`) VALUES
-(1, 1, 'professional', 'yearly', '2025-10-13', '2026-10-13', 15000000.00, '', NULL, '2025-10-13 17:00:20', NULL),
-(2, 4, 'professional', 'monthly', '2025-10-13', '2026-04-13', 1500000.00, '', NULL, '2025-10-13 17:35:23', NULL),
-(3, 5, 'basic', 'yearly', '2025-10-13', '2026-10-13', 5000000.00, '', NULL, '2025-10-13 17:39:19', NULL),
-(4, 7, 'basic', 'monthly', '2025-10-24', '2026-01-24', 500000.00, '', NULL, '2025-10-24 17:17:59', NULL);
+(6, 9, 'basic', 'monthly', '2025-12-20', '2026-01-20', 50000.00, '', NULL, '2025-12-19 22:11:08', NULL),
+(7, 10, 'basic', 'yearly', '2025-12-20', '2026-12-20', 500000.00, '', NULL, '2025-12-19 22:11:19', NULL);
 
 -- --------------------------------------------------------
 
@@ -114,9 +131,9 @@ CREATE TABLE `subscription_plans` (
 --
 
 INSERT INTO `subscription_plans` (`id`, `plan_key`, `plan_name`, `plan_name_en`, `price_monthly`, `price_yearly`, `max_users`, `max_customers`, `max_storage_mb`, `features`, `description`, `is_active`, `display_order`, `created_at`, `updated_at`) VALUES
-(1, 'basic', 'پایه', 'Basic', 500000.00, 5000000.00, 5, 500, 512, '[\"crm_basic\", \"customer_management\", \"task_management\"]', 'پلن پایه برای کسب‌وکارهای کوچک', 1, 1, '2025-10-13 15:20:25', '2025-10-13 15:20:25'),
-(2, 'professional', 'حرفه‌ای', 'Professional', 1500000.00, 15000000.00, 20, 5000, 2048, '[\"crm_basic\", \"customer_management\", \"task_management\", \"advanced_reports\", \"api_access\"]', 'پلن حرفه‌ای برای کسب‌وکارهای متوسط', 1, 2, '2025-10-13 15:20:25', '2025-10-13 15:20:25'),
-(3, 'enterprise', 'سازمانی', 'Enterprise', 5000000.00, 50000000.00, 100, 50000, 10240, '[\"crm_basic\", \"customer_management\", \"task_management\", \"advanced_reports\", \"api_access\", \"voice_assistant\", \"custom_integration\", \"priority_support\"]', 'پلن سازمانی برای شرکت‌های بزرگ', 1, 3, '2025-10-13 15:20:25', '2025-10-13 15:20:25');
+(1, 'basic', 'پایه', 'Basic', 50000.00, 500000.00, 5, 500, 512, '[\"crm_basic\", \"customer_management\", \"task_management\"]', 'پلن پایه برای کسب‌وکارهای کوچک', 1, 1, '2025-10-13 15:20:25', '2025-12-19 21:39:41'),
+(2, 'professional', 'حرفه‌ای', 'Professional', 100000.00, 1000000.00, 20, 5000, 2048, '[\"crm_basic\", \"customer_management\", \"task_management\", \"advanced_reports\", \"api_access\"]', 'پلن حرفه‌ای برای کسب‌وکارهای متوسط', 1, 2, '2025-10-13 15:20:25', '2025-12-19 21:39:41'),
+(3, 'enterprise', 'سازمانی', 'Enterprise', 200000.00, 2000000.00, 100, 50000, 10240, '[\"crm_basic\", \"customer_management\", \"task_management\", \"advanced_reports\", \"api_access\", \"voice_assistant\", \"custom_integration\", \"priority_support\"]', 'پلن سازمانی برای شرکت‌های بزرگ', 1, 3, '2025-10-13 15:20:25', '2025-12-19 21:39:41');
 
 -- --------------------------------------------------------
 
@@ -144,7 +161,7 @@ CREATE TABLE `super_admins` (
 --
 
 INSERT INTO `super_admins` (`id`, `username`, `email`, `password_hash`, `full_name`, `phone`, `role`, `permissions`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 'Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '$2b$10$LZwtbXyn2q1sIMV5ymNU7ujRHGJJbdPOu2PKf6jUs3wmE.syBxiKK', 'احمدرضا اوندی', NULL, 'super_admin', NULL, 1, '2025-11-18 20:26:55', '2025-10-13 15:20:25', '2025-11-18 20:26:55');
+(1, 'Ahmadreza.avandi', 'ahmadrezaavandi@gmail.com', '$2b$10$5FXXB3bwVoCEfOfX5m1sKut1judoQW/RZyDuil4l.nDu9tira3oOO', 'احمدرضا اوندی', NULL, 'super_admin', NULL, 1, '2025-12-21 20:41:52', '2025-10-13 15:20:25', '2025-12-21 20:41:52');
 
 -- --------------------------------------------------------
 
@@ -212,10 +229,8 @@ CREATE TABLE `tenants` (
 --
 
 INSERT INTO `tenants` (`id`, `tenant_key`, `company_name`, `db_name`, `db_host`, `db_port`, `db_user`, `db_password`, `admin_name`, `admin_email`, `admin_phone`, `subscription_status`, `subscription_plan`, `subscription_start`, `subscription_end`, `max_users`, `max_customers`, `max_storage_mb`, `features`, `settings`, `is_active`, `is_deleted`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'rabin', 'شرکت رابین تجارت', 'crm_system', 'localhost', 3306, 'root', 'e36e2202897c1684aa5e53c3d217fef6:c0d0a907cfb47e31099308c02a92a258:', 'احمدرضا اوندی', 'ahmadrezaavandi@gmail.com', '', 'active', 'professional', '2025-10-13', '2026-10-13', 20, 5000, 2048, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\", \\\"advanced_reports\\\", \\\"api_access\\\"]\"', NULL, 1, 0, '2025-10-13 17:00:20', '2025-10-17 10:24:26', NULL),
-(4, 'samin', 'samin', 'crm_system', 'localhost', 3306, 'root', 'af03b9577c92f64a678d99cd73eb190b:c76545e0b3896dc3e842c4290cd0116f:', 'samin', 'samin@gmail.com', '09001234567', 'active', 'professional', '2025-10-13', '2026-04-13', 20, 5000, 2048, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\", \\\"advanced_reports\\\", \\\"api_access\\\"]\"', NULL, 1, 0, '2025-10-13 17:35:23', '2025-10-17 09:53:23', NULL),
-(5, 'testcompany', 'شرکت تست', 'crm_system', 'localhost', 3306, 'root', '693011d4f215d8e3eead9d67d4dc51fd:94037994541b2ca22a452c3ca2cee3b4:', 'مدیر تست', 'admin@test.com', '', 'active', 'basic', '2025-10-13', '2026-10-13', 5, 500, 512, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\"]\"', NULL, 1, 0, '2025-10-13 17:39:19', '2025-10-17 09:53:23', NULL),
-(7, 'demo', 'demo', 'crm_system', 'localhost', 3306, 'crm_user', '1234', 'demo', 'demo@gmail.com', '09921386634', 'active', 'basic', '2025-10-24', '2026-01-24', 5, 500, 512, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\"]\"', NULL, 1, 0, '2025-10-24 17:17:59', '2025-10-24 17:17:59', NULL);
+(9, 'test-api-1766182267074', 'شرکت تست API', 'crm_system', 'localhost', 3306, 'crm_user', '1234', 'مدیر تست', 'test-api@example.com', '09123456789', 'active', 'basic', '2025-12-20', '2026-01-20', 5, 500, 512, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\"]\"', NULL, 1, 0, '2025-12-19 22:11:08', '2025-12-19 22:11:08', NULL),
+(10, 'rabin', 'رابین', 'crm_system', 'localhost', 3306, 'crm_user', '1234', 'مهندس کریمیRobintejarat@gmail.com', 'Robintejarat@gmail.com', '0', 'active', 'basic', '2025-12-20', '2026-12-20', 5, 500, 512, '\"[\\\"crm_basic\\\", \\\"customer_management\\\", \\\"task_management\\\"]\"', NULL, 1, 0, '2025-12-19 22:11:19', '2025-12-19 22:11:19', NULL);
 
 -- --------------------------------------------------------
 
@@ -240,10 +255,31 @@ CREATE TABLE `tenant_activity_logs` (
 --
 
 INSERT INTO `tenant_activity_logs` (`id`, `tenant_id`, `activity_type`, `description`, `metadata`, `performed_by`, `ip_address`, `user_agent`, `created_at`) VALUES
-(1, 1, '', 'Tenant created: شرکت رابین تجارت', '{\"plan_key\":\"professional\",\"subscription_months\":12,\"admin_email\":\"ahmadrezaavandi@gmail.com\"}', NULL, NULL, NULL, '2025-10-13 17:00:20'),
-(2, 4, '', 'Tenant created: samin', '{\"plan_key\":\"professional\",\"subscription_months\":6,\"admin_email\":\"samin@gmail.com\"}', NULL, NULL, NULL, '2025-10-13 17:35:23'),
-(3, 5, '', 'Tenant created: شرکت تست', '{\"plan_key\":\"basic\",\"subscription_months\":12,\"admin_email\":\"admin@test.com\"}', NULL, NULL, NULL, '2025-10-13 17:39:19'),
-(4, 7, '', 'Tenant created: demo', '{\"plan_key\":\"basic\",\"subscription_months\":3,\"admin_email\":\"demo@gmail.com\"}', NULL, NULL, NULL, '2025-10-24 17:17:59');
+(12, 9, '', 'Tenant created: شرکت تست API', '{\"plan_key\":\"basic\",\"subscription_months\":1,\"admin_email\":\"test-api@example.com\"}', NULL, NULL, NULL, '2025-12-19 22:11:08'),
+(13, 10, '', 'Tenant created: رابین', '{\"plan_key\":\"basic\",\"subscription_months\":12,\"admin_email\":\"Robintejarat@gmail.com\"}', NULL, NULL, NULL, '2025-12-19 22:11:19');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tenant_api_keys`
+--
+
+CREATE TABLE `tenant_api_keys` (
+  `id` int(11) NOT NULL,
+  `tenant_id` int(11) NOT NULL,
+  `api_key` varchar(64) NOT NULL COMMENT 'کلید API (sha256 hash)',
+  `api_key_prefix` varchar(20) NOT NULL COMMENT 'پیشوند کلید برای شناسایی',
+  `name` varchar(100) NOT NULL COMMENT 'نام کلید',
+  `description` text DEFAULT NULL,
+  `permissions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`permissions`)),
+  `rate_limit` int(11) DEFAULT 1000,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -266,6 +302,14 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `api_key_usage_logs`
+--
+ALTER TABLE `api_key_usage_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_api_key_id` (`api_key_id`),
+  ADD KEY `idx_created_at` (`created_at`);
 
 --
 -- Indexes for table `subscription_history`
@@ -326,14 +370,29 @@ ALTER TABLE `tenant_activity_logs`
   ADD KEY `idx_created_at` (`created_at`);
 
 --
+-- Indexes for table `tenant_api_keys`
+--
+ALTER TABLE `tenant_api_keys`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_tenant_id` (`tenant_id`),
+  ADD KEY `idx_api_key_prefix` (`api_key_prefix`),
+  ADD KEY `idx_is_active` (`is_active`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `api_key_usage_logs`
+--
+ALTER TABLE `api_key_usage_logs`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `subscription_history`
 --
 ALTER TABLE `subscription_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `subscription_plans`
@@ -357,13 +416,19 @@ ALTER TABLE `system_settings`
 -- AUTO_INCREMENT for table `tenants`
 --
 ALTER TABLE `tenants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `tenant_activity_logs`
 --
 ALTER TABLE `tenant_activity_logs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `tenant_api_keys`
+--
+ALTER TABLE `tenant_api_keys`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables

@@ -1,0 +1,361 @@
+/* WordPress CRM Integration - Persian/RTL Admin Styles */
+
+/* RTL Layout */
+.wp-crm-integration-admin-container {
+    direction: rtl;
+    text-align: right;
+}
+
+.wp-crm-tabs ul {
+    direction: rtl;
+    text-align: right;
+}
+
+.wp-crm-tabs ul li {
+    float: right;
+    margin-left: 0;
+    margin-right: 5px;
+}
+
+/* Form Elements RTL */
+.wp-crm-field-mapping-row {
+    direction: rtl;
+    text-align: right;
+    margin-bottom: 15px;
+}
+
+.wp-crm-field-mapping-row label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: right;
+}
+
+.wp-crm-field-mapping-row select,
+.wp-crm-field-mapping-row input {
+    direction: rtl;
+    text-align: right;
+    width: 100%;
+    max-width: 400px;
+}
+
+.wp-crm-field-mapping-required {
+    color: #d63638;
+    margin-right: 3px;
+}
+
+/* Connection Status */
+.wp-crm-connection-test {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    direction: rtl;
+    text-align: right;
+}
+
+#wp-crm-connection-status {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+#wp-crm-connection-status.success {
+    color: #46b450;
+}
+
+#wp-crm-connection-status.error {
+    color: #d63638;
+}
+
+#wp-crm-connection-status.loading {
+    color: #0073aa;
+}
+
+/* Log Levels */
+.wp-crm-log-level {
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.wp-crm-log-level.debug {
+    background: #f0f0f1;
+    color: #646970;
+}
+
+.wp-crm-log-level.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.wp-crm-log-level.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.wp-crm-log-level.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.wp-crm-log-level.critical {
+    background: #d63638;
+    color: #ffffff;
+}
+
+/* Status Indicators */
+.wp-crm-status-indicator {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.wp-crm-status-indicator.success {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.wp-crm-status-indicator.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.wp-crm-status-indicator.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Entity and Action Badges */
+.wp-crm-entity-badge,
+.wp-crm-action-badge {
+    background: #e9ecef;
+    color: #495057;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Sidebar */
+.wp-crm-integration-sidebar {
+    direction: rtl;
+    text-align: right;
+}
+
+.wp-crm-integration-sidebar-box {
+    background: #ffffff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    padding: 15px;
+}
+
+.wp-crm-integration-sidebar-box h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.wp-crm-integration-sidebar-box ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.wp-crm-integration-sidebar-box ul li {
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Statistics */
+.stat-box {
+    background: #ffffff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.stat-box h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.stat-item .count {
+    font-weight: 600;
+    color: #0073aa;
+}
+
+.stat-item .count.success {
+    color: #46b450;
+}
+
+.stat-item .count.warning {
+    color: #ffb900;
+}
+
+.stat-item .count.error {
+    color: #d63638;
+}
+
+/* Filters */
+.wp-crm-log-filters {
+    direction: rtl;
+    text-align: right;
+}
+
+.wp-crm-log-filters form > div {
+    direction: rtl;
+}
+
+.wp-crm-log-filters select,
+.wp-crm-log-filters input[type="text"],
+.wp-crm-log-filters input[type="date"] {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Tables */
+.wp-crm-sync-logs table {
+    direction: rtl;
+}
+
+.wp-crm-sync-logs th,
+.wp-crm-sync-logs td {
+    text-align: right;
+}
+
+/* Manual Testing */
+.wp-crm-test-section {
+    background: #ffffff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+    direction: rtl;
+    text-align: right;
+}
+
+.wp-crm-test-section h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.wp-crm-test-section .description {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    color: #646970;
+}
+
+/* Sync Controls */
+.wp-crm-sync-controls-section {
+    direction: rtl;
+    text-align: right;
+}
+
+.control-section {
+    background: #ffffff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.control-section h4 {
+    margin: 0 0 15px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.sync-control-item {
+    direction: rtl;
+    text-align: right;
+}
+
+.sync-control-item label {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wp-crm-integration-admin-container {
+        flex-direction: column;
+    }
+    
+    .wp-crm-integration-main-content,
+    .wp-crm-integration-sidebar {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .wp-crm-tabs ul {
+        flex-wrap: wrap;
+    }
+    
+    .wp-crm-tabs ul li {
+        margin-bottom: 5px;
+    }
+}
+
+/* Persian Font Support */
+body.rtl .wp-crm-integration-admin-container,
+.wp-crm-integration-admin-container {
+    font-family: Tahoma, Arial, sans-serif;
+}
+
+/* Form Validation */
+.wp-crm-field-validation {
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+.wp-crm-field-validation.valid {
+    color: #46b450;
+}
+
+.wp-crm-field-validation.invalid {
+    color: #d63638;
+}
+
+/* Loading States */
+.wp-crm-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.wp-crm-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0073aa;
+    border-radius: 50%;
+    animation: wp-crm-spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes wp-crm-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

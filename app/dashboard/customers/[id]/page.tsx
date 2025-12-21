@@ -488,7 +488,7 @@ export default function CustomerDetailPage() {
                             <div className="flex items-center gap-1 mt-1">
                                 <Star className="h-3 w-3 text-yellow-500" />
                                 <span className="text-xs text-emerald-600">
-                                    رضایت: {customer.satisfaction_score.toFixed(1)}
+                                    رضایت: {parseFloat(customer.satisfaction_score).toFixed(1)}
                                 </span>
                             </div>
                         )}

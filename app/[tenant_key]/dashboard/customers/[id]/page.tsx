@@ -17,7 +17,7 @@ import {
     AlertTriangle, Plus, MapPin, Activity as ActivityIcon, ExternalLink,
     Save, Tag, Target, Users, ShoppingCart, Receipt, Package
 } from 'lucide-react';
-import SalesPipelineProgress from '@/components/sales-pipeline-progress';
+import CustomerInterestsManager from '@/components/customer-interests-manager';
 
 // Configure moment-jalaali
 moment.loadPersian({ dialect: 'persian-modern' });
@@ -30,23 +30,67 @@ interface CustomerData {
     website?: string;
     address?: string;
     city?: string;
+    state?: string;
     country?: string;
     industry?: string;
     segment?: string;
     status: string;
     priority?: string;
+    company_name?: string;
+    company_size?: string;
+    annual_revenue?: number;
+    source?: string;
+    lead_score?: number;
+    lifecycle_stage?: string;
     assigned_user_name?: string;
-    total_deals: number;
-    total_tickets: number;
-    total_contacts: number;
-    won_value?: number;
-    satisfaction_score?: number;
-    created_at: string;
+    assigned_user_email?: string;
+    satisfaction_score?: number | string;
     potential_value?: number;
+    actual_value?: number;
+    created_at: string;
+    updated_at?: string;
     last_interaction?: string;
-    notes?: string;
-    company?: string;
-    activities: Array<{
+    
+    // محصولات علاقه‌مند
+    interested_products: Array<{
+        id: string;
+        name: string;
+        description?: string;
+        price?: number;
+        category?: string;
+        interest_level?: string;
+        interest_notes?: string;
+        interest_date: string;
+    }>;
+    
+    // آمار فروش
+    sales_stats: {
+        total_sales: number;
+        total_sales_amount: number;
+        paid_amount: number;
+        pending_amount: number;
+        last_sale_date?: string;
+    };
+    
+    // آمار تیکت‌ها
+    ticket_stats: {
+        total_tickets: number;
+        open_tickets: number;
+        closed_tickets: number;
+        last_ticket_date?: string;
+    };
+    
+    // آمار فعالیت‌ها
+    activity_stats: {
+        total_activities: number;
+        total_calls: number;
+        total_meetings: number;
+        total_emails: number;
+        last_activity_date?: string;
+    };
+    
+    // آخرین فعالیت‌ها
+    recent_activities: Array<{
         id: string;
         type: string;
         title: string;
@@ -55,6 +99,8 @@ interface CustomerData {
         created_at: string;
         outcome?: string;
     }>;
+    
+    // مخاطبین
     contacts: Array<{
         id: string;
         first_name: string;
@@ -63,20 +109,7 @@ interface CustomerData {
         phone?: string;
         job_title?: string;
         is_primary: boolean;
-    }>;
-    sales: Array<{
-        id: string;
-        total_amount: number;
-        payment_status: string;
-        sale_date: string;
-        invoice_number?: string;
-        sales_person_name: string;
-        items?: Array<{
-            product_name: string;
-            quantity: number;
-            unit_price: number;
-            total_price: number;
-        }>;
+        created_at: string;
     }>;
 }
 
@@ -113,14 +146,7 @@ export default function CustomerDetailPage() {
             const token = getAuthToken();
             const finalTenantKey = (params?.tenant_key as string) || tenantKey;
             
-            console.log('🔍 Fetching customer data:', {
-                customerId,
-                tenantKey: finalTenantKey,
-                hasToken: !!token
-            });
-
             if (!finalTenantKey) {
-                console.error('❌ No tenant key available');
                 toast({
                     title: 'خطا',
                     description: 'کلید تنانت یافت نشد',
@@ -139,36 +165,10 @@ export default function CustomerDetailPage() {
                 },
             });
             
-            console.log('🔍 Customer response status:', customerResponse.status);
             const customerData = await customerResponse.json();
-            console.log('🔍 Customer data:', customerData);
 
             if (customerData.success) {
-                // Fetch customer-specific sales
-                const salesResponse = await fetch(`/api/tenant/sales?customer_id=${customerId}`, {
-                    headers: {
-                        'Authorization': token ? `Bearer ${token}` : '',
-                        'X-Tenant-Key': finalTenantKey,
-                        'Content-Type': 'application/json',
-                    },
-                });
-                const salesData = await salesResponse.json();
-
-                // Fetch customer activities
-                const activitiesResponse = await fetch(`/api/tenant/activities?customer_id=${customerId}`, {
-                    headers: {
-                        'Authorization': token ? `Bearer ${token}` : '',
-                        'X-Tenant-Key': finalTenantKey,
-                        'Content-Type': 'application/json',
-                    },
-                });
-                const activitiesData = await activitiesResponse.json();
-
-                setCustomer({
-                    ...customerData.data,
-                    sales: salesData.success ? salesData.data.sales || [] : [],
-                    activities: activitiesData.success ? activitiesData.data || [] : []
-                });
+                setCustomer(customerData.data);
             } else {
                 toast({
                     title: "خطا",
@@ -238,26 +238,6 @@ export default function CustomerDetailPage() {
         }
     };
 
-    const getPaymentStatusLabel = (status: string) => {
-        switch (status) {
-            case 'pending': return 'در انتظار';
-            case 'partial': return 'پرداخت جزئی';
-            case 'paid': return 'پرداخت شده';
-            case 'refunded': return 'بازگشت داده شده';
-            default: return status;
-        }
-    };
-
-    const getPaymentStatusColor = (status: string) => {
-        switch (status) {
-            case 'pending': return 'destructive';
-            case 'partial': return 'secondary';
-            case 'paid': return 'default';
-            case 'refunded': return 'outline';
-            default: return 'secondary';
-        }
-    };
-
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'نامشخص';
         try {
@@ -267,13 +247,11 @@ export default function CustomerDetailPage() {
         }
     };
 
-    // Calculate customer metrics
-    const totalSalesAmount = customer?.sales?.reduce((sum, sale) => sum + sale.total_amount, 0) || 0;
-    const totalSalesCount = customer?.sales?.length || 0;
-    const paidSales = customer?.sales?.filter(sale => sale.payment_status === 'paid') || [];
-    const paidAmount = paidSales.reduce((sum, sale) => sum + sale.total_amount, 0);
-    const pendingSales = customer?.sales?.filter(sale => sale.payment_status === 'pending') || [];
-    const pendingAmount = pendingSales.reduce((sum, sale) => sum + sale.total_amount, 0);
+    // Calculate customer metrics from API data
+    const totalSalesAmount = customer?.sales_stats?.total_sales_amount || 0;
+    const totalSalesCount = customer?.sales_stats?.total_sales || 0;
+    const paidAmount = customer?.sales_stats?.paid_amount || 0;
+    const pendingAmount = customer?.sales_stats?.pending_amount || 0;
 
     if (!customerId) {
         return (
@@ -346,10 +324,10 @@ export default function CustomerDetailPage() {
                                     </span>
                                 )}
                             </div>
-                            {customer.company && (
+                            {customer.company_name && (
                                 <div className="flex items-center gap-1 mt-1 text-sm text-gray-600">
                                     <Building className="h-4 w-4" />
-                                    {customer.company}
+                                    {customer.company_name}
                                 </div>
                             )}
                         </div>
@@ -373,74 +351,144 @@ export default function CustomerDetailPage() {
                     </Button>
                 </div>
             </div>
+            {/* اطلاعات تماس و جزئیات */}
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card className="border-0 shadow-lg">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <User className="h-5 w-5" />
+                            اطلاعات تماس
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {customer.email && (
+                            <div className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-gray-500" />
+                                <span>{customer.email}</span>
+                            </div>
+                        )}
+                        {customer.phone && (
+                            <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-gray-500" />
+                                <span>{customer.phone}</span>
+                            </div>
+                        )}
+                        {customer.website && (
+                            <div className="flex items-center gap-2">
+                                <ExternalLink className="h-4 w-4 text-gray-500" />
+                                <a href={customer.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    {customer.website}
+                                </a>
+                            </div>
+                        )}
+                        {customer.address && (
+                            <div className="flex items-start gap-2">
+                                <MapPin className="h-4 w-4 text-gray-500 mt-1" />
+                                <div>
+                                    <p>{customer.address}</p>
+                                    {(customer.city || customer.state) && (
+                                        <p className="text-sm text-gray-600">
+                                            {[customer.city, customer.state].filter(Boolean).join(', ')}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
-            {/* اطلاعات تماس */}
+                <Card className="border-0 shadow-lg">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Building className="h-5 w-5" />
+                            اطلاعات کسب‌وکار
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {customer.company_name && (
+                            <div className="flex items-center gap-2">
+                                <Building className="h-4 w-4 text-gray-500" />
+                                <span>{customer.company_name}</span>
+                            </div>
+                        )}
+                        {customer.industry && (
+                            <div className="flex items-center gap-2">
+                                <Tag className="h-4 w-4 text-gray-500" />
+                                <span>{customer.industry}</span>
+                            </div>
+                        )}
+                        {customer.company_size && (
+                            <div className="flex items-center gap-2">
+                                <Users className="h-4 w-4 text-gray-500" />
+                                <span>اندازه شرکت: {customer.company_size} نفر</span>
+                            </div>
+                        )}
+                        {customer.annual_revenue && (
+                            <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-gray-500" />
+                                <span>درآمد سالیانه: {formatCurrency(customer.annual_revenue)}</span>
+                            </div>
+                        )}
+                        {customer.source && (
+                            <div className="flex items-center gap-2">
+                                <Target className="h-4 w-4 text-gray-500" />
+                                <span>منبع: {customer.source}</span>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* اطلاعات سیستم */}
             <Card className="border-0 shadow-lg">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <User className="h-5 w-5" />
-                        اطلاعات تماس
+                        <ActivityIcon className="h-5 w-5" />
+                        اطلاعات سیستم
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-4">
-                            {customer.email && (
-                                <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-gray-500" />
-                                    <span>{customer.email}</span>
-                                </div>
-                            )}
-                            {customer.phone && (
-                                <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-gray-500" />
-                                    <span>{customer.phone}</span>
-                                </div>
-                            )}
-                            {customer.website && (
-                                <div className="flex items-center gap-2">
-                                    <ExternalLink className="h-4 w-4 text-gray-500" />
-                                    <a href={customer.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                        {customer.website}
-                                    </a>
-                                </div>
-                            )}
-                        </div>
-                        <div className="space-y-4">
-                            {customer.address && (
-                                <div className="flex items-start gap-2">
-                                    <MapPin className="h-4 w-4 text-gray-500 mt-1" />
-                                    <div>
-                                        <p>{customer.address}</p>
-                                        {customer.city && <p className="text-sm text-gray-600">{customer.city}</p>}
-                                    </div>
-                                </div>
-                            )}
-                            {customer.industry && (
-                                <div className="flex items-center gap-2">
-                                    <Building className="h-4 w-4 text-gray-500" />
-                                    <span>{customer.industry}</span>
-                                </div>
-                            )}
-                        </div>
-                        <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <Calendar className="h-4 w-4 text-gray-500" />
-                                <span>عضویت: {formatDate(customer.created_at)}</span>
+                                <span className="text-sm font-medium">تاریخ ایجاد</span>
                             </div>
-                            {customer.last_interaction && (
+                            <p className="text-sm text-gray-600">{formatDate(customer.created_at)}</p>
+                        </div>
+                        
+                        {customer.updated_at && (
+                            <div className="space-y-2">
                                 <div className="flex items-center gap-2">
                                     <Clock className="h-4 w-4 text-gray-500" />
-                                    <span>آخرین تعامل: {formatDate(customer.last_interaction)}</span>
+                                    <span className="text-sm font-medium">آخرین بروزرسانی</span>
                                 </div>
-                            )}
-                            {customer.assigned_user_name && (
+                                <p className="text-sm text-gray-600">{formatDate(customer.updated_at)}</p>
+                            </div>
+                        )}
+                        
+                        {customer.assigned_user_name && (
+                            <div className="space-y-2">
                                 <div className="flex items-center gap-2">
                                     <User className="h-4 w-4 text-gray-500" />
-                                    <span>مسئول: {customer.assigned_user_name}</span>
+                                    <span className="text-sm font-medium">ایجاد شده توسط</span>
                                 </div>
-                            )}
-                        </div>
+                                <p className="text-sm text-gray-600">{customer.assigned_user_name}</p>
+                                {customer.assigned_user_email && (
+                                    <p className="text-xs text-gray-500">{customer.assigned_user_email}</p>
+                                )}
+                            </div>
+                        )}
+                        
+                        {customer.lead_score !== undefined && (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Star className="h-4 w-4 text-gray-500" />
+                                    <span className="text-sm font-medium">امتیاز لید</span>
+                                </div>
+                                <p className="text-sm text-gray-600">{customer.lead_score}/100</p>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -475,9 +523,6 @@ export default function CustomerDetailPage() {
                         <div className="text-2xl font-bold text-emerald-900">
                             {formatCurrency(paidAmount)}
                         </div>
-                        <p className="text-xs text-emerald-600 mt-1">
-                            {paidSales.length.toLocaleString('fa-IR')} فروش
-                        </p>
                     </CardContent>
                 </Card>
 
@@ -492,9 +537,6 @@ export default function CustomerDetailPage() {
                         <div className="text-2xl font-bold text-amber-900">
                             {formatCurrency(pendingAmount)}
                         </div>
-                        <p className="text-xs text-amber-600 mt-1">
-                            {pendingSales.length.toLocaleString('fa-IR')} فروش
-                        </p>
                     </CardContent>
                 </Card>
 
@@ -513,219 +555,238 @@ export default function CustomerDetailPage() {
                             <div className="flex items-center gap-1 mt-1">
                                 <Star className="h-3 w-3 text-yellow-500" />
                                 <span className="text-xs text-emerald-600">
-                                    رضایت: {customer.satisfaction_score.toFixed(1)}
+                                    رضایت: {parseFloat(customer.satisfaction_score.toString()).toFixed(1)}
                                 </span>
                             </div>
                         )}
                     </CardContent>
                 </Card>
             </div>
-
             {/* محتوای اصلی با Tabs */}
-            <Tabs defaultValue="sales" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="sales">فروش‌ها</TabsTrigger>
-                    <TabsTrigger value="pipeline">فرآیند فروش</TabsTrigger>
+            <Tabs defaultValue="overview" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="overview">خلاصه</TabsTrigger>
+                    <TabsTrigger value="products">محصولات علاقه‌مند</TabsTrigger>
                     <TabsTrigger value="activities">فعالیت‌ها</TabsTrigger>
                     <TabsTrigger value="contacts">مخاطبین</TabsTrigger>
-                    <TabsTrigger value="notes">یادداشت‌ها</TabsTrigger>
                 </TabsList>
 
-                {/* فروش‌ها */}
-                <TabsContent value="sales">
-                    <Card className="border-0 shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="flex items-center gap-2">
-                                <ShoppingCart className="h-5 w-5" />
-                                فروش‌های مشتری ({totalSalesCount.toLocaleString('fa-IR')} مورد)
-                            </CardTitle>
-                            <Button
-                                onClick={() => router.push('/dashboard/sales')}
-                                variant="outline"
-                            >
-                                <Plus className="h-4 w-4 ml-2" />
-                                ثبت فروش جدید
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            {customer.sales && customer.sales.length > 0 ? (
-                                <div className="space-y-4">
-                                    {customer.sales.map((sale) => (
-                                        <Card key={sale.id} className="border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="p-2 bg-teal-100 rounded-lg">
-                                                            <Receipt className="h-5 w-5 text-teal-600" />
-                                                        </div>
-                                                        <div>
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <span className="font-semibold">
-                                                                    {sale.invoice_number || `فروش ${sale.id.slice(0, 8)}`}
-                                                                </span>
-                                                                <Badge variant={getPaymentStatusColor(sale.payment_status)}>
-                                                                    {getPaymentStatusLabel(sale.payment_status)}
-                                                                </Badge>
-                                                            </div>
-                                                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                                <span className="flex items-center gap-1">
-                                                                    <User className="h-4 w-4" />
-                                                                    {sale.sales_person_name}
-                                                                </span>
-                                                                <span className="flex items-center gap-1">
-                                                                    <Calendar className="h-4 w-4" />
-                                                                    {formatDate(sale.sale_date)}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-left">
-                                                        <div className="text-xl font-bold text-green-600">
-                                                            {formatCurrency(sale.total_amount)}
-                                                        </div>
-                                                        {sale.items && sale.items.length > 0 && (
-                                                            <div className="text-sm text-gray-500">
-                                                                {sale.items.length.toLocaleString('fa-IR')} محصول
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                {sale.items && sale.items.length > 0 && (
-                                                    <div className="mt-3 pt-3 border-t">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                            {sale.items.slice(0, 4).map((item, index) => (
-                                                                <div key={index} className="flex items-center justify-between text-sm">
-                                                                    <span className="flex items-center gap-1">
-                                                                        <Package className="h-3 w-3 text-gray-400" />
-                                                                        {item.product_name}
-                                                                    </span>
-                                                                    <span className="text-gray-600">
-                                                                        {item.quantity.toLocaleString('fa-IR')} × {formatCurrency(item.unit_price)}
-                                                                    </span>
-                                                                </div>
-                                                            ))}
-                                                            {sale.items.length > 4 && (
-                                                                <div className="text-sm text-gray-500 col-span-2">
-                                                                    و {(sale.items.length - 4).toLocaleString('fa-IR')} محصول دیگر...
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    ))}
+                {/* خلاصه */}
+                <TabsContent value="overview">
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {/* آمار کلی */}
+                        <Card className="border-0 shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <TrendingUp className="h-5 w-5" />
+                                    آمار کلی
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-blue-600">{customer.activity_stats?.total_activities || 0}</div>
+                                        <div className="text-sm text-blue-700">کل فعالیت‌ها</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-green-600">{totalSalesCount}</div>
+                                        <div className="text-sm text-green-700">کل فروش‌ها</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-purple-600">{customer.ticket_stats?.total_tickets || 0}</div>
+                                        <div className="text-sm text-purple-700">کل تیکت‌ها</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-orange-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-orange-600">{customer.contacts?.length || 0}</div>
+                                        <div className="text-sm text-orange-700">مخاطبین</div>
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="text-center py-12">
-                                    <ShoppingCart className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                                    <p className="text-lg font-medium text-gray-600 mb-2">هیچ فروشی ثبت نشده</p>
-                                    <p className="text-sm text-gray-500 mb-4">
-                                        هنوز هیچ فروشی برای این مشتری ثبت نشده است
-                                    </p>
-                                    <Button
-                                        onClick={() => router.push('/dashboard/sales')}
-                                        className="bg-gradient-to-r from-emerald-600 to-teal-600"
-                                    >
-                                        <Plus className="h-4 w-4 ml-2" />
-                                        ثبت اولین فروش
-                                    </Button>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* فرآیند فروش */}
-                <TabsContent value="pipeline">
-                    <SalesPipelineProgress
-                        customerId={customerId}
-                        onUpdate={fetchCustomerData}
-                    />
-                </TabsContent>
-
-                {/* فعالیت‌ها */}
-                <TabsContent value="activities">
-                    <Card className="border-0 shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="flex items-center gap-2">
-                                <ActivityIcon className="h-5 w-5" />
-                                فعالیت‌ها ({customer.activities?.length || 0} مورد)
-                            </CardTitle>
-                            <Button 
-                                className="bg-gradient-to-r from-emerald-600 to-teal-600"
-                                onClick={() => router.push(`/dashboard/activities?customer_id=${customerId}`)}
-                            >
-                                <Plus className="h-4 w-4 ml-2" />
-                                افزودن فعالیت
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {customer.activities && customer.activities.length > 0 ? (
-                                    customer.activities.map((activity) => (
-                                        <div key={activity.id} className="flex items-start gap-4 p-4 border rounded-lg hover:border-emerald-300 transition-colors">
-                                            <div className="flex-shrink-0 p-2 rounded-lg bg-gray-100">
-                                                {activity.type === 'call' && <Phone className="h-5 w-5 text-blue-600" />}
-                                                {activity.type === 'meeting' && <Users className="h-5 w-5 text-green-600" />}
-                                                {activity.type === 'email' && <Mail className="h-5 w-5 text-purple-600" />}
-                                                {activity.type === 'task' && <CheckCircle className="h-5 w-5 text-orange-600" />}
-                                                {!['call', 'meeting', 'email', 'task'].includes(activity.type) && <ActivityIcon className="h-5 w-5 text-gray-600" />}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <h4 className="font-medium text-gray-900">{activity.title}</h4>
-                                                    <div className="flex items-center gap-2">
-                                                        {activity.outcome && (
-                                                            <Badge 
-                                                                variant={activity.outcome === 'successful' ? 'default' : 'secondary'}
-                                                                className={`text-xs ${
-                                                                    activity.outcome === 'successful' ? 'bg-green-100 text-green-800 border-green-200' :
-                                                                    activity.outcome === 'follow_up_needed' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                                                                    'bg-gray-100 text-gray-800 border-gray-200'
-                                                                }`}
-                                                            >
-                                                                {activity.outcome === 'successful' ? 'موفق' :
-                                                                 activity.outcome === 'follow_up_needed' ? 'نیاز به پیگیری' :
-                                                                 activity.outcome === 'no_answer' ? 'بدون پاسخ' : activity.outcome}
-                                                            </Badge>
-                                                        )}
-                                                        <span className="text-sm text-gray-500">
-                                                            {formatDate(activity.created_at)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                {activity.description && (
-                                                    <p className="text-sm text-gray-600 mt-2 leading-relaxed">{activity.description}</p>
-                                                )}
-                                                {activity.performed_by_name && (
-                                                    <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                                                        <User className="h-3 w-3" />
-                                                        توسط: {activity.performed_by_name}
-                                                    </p>
-                                                )}
+                                
+                                {customer.satisfaction_score && (
+                                    <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium text-yellow-700">امتیاز رضایت</span>
+                                            <div className="flex items-center gap-1">
+                                                <Star className="h-4 w-4 text-yellow-500" />
+                                                <span className="font-bold text-yellow-600">
+                                                    {parseFloat(customer.satisfaction_score.toString()).toFixed(1)}/5
+                                                </span>
                                             </div>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-12">
-                                        <ActivityIcon className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                                        <p className="text-lg font-medium text-gray-600 mb-2">فعالیتی ثبت نشده</p>
-                                        <p className="text-sm text-gray-500 mb-4">
-                                            فعالیت‌های مربوط به این مشتری اینجا نمایش داده می‌شود
-                                        </p>
-                                        <Button 
-                                            className="bg-gradient-to-r from-emerald-600 to-teal-600"
-                                            onClick={() => router.push(`/dashboard/activities?customer_id=${customerId}`)}
-                                        >
-                                            <Plus className="h-4 w-4 ml-2" />
-                                            ثبت اولین فعالیت
-                                        </Button>
+                                        <Progress 
+                                            value={(parseFloat(customer.satisfaction_score.toString()) / 5) * 100} 
+                                            className="mt-2 h-2"
+                                        />
                                     </div>
                                 )}
-                            </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* آخرین فعالیت‌ها */}
+                        <Card className="border-0 shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <ActivityIcon className="h-5 w-5" />
+                                    آخرین فعالیت‌ها
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {customer.recent_activities && customer.recent_activities.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {customer.recent_activities.slice(0, 3).map((activity) => (
+                                            <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                                                <div className="flex-shrink-0 p-1 rounded bg-white">
+                                                    {activity.type === 'call' && <Phone className="h-4 w-4 text-blue-600" />}
+                                                    {activity.type === 'meeting' && <Users className="h-4 w-4 text-green-600" />}
+                                                    {activity.type === 'email' && <Mail className="h-4 w-4 text-purple-600" />}
+                                                    {!['call', 'meeting', 'email'].includes(activity.type) && <ActivityIcon className="h-4 w-4 text-gray-600" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
+                                                    <p className="text-xs text-gray-500">{formatDate(activity.created_at)}</p>
+                                                    {activity.performed_by_name && (
+                                                        <p className="text-xs text-gray-400">توسط: {activity.performed_by_name}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6">
+                                        <ActivityIcon className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+                                        <p className="text-sm text-gray-500">فعالیتی ثبت نشده</p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+                </TabsContent>
+
+                {/* محصولات علاقه‌مند */}
+                <TabsContent value="products">
+                    <Card className="border-0 shadow-lg">
+                        <CardContent className="p-6">
+                            <CustomerInterestsManager
+                                customerId={customerId || ''}
+                                interests={customer.interested_products || []}
+                                onUpdate={fetchCustomerData}
+                            />
                         </CardContent>
                     </Card>
+                </TabsContent>
+                {/* فعالیت‌ها */}
+                <TabsContent value="activities">
+                    <div className="space-y-6">
+                        {/* آمار فعالیت‌ها */}
+                        <div className="grid gap-4 md:grid-cols-4">
+                            <Card className="border-0 shadow-sm bg-blue-50">
+                                <CardContent className="p-4 text-center">
+                                    <div className="text-2xl font-bold text-blue-600">{customer.activity_stats?.total_activities || 0}</div>
+                                    <div className="text-sm text-blue-700">کل فعالیت‌ها</div>
+                                </CardContent>
+                            </Card>
+                            <Card className="border-0 shadow-sm bg-green-50">
+                                <CardContent className="p-4 text-center">
+                                    <div className="text-2xl font-bold text-green-600">{customer.activity_stats?.total_calls || 0}</div>
+                                    <div className="text-sm text-green-700">تماس‌ها</div>
+                                </CardContent>
+                            </Card>
+                            <Card className="border-0 shadow-sm bg-purple-50">
+                                <CardContent className="p-4 text-center">
+                                    <div className="text-2xl font-bold text-purple-600">{customer.activity_stats?.total_meetings || 0}</div>
+                                    <div className="text-sm text-purple-700">جلسات</div>
+                                </CardContent>
+                            </Card>
+                            <Card className="border-0 shadow-sm bg-orange-50">
+                                <CardContent className="p-4 text-center">
+                                    <div className="text-2xl font-bold text-orange-600">{customer.activity_stats?.total_emails || 0}</div>
+                                    <div className="text-sm text-orange-700">ایمیل‌ها</div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* لیست فعالیت‌ها */}
+                        <Card className="border-0 shadow-lg">
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle className="flex items-center gap-2">
+                                    <ActivityIcon className="h-5 w-5" />
+                                    همه فعالیت‌ها ({customer.recent_activities?.length || 0} مورد)
+                                </CardTitle>
+                                <Button 
+                                    className="bg-gradient-to-r from-emerald-600 to-teal-600"
+                                    onClick={() => router.push(`/dashboard/activities?customer_id=${customerId}`)}
+                                >
+                                    <Plus className="h-4 w-4 ml-2" />
+                                    افزودن فعالیت
+                                </Button>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {customer.recent_activities && customer.recent_activities.length > 0 ? (
+                                        customer.recent_activities.map((activity) => (
+                                            <div key={activity.id} className="flex items-start gap-4 p-4 border rounded-lg hover:border-emerald-300 transition-colors">
+                                                <div className="flex-shrink-0 p-2 rounded-lg bg-gray-100">
+                                                    {activity.type === 'call' && <Phone className="h-5 w-5 text-blue-600" />}
+                                                    {activity.type === 'meeting' && <Users className="h-5 w-5 text-green-600" />}
+                                                    {activity.type === 'email' && <Mail className="h-5 w-5 text-purple-600" />}
+                                                    {activity.type === 'task' && <CheckCircle className="h-5 w-5 text-orange-600" />}
+                                                    {!['call', 'meeting', 'email', 'task'].includes(activity.type) && <ActivityIcon className="h-5 w-5 text-gray-600" />}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <h4 className="font-medium text-gray-900">{activity.title}</h4>
+                                                        <div className="flex items-center gap-2">
+                                                            {activity.outcome && (
+                                                                <Badge 
+                                                                    variant={activity.outcome === 'successful' ? 'default' : 'secondary'}
+                                                                    className={`text-xs ${
+                                                                        activity.outcome === 'successful' ? 'bg-green-100 text-green-800 border-green-200' :
+                                                                        activity.outcome === 'follow_up_needed' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                                                        'bg-gray-100 text-gray-800 border-gray-200'
+                                                                    }`}
+                                                                >
+                                                                    {activity.outcome === 'successful' ? 'موفق' :
+                                                                     activity.outcome === 'follow_up_needed' ? 'نیاز به پیگیری' :
+                                                                     activity.outcome === 'no_answer' ? 'بدون پاسخ' : activity.outcome}
+                                                                </Badge>
+                                                            )}
+                                                            <span className="text-sm text-gray-500">
+                                                                {formatDate(activity.created_at)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {activity.description && (
+                                                        <p className="text-sm text-gray-600 mt-2 leading-relaxed">{activity.description}</p>
+                                                    )}
+                                                    {activity.performed_by_name && (
+                                                        <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                                            <User className="h-3 w-3" />
+                                                            توسط: {activity.performed_by_name}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <ActivityIcon className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                                            <p className="text-lg font-medium text-gray-600 mb-2">فعالیتی ثبت نشده</p>
+                                            <p className="text-sm text-gray-500 mb-4">
+                                                فعالیت‌های مربوط به این مشتری اینجا نمایش داده می‌شود
+                                            </p>
+                                            <Button 
+                                                className="bg-gradient-to-r from-emerald-600 to-teal-600"
+                                                onClick={() => router.push(`/dashboard/activities?customer_id=${customerId}`)}
+                                            >
+                                                <Plus className="h-4 w-4 ml-2" />
+                                                ثبت اولین فعالیت
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </TabsContent>
 
                 {/* مخاطبین */}
@@ -734,7 +795,7 @@ export default function CustomerDetailPage() {
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="flex items-center gap-2">
                                 <Users className="h-5 w-5" />
-                                مخاطبین
+                                مخاطبین ({customer.contacts?.length || 0} مورد)
                             </CardTitle>
                             <Button className="bg-gradient-to-r from-emerald-600 to-teal-600">
                                 <Plus className="h-4 w-4 ml-2" />
@@ -786,35 +847,6 @@ export default function CustomerDetailPage() {
                                     </div>
                                 )}
                             </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* یادداشت‌ها */}
-                <TabsContent value="notes">
-                    <Card className="border-0 shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="flex items-center gap-2">
-                                <FileText className="h-5 w-5" />
-                                یادداشت‌ها
-                            </CardTitle>
-                            <Button className="bg-gradient-to-r from-emerald-600 to-teal-600">
-                                <Plus className="h-4 w-4 ml-2" />
-                                افزودن یادداشت
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            {customer.notes ? (
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <p className="text-gray-700">{customer.notes}</p>
-                                </div>
-                            ) : (
-                                <div className="text-center py-12">
-                                    <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                                    <p className="text-lg font-medium text-gray-600 mb-2">یادداشتی ثبت نشده</p>
-                                    <p className="text-sm text-gray-500">یادداشت‌های مربوط به این مشتری اینجا نمایش داده می‌شود</p>
-                                </div>
-                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>

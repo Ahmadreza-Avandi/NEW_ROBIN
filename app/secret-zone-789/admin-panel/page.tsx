@@ -13,6 +13,7 @@ import BillingInterface from './components/BillingInterface';
 import AddTenantModal from './components/AddTenantModal';
 import PlanFormModal from './components/PlanFormModal';
 import PlansTable from './components/PlansTable';
+import ApiKeyManagement from './components/ApiKeyManagement';
 
 // Try to load react-icons, but provide simple fallbacks if not installed to avoid build/runtime errors
 let FiHome: any = () => <svg className="w-5 h-5 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9.5L12 3l9 6.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>;
@@ -58,7 +59,8 @@ const getPageTitle = (tab: string): string => {
         customers: 'مدیریت مشتریان',
         subscriptions: 'مدیریت اشتراک‌ها',
         billing: 'صورتحساب‌ها و درآمد',
-        settings: 'تنظیمات سیستم'
+        settings: 'تنظیمات سیستم',
+        api_keys: 'مدیریت کلیدهای API'
     };
     return titles[tab] || 'پنل مدیریت CRM';
 };
@@ -279,6 +281,10 @@ export default function AdminPanel() {
                                 <button className="mt-3 bg-blue-600 text-white px-4 py-2 rounded">ذخیره</button>
                             </div>
                         </div>
+                    )}
+
+                    {activeTab === 'api_keys' && (
+                        <ApiKeyManagement />
                     )}
                 </div>
             </main>

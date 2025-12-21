@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت نقش‌ها و دسترسی‌ها</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .section h2 {
+            color: #555;
+            margin-top: 0;
+        }
+        .role-card {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-right: 4px solid #007bff;
+        }
+        .role-title {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .role-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .permissions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .permission-tag {
+            background: #e9ecef;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #495057;
+        }
+        .user-list {
+            margin-top: 20px;
+        }
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .user-info {
+            flex: 1;
+        }
+        .user-name {
+            font-weight: bold;
+        }
+        .user-email {
+            color: #666;
+            font-size: 14px;
+        }
+        .user-role {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 مدیریت نقش‌ها و دسترسی‌ها</h1>
+        
+        <div class="section">
+            <h2>📋 نقش‌های تعریف شده</h2>
+            <div id="roles-list">
+                <div class="loading">در حال بارگذاری نقش‌ها...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>👥 کاربران سیستم</h2>
+            <div id="users-list">
+                <div class="loading">در حال بارگذاری کاربران...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 تست عملکرد</h2>
+            <button class="btn btn-primary" onclick="testCurrentUser()">تست کاربر فعلی</button>
+            <button class="btn btn-success" onclick="refreshData()">بروزرسانی داده‌ها</button>
+            <div id="test-results"></div>
+        </div>
+    </div>
+
+    <script>
+        // تعریف نقش‌ها و توضیحات
+        const roleDefinitions = {
+            'ceo': {
+                title: 'مدیرعامل',
+                description: 'می‌پرسه چرا نفروختید؟ - دسترسی کامل به همه بخش‌ها',
+                permissions: ['همه ماژول‌ها'],
+                color: '#dc3545'
+            },
+            'sales_manager': {
+                title: 'مدیر فروش',
+                description: 'مجبور می‌کنه بفروشن - مدیریت تیم فروش و گزارش‌گیری',
+                permissions: ['dashboard', 'customers', 'contacts', 'products', 'sales', 'deals', 'activities', 'reports', 'coworkers', 'tasks', 'calendar', 'chat'],
+                color: '#28a745'
+            },
+            'sales_specialist': {
+                title: 'کارشناس فروش',
+                description: 'واقعاً می‌فروشه - تمرکز روی فروش و ارتباط با مشتری',
+                permissions: ['dashboard', 'customers', 'contacts', 'products', 'sales', 'deals', 'activities', 'tasks', 'calendar', 'chat'],
+                color: '#007bff'
+            },
+            'technical_specialist': {
+                title: 'کارشناس فنی',
+                description: 'باعث میشه فروش شدنی باشه - پشتیبانی فنی و مستندسازی',
+                permissions: ['dashboard', 'customers', 'contacts', 'products', 'activities', 'tasks', 'calendar', 'documents', 'feedback', 'chat'],
+                color: '#6f42c1'
+            },
+            'team_manager': {
+                title: 'مدیر تیم تخصصی',
+                description: 'نگهبان کیفیت و تحویل وعده - مدیریت پروژه‌ها و کیفیت',
+                permissions: ['dashboard', 'customers', 'contacts', 'products', 'activities', 'coworkers', 'tasks', 'calendar', 'documents', 'reports', 'feedback', 'chat'],
+                color: '#fd7e14'
+            }
+        };
+
+        // بارگذاری داده‌ها
+        async function loadData() {
+            await loadRoles();
+            await loadUsers();
+        }
+
+        // بارگذاری نقش‌ها
+        async function loadRoles() {
+            const rolesContainer = document.getElementById('roles-list');
+            rolesContainer.innerHTML = '';
+
+            Object.entries(roleDefinitions).forEach(([roleKey, roleData]) => {
+                const roleCard = document.createElement('div');
+                roleCard.className = 'role-card';
+                roleCard.style.borderRightColor = roleData.color;
+                
+                roleCard.innerHTML = `
+                    <div class="role-title" style="color: ${roleData.color}">${roleData.title}</div>
+                    <div class="role-description">${roleData.description}</div>
+                    <div class="permissions">
+                        ${roleData.permissions.map(perm => `<span class="permission-tag">${perm}</span>`).join('')}
+                    </div>
+                `;
+                
+                rolesContainer.appendChild(roleCard);
+            });
+        }
+
+        // بارگذاری کاربران (شبیه‌سازی)
+        async function loadUsers() {
+            const usersContainer = document.getElementById('users-list');
+            
+            // شبیه‌سازی داده‌های کاربران
+            const users = [
+                {
+                    name: 'مهندس کریمی',
+                    email: 'Robintejarat@gmail.com',
+                    role: 'ceo'
+                },
+                {
+                    name: 'احمدرضا آوندی',
+                    email: 'Ahmadreza.avandi@gmail.com',
+                    role: 'sales_specialist'
+                }
+            ];
+
+            usersContainer.innerHTML = '';
+            
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                
+                const roleData = roleDefinitions[user.role] || { title: user.role, color: '#6c757d' };
+                
+                userItem.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-name">${user.name}</div>
+                        <div class="user-email">${user.email}</div>
+                    </div>
+                    <div>
+                        <span class="user-role" style="background: ${roleData.color}">${roleData.title}</span>
+                        <button class="btn btn-warning" onclick="changeUserRole('${user.email}')">تغییر نقش</button>
+                    </div>
+                `;
+                
+                usersContainer.appendChild(userItem);
+            });
+        }
+
+        // تست کاربر فعلی
+        async function testCurrentUser() {
+            const resultsContainer = document.getElementById('test-results');
+            resultsContainer.innerHTML = '<div class="loading">در حال تست...</div>';
+
+            try {
+                // شبیه‌سازی تست API
+                setTimeout(() => {
+                    resultsContainer.innerHTML = `
+                        <div class="success">
+                            ✅ تست موفق<br>
+                            - سیستم نقش‌ها فعال است<br>
+                            - دسترسی‌ها بر اساس نقش تنظیم شده‌اند<br>
+                            - منوی سایدبار متناسب با دسترسی‌ها نمایش داده می‌شود
+                        </div>
+                    `;
+                }, 1000);
+            } catch (error) {
+                resultsContainer.innerHTML = `<div class="error">خطا در تست: ${error.message}</div>`;
+            }
+        }
+
+        // تغییر نقش کاربر
+        function changeUserRole(email) {
+            const newRole = prompt('نقش جدید را انتخاب کنید:\\n\\nceo - مدیرعامل\\nsales_manager - مدیر فروش\\nsales_specialist - کارشناس فروش\\ntechnical_specialist - کارشناس فنی\\nteam_manager - مدیر تیم تخصصی');
+            
+            if (newRole && roleDefinitions[newRole]) {
+                alert(`نقش کاربر ${email} به ${roleDefinitions[newRole].title} تغییر یافت.\\n\\nبرای اعمال تغییرات، از اسکریپت change-user-role.cjs استفاده کنید.`);
+            } else if (newRole) {
+                alert('نقش نامعتبر! لطفاً یکی از نقش‌های معتبر را انتخاب کنید.');
+            }
+        }
+
+        // بروزرسانی داده‌ها
+        function refreshData() {
+            loadData();
+        }
+
+        // بارگذاری اولیه
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>

@@ -38,20 +38,48 @@ export interface ChatThread {
 export interface Customer {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  status: 'active' | 'inactive' | 'follow_up' | 'rejected';
-  segment: 'enterprise' | 'small_business' | 'individual';
-  createdAt: string;
+  email?: string;
+  phone?: string;
+  company_name?: string;
+  status: 'active' | 'inactive' | 'follow_up' | 'rejected' | 'prospect' | 'customer';
+  segment?: 'enterprise' | 'small_business' | 'individual';
+  priority?: 'low' | 'medium' | 'high';
+  created_at: string;
+  updated_at?: string;
+  last_interaction?: string;
+  total_tickets?: number;
+  satisfaction_score?: number | string;
+  potential_value?: number;
+  actual_value?: number;
+  assigned_to?: string;
+  assigned_user_name?: string;
+  created_by?: string;
+  industry?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  website?: string;
+  address?: string;
+  company_size?: string;
+  annual_revenue?: number;
+  source?: string;
+  lead_score?: number;
+  lifecycle_stage?: string;
+  
+  // Legacy fields for backward compatibility
+  createdAt?: string;
   lastInteraction?: string;
-  totalTickets: number;
+  totalTickets?: number;
   satisfactionScore?: number;
-  salesPipeline?: SalesPipelineStage;
-  tags?: string[];
-
   assignedTo?: string;
   potentialValue?: number;
-  priority?: 'low' | 'medium' | 'high';
+  
+  // Additional fields from API
+  interested_products_names?: string;
+  interested_products_count?: number;
+  
+  salesPipeline?: SalesPipelineStage;
+  tags?: string[];
 }
 
 export interface SalesPipelineStage {
@@ -321,4 +349,16 @@ export interface CalendarEvent {
   status: 'scheduled' | 'completed' | 'cancelled';
   location?: string;
   attendees?: string[];
+}
+
+export interface Interest {
+  id: string;
+  product_id: string;
+  product_name: string;
+  description?: string;
+  price?: number;
+  category?: string;
+  interest_level: 'high' | 'medium' | 'low';
+  notes?: string;
+  created_at: string;
 }

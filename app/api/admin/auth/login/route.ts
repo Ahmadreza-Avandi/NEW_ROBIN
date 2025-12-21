@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
-const JWT_EXPIRATION = '1h';
+const JWT_EXPIRATION = '24h';
 
 export async function POST(request: NextRequest) {
   let connection;
@@ -82,9 +82,10 @@ export async function POST(request: NextRequest) {
     // تنظیم cookie
     response.cookies.set('admin_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 // 1 hour
+      secure: false, // برای development
+      sameSite: 'lax', // تغییر از strict به lax
+      maxAge: 24 * 60 * 60, // 24 hours
+      path: '/' // مطمئن شوید که path درست است
     });
 
     return response;

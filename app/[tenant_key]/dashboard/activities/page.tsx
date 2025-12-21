@@ -30,7 +30,11 @@ import {
   RefreshCw,
   User,
   CalendarDays,
-  X
+  X,
+  Users,
+  ShoppingCart,
+  DollarSign,
+  Package
 } from 'lucide-react';
 
 interface Activity {
@@ -46,9 +50,17 @@ interface Activity {
   created_at: string;
 }
 
+interface RecentItem {
+  id: string;
+  name: string;
+  date?: string;
+  type?: string;
+  amount?: number;
+}
+
 export default function ActivitiesPage() {
   const params = useParams();
-  const tenantKey = (params?.tenant_key as string) || '';
+  const tenantKey = Array.isArray(params?.tenant_key) ? params.tenant_key[0] : (params?.tenant_key as string) || '';
 
   const [activities, setActivities] = useState<Activity[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
@@ -58,10 +70,19 @@ export default function ActivitiesPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [dateFilter, setDateFilter] = useState('today'); // Default to today
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [performedByFilter, setPerformedByFilter] = useState('all');
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  
+  // Recent data states
+  const [recentMeetings, setRecentMeetings] = useState<RecentItem[]>([]);
+  const [recentCalls, setRecentCalls] = useState<RecentItem[]>([]);
+  const [recentCustomers, setRecentCustomers] = useState<RecentItem[]>([]);
+  const [recentProducts, setRecentProducts] = useState<RecentItem[]>([]);
+  const [recentSales, setRecentSales] = useState<RecentItem[]>([]);
+  
   const { toast } = useToast();
 
   const [newActivity, setNewActivity] = useState({
@@ -82,10 +103,41 @@ export default function ActivitiesPage() {
   };
 
   useEffect(() => {
+    // Set today's date as default
+    if (dateFilter === 'today') {
+      const today = moment().format('jYYYY/jMM/jDD');
+      setStartDate(today);
+      setEndDate(today);
+    } else if (dateFilter === 'week') {
+      const startOfWeek = moment().startOf('week').format('jYYYY/jMM/jDD');
+      const endOfWeek = moment().endOf('week').format('jYYYY/jMM/jDD');
+      setStartDate(startOfWeek);
+      setEndDate(endOfWeek);
+    } else if (dateFilter === 'month') {
+      const startOfMonth = moment().startOf('month').format('jYYYY/jMM/jDD');
+      const endOfMonth = moment().endOf('month').format('jYYYY/jMM/jDD');
+      setStartDate(startOfMonth);
+      setEndDate(endOfMonth);
+    } else if (dateFilter === 'all') {
+      setStartDate('');
+      setEndDate('');
+    }
+  }, [dateFilter]);
+
+  useEffect(() => {
     loadActivities();
     loadCustomers();
     loadCoworkers();
   }, [searchTerm, filterType, startDate, endDate, performedByFilter, selectedCustomer]);
+
+  // Update recent data when activities change
+  useEffect(() => {
+    if (activities.length > 0) {
+      updateRecentData();
+    } else {
+      loadRecentData();
+    }
+  }, [activities]);
 
   const loadActivities = async () => {
     try {
@@ -175,6 +227,136 @@ export default function ActivitiesPage() {
     }
   };
 
+  const updateRecentData = () => {
+    // Get recent meetings from current activities
+    const meetings = activities
+      .filter(a => a.type === 'meeting')
+      .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+      .slice(0, 3)
+      .map(m => ({
+        id: m.id,
+        name: m.title,
+        date: m.start_time,
+        type: m.customer_name || 'نامشخص'
+      }));
+    setRecentMeetings(meetings);
+
+    // Get recent calls from current activities
+    const calls = activities
+      .filter(a => a.type === 'call')
+      .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+      .slice(0, 3)
+      .map(c => ({
+        id: c.id,
+        name: c.title,
+        date: c.start_time,
+        type: c.customer_name || 'نامشخص'
+      }));
+    setRecentCalls(calls);
+  };
+
+  const loadRecentData = async () => {
+    try {
+      const token = getAuthToken();
+      
+      // Load recent meetings (from activities table)
+      const meetingsResponse = await fetch(`/api/tenant/activities?type=meeting&limit=3&sort=desc`, {
+        headers: {
+          'X-Tenant-Key': tenantKey,
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
+      });
+      const meetingsData = await meetingsResponse.json();
+      if (meetingsData.success && meetingsData.data) {
+        setRecentMeetings(meetingsData.data.slice(0, 3).map((m: Activity) => ({
+          id: m.id,
+          name: m.title,
+          date: m.start_time,
+          type: m.customer_name || 'نامشخص'
+        })));
+      }
+
+      // Load recent calls (from activities table)
+      const callsResponse = await fetch(`/api/tenant/activities?type=call&limit=3&sort=desc`, {
+        headers: {
+          'X-Tenant-Key': tenantKey,
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
+      });
+      const callsData = await callsResponse.json();
+      if (callsData.success && callsData.data) {
+        setRecentCalls(callsData.data.slice(0, 3).map((c: Activity) => ({
+          id: c.id,
+          name: c.title,
+          date: c.start_time,
+          type: c.customer_name || 'نامشخص'
+        })));
+      }
+
+      // Load recent customers (last 3 created)
+      const customersResponse = await fetch(`/api/tenant/customers?limit=3&sort=created_at&order=desc`, {
+        headers: {
+          'X-Tenant-Key': tenantKey,
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
+      });
+      const customersData = await customersResponse.json();
+      if (customersData.success && customersData.data) {
+        setRecentCustomers(customersData.data.slice(0, 3).map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          date: c.created_at,
+          type: c.segment || 'مشتری'
+        })));
+      }
+
+      // Load recent products (last 3 created)
+      const productsResponse = await fetch(`/api/tenant/products/list?limit=50`, {
+        headers: {
+          'X-Tenant-Key': tenantKey,
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
+      });
+      const productsData = await productsResponse.json();
+      if (productsData.success && productsData.data) {
+        // Sort by creation date and take last 3
+        const sortedProducts = productsData.data
+          .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+          .slice(0, 3);
+        
+        setRecentProducts(sortedProducts.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          type: p.category || 'محصول'
+        })));
+      }
+
+      // Load recent sales (last 3)
+      const salesResponse = await fetch(`/api/tenant/sales?limit=3&sort=desc`, {
+        headers: {
+          'X-Tenant-Key': tenantKey,
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
+      });
+      const salesData = await salesResponse.json();
+      if (salesData.success && salesData.data) {
+        setRecentSales(salesData.data.slice(0, 3).map((s: any) => ({
+          id: s.id,
+          name: s.customer_name || 'نامشخص',
+          date: s.sale_date,
+          amount: s.total_amount
+        })));
+      }
+    } catch (error) {
+      console.error('Error loading recent data:', error);
+    }
+  };
+
   const handleAddActivity = async () => {
     if (!newActivity.customer_id || !newActivity.title) {
       setError('مشتری و عنوان الزامی است');
@@ -187,7 +369,7 @@ export default function ActivitiesPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Key': params?.tenant_key || tenantKey,
+          'X-Tenant-Key': tenantKey,
           'Authorization': token ? `Bearer ${token}` : ''
         },
         body: JSON.stringify({
@@ -502,7 +684,7 @@ export default function ActivitiesPage() {
         <CardContent>
           <div className="space-y-4">
             {/* ردیف اول فیلترها */}
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-5">
               <div className="relative">
                 <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -513,6 +695,19 @@ export default function ActivitiesPage() {
                   dir="rtl"
                 />
               </div>
+
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="font-vazir">
+                  <SelectValue placeholder="فیلتر زمانی" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today" className="font-vazir">امروز</SelectItem>
+                  <SelectItem value="week" className="font-vazir">این هفته</SelectItem>
+                  <SelectItem value="month" className="font-vazir">این ماه</SelectItem>
+                  <SelectItem value="custom" className="font-vazir">سفارشی</SelectItem>
+                  <SelectItem value="all" className="font-vazir">همه</SelectItem>
+                </SelectContent>
+              </Select>
 
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="font-vazir">
@@ -534,7 +729,7 @@ export default function ActivitiesPage() {
                   <SelectItem value="all" className="font-vazir">همه همکاران</SelectItem>
                   {coworkers.map(coworker => (
                     <SelectItem key={coworker.id} value={coworker.id} className="font-vazir">
-                      {coworker.full_name || coworker.username}
+                      {coworker.name || coworker.username}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -545,8 +740,7 @@ export default function ActivitiesPage() {
                 onClick={() => {
                   setSearchTerm('');
                   setFilterType('all');
-                  setStartDate('');
-                  setEndDate('');
+                  setDateFilter('today');
                   setPerformedByFilter('all');
                   setSelectedCustomer(null);
                 }}
@@ -557,34 +751,39 @@ export default function ActivitiesPage() {
               </Button>
             </div>
 
-            {/* ردیف دوم - فیلتر تاریخ و مشتری */}
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label className="font-vazir flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4" />
-                  تاریخ شروع (فارسی)
-                </Label>
-                <PersianDatePicker
-                  value={startDate}
-                  onChange={setStartDate}
-                  placeholder="انتخاب تاریخ شروع"
-                  className="font-vazir"
-                />
-              </div>
+            {/* ردیف دوم - فیلتر تاریخ سفارشی و مشتری */}
+            {dateFilter === 'custom' && (
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label className="font-vazir flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    تاریخ شروع (فارسی)
+                  </Label>
+                  <PersianDatePicker
+                    value={startDate}
+                    onChange={setStartDate}
+                    placeholder="انتخاب تاریخ شروع"
+                    className="font-vazir"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label className="font-vazir flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4" />
-                  تاریخ پایان (فارسی)
-                </Label>
-                <PersianDatePicker
-                  value={endDate}
-                  onChange={setEndDate}
-                  placeholder="انتخاب تاریخ پایان"
-                  className="font-vazir"
-                />
+                <div className="space-y-2">
+                  <Label className="font-vazir flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    تاریخ پایان (فارسی)
+                  </Label>
+                  <PersianDatePicker
+                    value={endDate}
+                    onChange={setEndDate}
+                    placeholder="انتخاب تاریخ پایان"
+                    className="font-vazir"
+                  />
+                </div>
               </div>
+            )}
 
+            {/* فیلتر مشتری */}
+            <div className="grid gap-4 md:grid-cols-1">
               <div className="space-y-2">
                 <Label className="font-vazir flex items-center gap-2">
                   <User className="h-4 w-4" />
@@ -600,7 +799,7 @@ export default function ActivitiesPage() {
             </div>
 
             {/* نمایش فیلترهای فعال */}
-            {(startDate || endDate || selectedCustomer || performedByFilter !== 'all' || filterType !== 'all' || searchTerm) && (
+            {(dateFilter !== 'today' || selectedCustomer || performedByFilter !== 'all' || filterType !== 'all' || searchTerm) && (
               <div className="flex flex-wrap gap-2 pt-2 border-t">
                 <span className="text-sm font-vazir text-muted-foreground">فیلترهای فعال:</span>
 
@@ -618,6 +817,22 @@ export default function ActivitiesPage() {
                   </Badge>
                 )}
 
+                {dateFilter !== 'today' && (
+                  <Badge variant="secondary" className="font-vazir">
+                    زمان: {dateFilter === 'week' ? 'این هفته' : 
+                           dateFilter === 'month' ? 'این ماه' : 
+                           dateFilter === 'all' ? 'همه' : 'سفارشی'}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => setDateFilter('today')}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                )}
+
                 {filterType !== 'all' && (
                   <Badge variant="secondary" className="font-vazir">
                     نوع: {getTypeLabel(filterType)}
@@ -626,34 +841,6 @@ export default function ActivitiesPage() {
                       size="sm"
                       className="h-4 w-4 p-0 ml-1"
                       onClick={() => setFilterType('all')}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                )}
-
-                {startDate && (
-                  <Badge variant="secondary" className="font-vazir">
-                    از تاریخ: {startDate}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-4 w-4 p-0 ml-1"
-                      onClick={() => setStartDate('')}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                )}
-
-                {endDate && (
-                  <Badge variant="secondary" className="font-vazir">
-                    تا تاریخ: {endDate}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-4 w-4 p-0 ml-1"
-                      onClick={() => setEndDate('')}
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -676,7 +863,7 @@ export default function ActivitiesPage() {
 
                 {performedByFilter !== 'all' && (
                   <Badge variant="secondary" className="font-vazir">
-                    همکار: {coworkers.find(c => c.id === performedByFilter)?.full_name || 'نامشخص'}
+                    همکار: {coworkers.find(c => c.id === performedByFilter)?.name || 'نامشخص'}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -692,6 +879,133 @@ export default function ActivitiesPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* کادرهای مینیمال - فعالیت‌های اخیر */}
+      <div className="grid gap-4 md:grid-cols-5">
+        {/* جلسات اخیر */}
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-50 to-emerald-50 border-l-4 border-l-green-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-vazir text-green-700 flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              جلسات اخیر
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {recentMeetings.length > 0 ? (
+              recentMeetings.map((meeting) => (
+                <div key={meeting.id} className="text-xs border-b border-green-100 pb-1 last:border-b-0">
+                  <div className="font-medium text-green-800 truncate">{meeting.name}</div>
+                  <div className="text-green-600 text-[10px]">{meeting.type}</div>
+                  <div className="text-green-500 text-[10px]">
+                    {new Date(meeting.date).toLocaleDateString('fa-IR')}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-xs text-green-600">جلسه‌ای ثبت نشده</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* تماس‌های اخیر */}
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-50 to-blue-50 border-l-4 border-l-blue-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-vazir text-blue-700 flex items-center gap-2">
+              <Phone className="h-4 w-4" />
+              تماس‌های اخیر
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {recentCalls.length > 0 ? (
+              recentCalls.map((call) => (
+                <div key={call.id} className="text-xs border-b border-blue-100 pb-1 last:border-b-0">
+                  <div className="font-medium text-blue-800 truncate">{call.name}</div>
+                  <div className="text-blue-600 text-[10px]">{call.type}</div>
+                  <div className="text-blue-500 text-[10px]">
+                    {new Date(call.date).toLocaleDateString('fa-IR')}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-xs text-blue-600">تماسی ثبت نشده</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* مشتریان اخیر */}
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-50 to-purple-50 border-l-4 border-l-purple-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-vazir text-purple-700 flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              مشتریان اخیر
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {recentCustomers.length > 0 ? (
+              recentCustomers.map((customer) => (
+                <div key={customer.id} className="text-xs border-b border-purple-100 pb-1 last:border-b-0">
+                  <div className="font-medium text-purple-800 truncate">{customer.name}</div>
+                  <div className="text-purple-600 text-[10px]">{customer.type || 'مشتری'}</div>
+                  <div className="text-purple-500 text-[10px]">
+                    {customer.date ? new Date(customer.date).toLocaleDateString('fa-IR') : ''}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-xs text-purple-600">مشتری جدیدی نیست</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* محصولات اخیر */}
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-orange-50 to-orange-50 border-l-4 border-l-orange-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-vazir text-orange-700 flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              محصولات اخیر
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {recentProducts.length > 0 ? (
+              recentProducts.map((product) => (
+                <div key={product.id} className="text-xs border-b border-orange-100 pb-1 last:border-b-0">
+                  <div className="font-medium text-orange-800 truncate">{product.name}</div>
+                  <div className="text-orange-600 text-[10px]">{product.type || 'محصول'}</div>
+                </div>
+              ))
+            ) : (
+              <div className="text-xs text-orange-600">محصول جدیدی نیست</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* فروش‌های اخیر */}
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-emerald-50 to-teal-50 border-l-4 border-l-emerald-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-vazir text-emerald-700 flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              فروش‌های اخیر
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {recentSales.length > 0 ? (
+              recentSales.map((sale) => (
+                <div key={sale.id} className="text-xs border-b border-emerald-100 pb-1 last:border-b-0">
+                  <div className="font-medium text-emerald-800 truncate">{sale.name}</div>
+                  <div className="text-emerald-600 text-[10px]">
+                    {sale.amount ? `${sale.amount.toLocaleString('fa-IR')} تومان` : 'فروش'}
+                  </div>
+                  <div className="text-emerald-500 text-[10px]">
+                    {sale.date ? new Date(sale.date).toLocaleDateString('fa-IR') : ''}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-xs text-emerald-600">فروش جدیدی نیست</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* لیست فعالیت‌ها */}
       <div className="space-y-4">

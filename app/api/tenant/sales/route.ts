@@ -42,29 +42,53 @@ export async function GET(request: NextRequest) {
       }
 
       if (searchTerm) {
-        query += ' AND (customer_name LIKE ? OR invoice_number LIKE ? OR sales_person_name LIKE ?)';
+        query += ' AND (customer_name LIKE ? OR invoice_number LIKE ? OR sales_person_name LIKE ? OR title LIKE ?)';
         const searchPattern = `%${searchTerm}%`;
-        params.push(searchPattern, searchPattern, searchPattern);
+        params.push(searchPattern, searchPattern, searchPattern, searchPattern);
       }
 
-      query += ' ORDER BY sale_date DESC LIMIT ? OFFSET ?';
+      query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
       params.push(limit, offset);
 
-      const [sales] = await conn.query(query, params);
+      const [sales] = await conn.query(query, params) as any;
+
+      // Get sale items for each sale
+      const salesWithItems = await Promise.all(
+        sales.map(async (sale: any) => {
+          const [items] = await conn.query(
+            'SELECT * FROM sale_items WHERE sale_id = ? AND tenant_key = ?',
+            [sale.id, tenantKey]
+          ) as any;
+          
+          return {
+            ...sale,
+            items: items || []
+          };
+        })
+      );
 
       return NextResponse.json({
         success: true,
-        data: sales,
-        sales: sales // Include both for compatibility
+        data: salesWithItems,
+        sales: salesWithItems // Include both for compatibility
       });
     } finally {
       conn.release();
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ خطا در دریافت فروش‌ها:', error);
+    
+    // Handle specific database connection errors
+    if (error.code === 'ER_CON_COUNT_ERROR' || error.message?.includes('Too many connections')) {
+      return NextResponse.json(
+        { success: false, message: 'مشکل در اتصال به دیتابیس - لطفاً چند لحظه صبر کنید' },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
-      { success: false, message: 'خطای سرور' },
+      { success: false, message: 'خطای سرور - لطفاً دوباره تلاش کنید' },
       { status: 500 }
     );
   }
@@ -92,11 +116,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const {
-      deal_id,
       customer_id,
-      customer_name,
-      total_amount,
-      currency = 'IRR',
+      items = [],
       payment_status = 'pending',
       payment_method,
       delivery_date,
@@ -105,9 +126,9 @@ export async function POST(request: NextRequest) {
       invoice_number
     } = body;
 
-    if (!customer_id || !customer_name || !total_amount) {
+    if (!customer_id || !items || items.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'مشتری، نام مشتری و مبلغ الزامی است' },
+        { success: false, message: 'مشتری و حداقل یک محصول الزامی است' },
         { status: 400 }
       );
     }
@@ -116,14 +137,39 @@ export async function POST(request: NextRequest) {
     const conn = await pool.getConnection();
 
     try {
+      await conn.beginTransaction();
+
       const salesPersonId = session.user?.id || 'unknown';
       const salesPersonName = session.user?.name || 'ناشناس';
 
-      const [result] = await conn.query(
+      // Get customer info
+      const [customerResult] = await conn.query(
+        'SELECT name, company_name FROM customers WHERE id = ? AND tenant_key = ?',
+        [customer_id, tenantKey]
+      ) as any;
+
+      if (!customerResult || customerResult.length === 0) {
+        await conn.rollback();
+        return NextResponse.json(
+          { success: false, message: 'مشتری یافت نشد' },
+          { status: 404 }
+        );
+      }
+
+      const customer = customerResult[0];
+      const customer_name = customer.name;
+
+      // Calculate total amount
+      const total_amount = items.reduce((sum: number, item: any) => 
+        sum + (item.quantity * item.unit_price), 0
+      );
+
+      // Create sale record
+      const saleId = crypto.randomUUID();
+      await conn.query(
         `INSERT INTO sales (
           id,
           tenant_key,
-          deal_id,
           customer_id,
           customer_name,
           total_amount,
@@ -136,16 +182,16 @@ export async function POST(request: NextRequest) {
           invoice_number,
           sales_person_id,
           sales_person_name,
+          title,
           created_at,
           updated_at
-        ) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        ) VALUES (?, ?, ?, ?, ?, 'IRR', ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [
+          saleId,
           tenantKey,
-          deal_id || null,
           customer_id,
           customer_name,
           total_amount,
-          currency,
           payment_status,
           payment_method || null,
           delivery_date || null,
@@ -153,9 +199,51 @@ export async function POST(request: NextRequest) {
           notes || null,
           invoice_number || null,
           salesPersonId,
-          salesPersonName
+          salesPersonName,
+          `فروش ${customer_name} - ${new Date().toLocaleDateString('fa-IR')}`
         ]
-      ) as any;
+      );
+
+      // Create sale items
+      for (const item of items) {
+        // Get product info
+        const [productResult] = await conn.query(
+          'SELECT name, category FROM products WHERE id = ? AND tenant_key = ?',
+          [item.product_id, tenantKey]
+        ) as any;
+
+        if (productResult && productResult.length > 0) {
+          const product = productResult[0];
+          
+          await conn.query(
+            `INSERT INTO sale_items (
+              id,
+              tenant_key,
+              sale_id,
+              product_id,
+              product_name,
+              product_category,
+              quantity,
+              unit_price,
+              total_price,
+              created_at,
+              updated_at
+            ) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+            [
+              tenantKey,
+              saleId,
+              item.product_id,
+              product.name,
+              product.category || 'عمومی',
+              item.quantity,
+              item.unit_price,
+              item.quantity * item.unit_price
+            ]
+          );
+        }
+      }
+
+      await conn.commit();
 
       // ثبت خودکار فعالیت
       await logActivity({
@@ -164,7 +252,7 @@ export async function POST(request: NextRequest) {
         userName: salesPersonName,
         type: 'sale',
         title: `فروش جدید به ${customer_name}`,
-        description: `فروش به مبلغ ${total_amount.toLocaleString('fa-IR')} ${currency} ثبت شد${invoice_number ? ` - شماره فاکتور: ${invoice_number}` : ''}`,
+        description: `فروش ${items.length} محصول به مبلغ ${total_amount.toLocaleString('fa-IR')} تومان ثبت شد${invoice_number ? ` - شماره فاکتور: ${invoice_number}` : ''}`,
         customerId: customer_id,
         customerName: customer_name
       });
@@ -172,16 +260,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'فروش با موفقیت ثبت شد',
-        id: result.insertId
+        id: saleId
       });
+    } catch (error) {
+      await conn.rollback();
+      throw error;
     } finally {
       conn.release();
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ خطا در ثبت فروش:', error);
+    
+    // Handle specific database connection errors
+    if (error.code === 'ER_CON_COUNT_ERROR' || error.message?.includes('Too many connections')) {
+      return NextResponse.json(
+        { success: false, message: 'مشکل در اتصال به دیتابیس - لطفاً چند لحظه صبر کنید' },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
-      { success: false, message: 'خطای سرور' },
+      { success: false, message: 'خطای سرور - لطفاً دوباره تلاش کنید' },
       { status: 500 }
     );
   }

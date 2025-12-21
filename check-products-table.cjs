@@ -1,39 +1,41 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
 
-async function checkTable() {
+async function checkProductsTable() {
+  let connection;
+  
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'crm_system'
+    connection = await mysql.createConnection({
+      host: 'localhost',
+      user: 'crm_user',
+      password: '1234',
+      database: 'crm_system',
+      charset: 'utf8mb4'
     });
-    
-    const [rows] = await connection.execute('SHOW TABLES LIKE "products"');
-    console.log('Products table exists:', rows.length > 0);
-    
-    if (rows.length > 0) {
-      const [columns] = await connection.execute('DESCRIBE products');
-      console.log('Table structure:');
-      columns.forEach(col => console.log('- ' + col.Field + ': ' + col.Type));
-      
-      const [count] = await connection.execute('SELECT COUNT(*) as count FROM products');
-      console.log('Total products:', count[0].count);
-      
-      const [categories] = await connection.execute('SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != ""');
-      console.log('Categories:', categories.map(c => c.category));
-      
-      // نمونه محصولات
-      const [samples] = await connection.execute('SELECT id, name, category, price, status FROM products LIMIT 5');
-      console.log('\nSample products:');
-      samples.forEach(p => console.log(`- ${p.name} (${p.category}) - ${p.price} - Status: ${p.status}`));
-    }
-    
-    await connection.end();
+
+    console.log('✅ اتصال به دیتابیس برقرار شد');
+
+    // بررسی ساختار جدول products
+    const [structure] = await connection.query("DESCRIBE products");
+    console.log('🏗️ ساختار جدول products:');
+    structure.forEach(col => {
+      console.log(`  - ${col.Field}: ${col.Type} ${col.Null === 'YES' ? '(nullable)' : '(required)'} ${col.Key} ${col.Default ? `default: ${col.Default}` : ''} ${col.Extra}`);
+    });
+
+    // بررسی محصولات موجود
+    const [existingProducts] = await connection.query("SELECT * FROM products WHERE tenant_key = 'rabin'");
+    console.log('\n📦 محصولات موجود:', existingProducts.length);
+    existingProducts.forEach(product => {
+      console.log(`  - ID: ${product.id}, نام: ${product.name}`);
+    });
+
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('❌ خطا:', error.message);
+  } finally {
+    if (connection) {
+      await connection.end();
+      console.log('\n🔌 اتصال بسته شد');
+    }
   }
 }
 
-checkTable();
+checkProductsTable();

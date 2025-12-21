@@ -1,0 +1,127 @@
+# WordPress CRM Integration - Persian Translation
+# Copyright (C) 2024 Rabin CRM Team
+msgid ""
+msgstr ""
+"Project-Id-Version: WordPress CRM Integration 2.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/rabin-crm/wordpress-integration\n"
+"POT-Creation-Date: 2024-12-21 12:00+0000\n"
+"PO-Revision-Date: 2024-12-21 12:00+0000\n"
+"Last-Translator: Rabin CRM Team\n"
+"Language-Team: Persian\n"
+"Language: fa_IR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n==0 || n==1);\n"
+"X-Generator: Poedit 3.0\n"
+
+msgid "CRM Integration"
+msgstr "یکپارچه‌سازی CRM"
+
+msgid "تنظیمات"
+msgstr "تنظیمات"
+
+msgid "لاگ‌ها"
+msgstr "لاگ‌ها"
+
+msgid "همگام‌سازی دستی"
+msgstr "همگام‌سازی دستی"
+
+msgid "تنظیمات CRM Integration"
+msgstr "تنظیمات یکپارچه‌سازی CRM"
+
+msgid "آدرس CRM"
+msgstr "آدرس CRM"
+
+msgid "آدرس کامل سیستم CRM شما"
+msgstr "آدرس کامل سیستم CRM شما"
+
+msgid "کلید API"
+msgstr "کلید API"
+
+msgid "کلید API دریافتی از سیستم CRM"
+msgstr "کلید API دریافتی از سیستم CRM"
+
+msgid "کلید Tenant"
+msgstr "کلید Tenant"
+
+msgid "شناسه tenant در سیستم multi-tenant CRM"
+msgstr "شناسه tenant در سیستم multi-tenant CRM"
+
+msgid "تست اتصال"
+msgstr "تست اتصال"
+
+msgid "تنظیمات همگام‌سازی"
+msgstr "تنظیمات همگام‌سازی"
+
+msgid "فعال‌سازی همگام‌سازی"
+msgstr "فعال‌سازی همگام‌سازی"
+
+msgid "همگام‌سازی خودکار فعال باشد"
+msgstr "همگام‌سازی خودکار فعال باشد"
+
+msgid "همگام‌سازی کاربران"
+msgstr "همگام‌سازی کاربران"
+
+msgid "کاربران جدید و به‌روزرسانی‌ها همگام‌سازی شوند"
+msgstr "کاربران جدید و به‌روزرسانی‌ها همگام‌سازی شوند"
+
+msgid "همگام‌سازی WooCommerce"
+msgstr "همگام‌سازی WooCommerce"
+
+msgid "سفارشات و مشتریان WooCommerce همگام‌سازی شوند"
+msgstr "سفارشات و مشتریان WooCommerce همگام‌سازی شوند"
+
+msgid "حالت Debug"
+msgstr "حالت Debug"
+
+msgid "ثبت جزئیات کامل در لاگ‌ها"
+msgstr "ثبت جزئیات کامل در لاگ‌ها"
+
+msgid "تنظیمات ذخیره شد."
+msgstr "تنظیمات ذخیره شد."
+
+msgid "لاگ‌های CRM Integration"
+msgstr "لاگ‌های یکپارچه‌سازی CRM"
+
+msgid "زمان"
+msgstr "زمان"
+
+msgid "سطح"
+msgstr "سطح"
+
+msgid "پیام"
+msgstr "پیام"
+
+msgid "هیچ لاگی یافت نشد."
+msgstr "هیچ لاگی یافت نشد."
+
+msgid "همگام‌سازی کاربران"
+msgstr "همگام‌سازی کاربران"
+
+msgid "همگام‌سازی تمام کاربران موجود با CRM"
+msgstr "همگام‌سازی تمام کاربران موجود با CRM"
+
+msgid "شروع همگام‌سازی"
+msgstr "شروع همگام‌سازی"
+
+msgid "در حال همگام‌سازی..."
+msgstr "در حال همگام‌سازی..."
+
+msgid "دسترسی غیرمجاز"
+msgstr "دسترسی غیرمجاز"
+
+msgid "کاربر یافت نشد"
+msgstr "کاربر یافت نشد"
+
+msgid "همگام‌سازی موفقیت‌آمیز بود"
+msgstr "همگام‌سازی موفقیت‌آمیز بود"
+
+msgid "در حال تست..."
+msgstr "در حال تست..."
+
+msgid "موفقیت‌آمیز"
+msgstr "موفقیت‌آمیز"
+
+msgid "خطا"
+msgstr "خطا"

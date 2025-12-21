@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    bootstrap="tests/bootstrap.php"
+    backupGlobals="false"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    processIsolation="false"
+    stopOnFailure="false"
+    verbose="true"
+    testdox="true">
+    
+    <testsuites>
+        <testsuite name="WordPress CRM Integration Test Suite">
+            <directory>./tests/</directory>
+        </testsuite>
+        <testsuite name="Integration Tests">
+            <directory>./tests/integration/</directory>
+        </testsuite>
+        <testsuite name="Unit Tests">
+            <directory>./tests/unit/</directory>
+        </testsuite>
+    </testsuites>
+    
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">./includes/</directory>
+            <directory suffix=".php">./admin/</directory>
+            <file>./wordpress-crm-integration.php</file>
+            <exclude>
+                <directory>./tests/</directory>
+                <directory>./vendor/</directory>
+                <directory>./node_modules/</directory>
+            </exclude>
+        </whitelist>
+    </filter>
+    
+    <logging>
+        <log type="coverage-html" target="./tests/coverage/html"/>
+        <log type="coverage-clover" target="./tests/coverage/clover.xml"/>
+        <log type="junit" target="./tests/coverage/junit.xml"/>
+    </logging>
+    
+    <php>
+        <!-- WordPress Test Configuration -->
+        <const name="WP_TESTS_DOMAIN" value="example.org"/>
+        <const name="WP_TESTS_EMAIL" value="admin@example.org"/>
+        <const name="WP_TESTS_TITLE" value="Test Blog"/>
+        <const name="WP_PHP_BINARY" value="php"/>
+        <const name="WP_TESTS_FORCE_KNOWN_BUGS" value="true"/>
+        
+        <!-- Plugin Test Configuration -->
+        <const name="WP_CRM_INTEGRATION_TESTING" value="true"/>
+        <const name="WP_CRM_TEST_MODE" value="true"/>
+        
+        <!-- Database Configuration for Testing -->
+        <server name="DB_NAME" value="wordpress_test"/>
+        <server name="DB_USER" value="root"/>
+        <server name="DB_PASSWORD" value=""/>
+        <server name="DB_HOST" value="localhost"/>
+        <server name="DB_CHARSET" value="utf8"/>
+        <server name="DB_COLLATE" value=""/>
+        
+        <!-- WordPress Configuration -->
+        <server name="WP_TESTS_DIR" value="/tmp/wordpress-tests-lib"/>
+        <server name="WP_CORE_DIR" value="/tmp/wordpress/"/>
+        
+        <!-- Disable external HTTP requests during testing -->
+        <server name="WP_HTTP_BLOCK_EXTERNAL" value="true"/>
+        
+        <!-- Test-specific settings -->
+        <server name="WP_DEBUG" value="true"/>
+        <server name="WP_DEBUG_LOG" value="false"/>
+        <server name="WP_DEBUG_DISPLAY" value="false"/>
+    </php>
+</phpunit>

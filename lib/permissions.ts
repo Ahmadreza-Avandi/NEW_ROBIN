@@ -190,12 +190,34 @@ export async function getUserSidebarMenu(userId: string) {
  * ماژول‌های پیش‌فرض برای نقش‌های مختلف
  */
 export const DEFAULT_PERMISSIONS = {
-  ceo: [], // مدیر عامل به همه چیز دسترسی دارد
+  // مدیرعامل - می‌پرسه چرا نفروختید؟ (به همه چیز دسترسی دارد)
+  ceo: [], 
+  
+  // مدیر فروش - مجبور می‌کنه بفروشن
   sales_manager: [
-    'dashboard', 'customers', 'contacts', 'coworkers', 'activities', 'interactions',
-    'tasks', 'sales', 'products', 'deals', 'feedback', 'reports', 'daily_reports',
-    'chat', 'customer_club', 'calendar', 'projects'
+    'dashboard', 'customers', 'contacts', 'products', 'sales', 'deals', 
+    'activities', 'reports', 'coworkers', 'tasks', 'calendar', 'chat'
   ],
+  
+  // کارشناس فروش - واقعاً می‌فروشه
+  sales_specialist: [
+    'dashboard', 'customers', 'contacts', 'products', 'sales', 'deals',
+    'activities', 'tasks', 'calendar', 'chat'
+  ],
+  
+  // کارشناس فنی - باعث میشه فروش شدنی باشه
+  technical_specialist: [
+    'dashboard', 'customers', 'contacts', 'products', 'activities', 
+    'tasks', 'calendar', 'documents', 'feedback', 'chat'
+  ],
+  
+  // مدیر تیم تخصصی - نگهبان کیفیت و تحویل وعده
+  team_manager: [
+    'dashboard', 'customers', 'contacts', 'products', 'activities', 
+    'coworkers', 'tasks', 'calendar', 'documents', 'reports', 'feedback', 'chat'
+  ],
+  
+  // نقش‌های قدیمی برای سازگاری
   sales_agent: [
     'dashboard', 'customers', 'contacts', 'activities', 'interactions',
     'tasks', 'sales', 'products', 'feedback', 'chat', 'calendar'

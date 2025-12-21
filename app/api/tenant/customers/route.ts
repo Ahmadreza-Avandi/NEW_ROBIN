@@ -8,25 +8,111 @@ async function handleGetCustomers(request: NextRequest, session: any) {
 
   try {
     const tenantKey = session.tenantKey || session.tenant_key;
+    const { searchParams } = new URL(request.url);
+
+    // پارامترهای جستجو و فیلتر
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || '';
+    const segment = searchParams.get('segment') || '';
+    const priority = searchParams.get('priority') || '';
+    const industry = searchParams.get('industry') || '';
+    const city = searchParams.get('city') || '';
+
+    const offset = (page - 1) * limit;
 
     // اتصال به دیتابیس tenant
     const pool = await getTenantConnection(tenantKey);
     connection = await pool.getConnection();
 
     try {
+      // ساخت کوئری با فیلترها
+      let whereConditions = ['c.tenant_key = ?'];
+      let queryParams = [tenantKey];
+
+      if (search) {
+        whereConditions.push('(c.name LIKE ? OR c.email LIKE ? OR c.phone LIKE ? OR c.company_name LIKE ?)');
+        const searchPattern = `%${search}%`;
+        queryParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      }
+
+      if (status && status !== 'all') {
+        whereConditions.push('c.status = ?');
+        queryParams.push(status);
+      }
+
+      if (segment && segment !== 'all') {
+        whereConditions.push('c.segment = ?');
+        queryParams.push(segment);
+      }
+
+      if (priority && priority !== 'all') {
+        whereConditions.push('c.priority = ?');
+        queryParams.push(priority);
+      }
+
+      if (industry && industry !== 'all') {
+        whereConditions.push('c.industry = ?');
+        queryParams.push(industry);
+      }
+
+      if (city && city !== 'all') {
+        whereConditions.push('c.city = ?');
+        queryParams.push(city);
+      }
+
+      const whereClause = whereConditions.join(' AND ');
+
+      // شمارش کل رکوردها
+      const [countResult] = await connection.query(
+        `SELECT COUNT(*) as total FROM customers c WHERE ${whereClause}`,
+        queryParams
+      ) as any[];
+
+      const totalCustomers = countResult[0].total;
+      const totalPages = Math.ceil(totalCustomers / limit);
+
       // دریافت لیست مشتریان با نام کاربر اضافه کننده
       const [customers] = await connection.query(
-        `SELECT c.*, u.name as assigned_user_name 
+        `SELECT c.*, u.name as assigned_user_name
          FROM customers c 
          LEFT JOIN users u ON c.created_by = u.id AND c.tenant_key = u.tenant_key
-         WHERE c.tenant_key = ? 
-         ORDER BY c.created_at DESC LIMIT 100`,
-        [tenantKey]
+         WHERE ${whereClause}
+         ORDER BY c.created_at DESC 
+         LIMIT ? OFFSET ?`,
+        [...queryParams, limit, offset]
       ) as any[];
+
+      // اضافه کردن اطلاعات محصولات علاقه‌مند برای هر مشتری
+      for (let customer of customers) {
+        try {
+          const [interests] = await connection.query(`
+            SELECT p.name
+            FROM customer_product_interests cpi
+            JOIN products p ON cpi.product_id = p.id
+            WHERE cpi.customer_id = ? AND p.tenant_key = ?
+          `, [customer.id, tenantKey]) as any[];
+          
+          customer.interested_products_names = interests.map((i: any) => i.name).join(', ');
+          customer.interested_products_count = interests.length;
+        } catch (error) {
+          customer.interested_products_names = '';
+          customer.interested_products_count = 0;
+        }
+      }
 
       return NextResponse.json({
         success: true,
-        customers: customers
+        customers: customers,
+        pagination: {
+          page,
+          limit,
+          total: totalCustomers,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
       });
     } finally {
       connection.release();

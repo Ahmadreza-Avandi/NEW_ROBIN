@@ -8,9 +8,17 @@ async function handleGetPlans(request: NextRequest) {
   try {
     connection = await getMasterConnection();
 
-    const [plans] = await connection.query(
-      'SELECT * FROM subscription_plans WHERE is_active = true ORDER BY price_monthly ASC'
-    );
+    // دریافت لیست پلن‌ها
+    const [plans] = await connection.query(`
+      SELECT 
+        id, plan_key, plan_name, description,
+        price_monthly, price_yearly,
+        max_users, max_customers, max_storage_mb,
+        features, is_active, created_at
+      FROM subscription_plans 
+      WHERE is_active = 1
+      ORDER BY price_monthly ASC
+    `);
 
     return NextResponse.json({
       success: true,
@@ -18,61 +26,7 @@ async function handleGetPlans(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ خطا در دریافت پلن‌ها:', error);
-    return NextResponse.json(
-      { success: false, message: 'خطای سرور' },
-      { status: 500 }
-    );
-  } finally {
-    if (connection) {
-      connection.release();
-    }
-  }
-}
-
-async function handleCreatePlan(request: NextRequest) {
-  let connection;
-  
-  try {
-    const body = await request.json();
-    const { plan_key, plan_name, price_monthly, price_yearly, max_users, max_customers, max_storage_mb, description, features } = body;
-
-    if (!plan_key || !plan_name || !price_monthly || !price_yearly) {
-      return NextResponse.json(
-        { success: false, message: 'فیلدهای الزامی را پر کنید' },
-        { status: 400 }
-      );
-    }
-
-    connection = await getMasterConnection();
-
-    // بررسی تکراری نبودن plan_key
-    const [existing] = await connection.query(
-      'SELECT id FROM subscription_plans WHERE plan_key = ?',
-      [plan_key]
-    ) as any[];
-
-    if (existing.length > 0) {
-      return NextResponse.json(
-        { success: false, message: 'این کلید پلن قبلا استفاده شده است' },
-        { status: 400 }
-      );
-    }
-
-    await connection.query(
-      `INSERT INTO subscription_plans 
-       (plan_key, plan_name, price_monthly, price_yearly, max_users, max_customers, max_storage_mb, description, features, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, true)`,
-      [plan_key, plan_name, price_monthly, price_yearly, max_users, max_customers, max_storage_mb, description || '', JSON.stringify(features || {})]
-    );
-
-    return NextResponse.json({
-      success: true,
-      message: 'پلن با موفقیت ایجاد شد'
-    });
-
-  } catch (error) {
-    console.error('❌ خطا در ایجاد پلن:', error);
+    console.error('❌ خطا در دریافت لیست پلن‌ها:', error);
     return NextResponse.json(
       { success: false, message: 'خطای سرور' },
       { status: 500 }
@@ -85,4 +39,3 @@ async function handleCreatePlan(request: NextRequest) {
 }
 
 export const GET = requireAdmin(handleGetPlans);
-export const POST = requireAdmin(handleCreatePlan);

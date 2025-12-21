@@ -30,7 +30,8 @@ async function registerTenant(tenantData) {
       admin_password,
       admin_phone = '',
       plan_key = 'basic',
-      subscription_months = 12
+      subscription_months = 12,
+      subscription_end: custom_end_date = null
     } = tenantData;
 
     console.log(`\n🚀 ثبت tenant: ${tenant_key}`);
@@ -53,8 +54,17 @@ async function registerTenant(tenantData) {
 
     // محاسبه تاریخ انقضا
     const subscription_start = new Date();
-    const subscription_end = new Date();
-    subscription_end.setMonth(subscription_end.getMonth() + subscription_months);
+    let subscription_end;
+    
+    if (custom_end_date) {
+      // استفاده از تاریخ کاستوم
+      subscription_end = new Date(custom_end_date);
+      console.log(`📅 تاریخ پایان کاستوم: ${subscription_end.toLocaleDateString('fa-IR')}`);
+    } else {
+      // محاسبه بر اساس ماه‌های اشتراک
+      subscription_end = new Date();
+      subscription_end.setMonth(subscription_end.getMonth() + subscription_months);
+    }
 
     // ثبت tenant در master database
     console.log('💾 ثبت tenant در master database...');

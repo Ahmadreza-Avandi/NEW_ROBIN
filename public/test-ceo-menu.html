@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست منوی CEO</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .login-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .menu-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .menu-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .menu-item h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        .menu-item p {
+            margin: 0;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 تست منوی CEO - مهندس کریمی</h1>
+        
+        <div class="login-section">
+            <h3>1. ابتدا وارد شوید:</h3>
+            <div class="form-group">
+                <label for="email">ایمیل:</label>
+                <input type="email" id="email" value="Robintejarat@gmail.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">رمز عبور:</label>
+                <input type="password" id="password" value="admin123">
+            </div>
+            
+            <button onclick="login()">ورود</button>
+            <button onclick="testMenu()">تست منو (پس از ورود)</button>
+            <button onclick="logout()">خروج</button>
+        </div>
+        
+        <div id="result" class="result"></div>
+        
+        <div id="menuContainer"></div>
+    </div>
+
+    <script>
+        function showResult(message, isSuccess = true) {
+            const result = document.getElementById('result');
+            result.textContent = message;
+            result.className = `result ${isSuccess ? 'success' : 'error'}`;
+            result.style.display = 'block';
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/tenant/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Tenant-Key': 'rabin'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        tenant_key: 'rabin'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult(`✅ ورود موفق! کاربر: ${data.user.name} - نقش: ${data.user.role}`, true);
+                    
+                    // ذخیره token در localStorage
+                    if (data.token) {
+                        localStorage.setItem('auth-token', data.token);
+                    }
+                } else {
+                    showResult(`❌ خطا در ورود: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ خطا در اتصال: ${error.message}`, false);
+            }
+        }
+
+        async function testMenu() {
+            try {
+                const token = localStorage.getItem('auth-token');
+                if (!token) {
+                    showResult('❌ ابتدا وارد شوید', false);
+                    return;
+                }
+
+                const response = await fetch('/api/sidebar-menu', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-Tenant-Key': 'rabin'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult(`✅ منو دریافت شد! تعداد آیتم‌ها: ${data.data.length}`, true);
+                    displayMenu(data.data);
+                } else {
+                    showResult(`❌ خطا در دریافت منو: ${data.message}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ خطا در اتصال: ${error.message}`, false);
+            }
+        }
+
+        function displayMenu(menuItems) {
+            const container = document.getElementById('menuContainer');
+            
+            if (menuItems.length === 0) {
+                container.innerHTML = '<p>هیچ آیتم منویی یافت نشد</p>';
+                return;
+            }
+
+            const menuHTML = menuItems.map(item => `
+                <div class="menu-item">
+                    <h4>${item.display_name}</h4>
+                    <p>مسیر: ${item.route}</p>
+                    <p>نام: ${item.name}</p>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <h3>📋 آیتم‌های منو (${menuItems.length} مورد):</h3>
+                <div class="menu-items">
+                    ${menuHTML}
+                </div>
+            `;
+        }
+
+        async function logout() {
+            localStorage.removeItem('auth-token');
+            showResult('✅ خروج انجام شد', true);
+            document.getElementById('menuContainer').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

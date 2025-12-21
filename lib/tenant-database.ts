@@ -67,14 +67,16 @@ export async function getTenantConnection(tenantKey: string): Promise<mysql.Pool
     socketPath: undefined,
   };
 
-  // ایجاد pool جدید
+  // ایجاد pool جدید با تنظیمات بهینه
   const pool = mysql.createPool({
     ...dbConfig,
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 5, // کاهش تعداد اتصالات همزمان
     queueLimit: 0,
-    acquireTimeout: 15000,
-    timeout: 15000,
+    acquireTimeout: 10000,
+    timeout: 10000,
+    idleTimeout: 300000, // 5 دقیقه
+    maxIdle: 2, // حداکثر 2 اتصال idle
   });
 
   // ذخیره در cache

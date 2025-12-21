@@ -1,56 +1,49 @@
-/**
- * Internal API برای دریافت اطلاعات Tenant
- * این API فقط توسط middleware قابل فراخوانی است
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { getTenantByKey } from '@/lib/master-database';
+import { getMasterConnection } from '@/lib/master-database';
 
-export async function GET(request: NextRequest) {
-  // بررسی اینکه فقط از middleware فراخوانی شده باشد
-  const isInternal = request.headers.get('x-internal-api');
-  
-  if (!isInternal) {
-    return NextResponse.json(
-      { success: false, message: 'Forbidden' },
-      { status: 403 }
-    );
-  }
-  
+export async function POST(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const tenantKey = searchParams.get('tenant_key');
+    const { tenant_key } = await request.json();
     
-    if (!tenantKey) {
-      return NextResponse.json(
-        { success: false, message: 'tenant_key is required' },
-        { status: 400 }
-      );
+    if (!tenant_key) {
+      return NextResponse.json({
+        success: false,
+        error: 'tenant_key is required'
+      }, { status: 400 });
+    }
+
+    const connection = await getMasterConnection();
+    
+    const [tenants]: any = await connection.execute(
+      'SELECT id, tenant_key, company_name, is_active, is_deleted FROM tenants WHERE tenant_key = ?',
+      [tenant_key]
+    );
+    
+    if (tenants.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Tenant not found'
+      }, { status: 404 });
     }
     
-    // دریافت اطلاعات tenant از master database
-    const tenant = await getTenantByKey(tenantKey);
-    
-    if (!tenant) {
-      return NextResponse.json(
-        { success: false, message: 'Tenant not found' },
-        { status: 404 }
-      );
-    }
-    
-    // برگرداندن اطلاعات tenant (بدون password)
-    const { db_password, ...tenantInfo } = tenant;
+    const tenant = tenants[0];
     
     return NextResponse.json({
       success: true,
-      tenant: tenantInfo
+      data: {
+        id: tenant.id,
+        tenant_key: tenant.tenant_key,
+        company_name: tenant.company_name,
+        is_active: tenant.is_active,
+        is_deleted: tenant.is_deleted
+      }
     });
     
-  } catch (error) {
-    console.error('Error in tenant-info API:', error);
-    return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    console.error('Error checking tenant:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Internal server error'
+    }, { status: 500 });
   }
 }

@@ -41,66 +41,6 @@ interface NavItem {
   children?: NavItem[];
 }
 
-interface Module {
-  id: string;
-  name: string;
-  display_name: string;
-  route: string;
-  icon: string;
-  sort_order: number;
-  parent_id?: string;
-}
-
-// نقشه آیکون‌ها
-const iconMap: { [key: string]: React.ComponentType<any> } = {
-  'Home': LayoutDashboard,
-  'LayoutDashboard': LayoutDashboard,
-  'Users': Users,
-  'Users2': Target,
-  'UserCheck': Contact,
-  'Activity': Activity,
-  'MessageCircle': MessageCircle,
-  'MessageCircle2': MessageCircle,
-  'DollarSign': TrendingUp,
-  'BarChart3': BarChart3,
-  'Calendar': Calendar,
-  'User': Contact,
-  'Settings': Settings,
-  'Target': Target,
-  'Briefcase': Briefcase,
-  'Ticket': Ticket,
-  'ChevronRight': ChevronRight,
-  'Building2': Building2,
-  'TrendingUp': TrendingUp,
-  'FileText': FileText,
-  'Package': Package,
-  'Mail': Mail,
-  'Monitor': Monitor,
-  'Mic': Mic,
-};
-
-// نقشه نام‌های نمایشی روت‌ها
-const routeDisplayNames: { [key: string]: string } = {
-  '/dashboard': 'داشبورد',
-  '/dashboard/customers': 'مشتریان',
-  '/dashboard/contacts': 'مخاطبین',
-  '/dashboard/coworkers': 'همکاران',
-  '/dashboard/activities': 'فعالیت‌ها',
-  '/dashboard/chat': 'چت',
-  '/dashboard/customer-club': 'باشگاه مشتریان',
-  '/dashboard/deals': 'معاملات',
-  '/dashboard/feedback': 'بازخوردها',
-  '/dashboard/reports': 'گزارش‌ها',
-  '/dashboard/daily-reports': 'گزارش‌های روزانه',
-
-  '/dashboard/calendar': 'تقویم',
-  '/dashboard/profile': 'پروفایل',
-
-  '/dashboard/system-monitoring': 'مانیتورینگ سیستم',
-  '/dashboard/products': 'محصولات',
-  '/dashboard/documents': 'مدیریت اسناد',
-};
-
 interface ResponsiveSidebarProps {
   mobileOpen?: boolean;
   onMobileClose?: () => void;
@@ -162,9 +102,9 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
       console.log('🔍 Raw data:', JSON.stringify(data.data, null, 2));
 
       if (data.success && data.data && data.data.length > 0) {
-        const modules: Module[] = data.data;
-        console.log('✅ Converting modules to nav items:', modules);
-        const convertedNavItems = convertModulesToNavItems(modules, tenantKey);
+        const permissions = data.data;
+        console.log('✅ Converting permissions to nav items:', permissions);
+        const convertedNavItems = convertModulesToNavItems(permissions, tenantKey);
         console.log('✅ Converted nav items count:', convertedNavItems.length);
         console.log('✅ Converted nav items:', JSON.stringify(convertedNavItems, null, 2));
         setNavItems(convertedNavItems);
@@ -318,76 +258,60 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
     }
   };
 
-  const convertModulesToNavItems = (modules: Module[], tenantKey: string): NavItem[] => {
-    console.log('🔄 convertModulesToNavItems called with:', modules, 'tenantKey:', tenantKey);
-
-    const filteredModules = modules
-      .filter(module => module.route && module.route !== '#')
-      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-
-    console.log('📋 Filtered modules:', filteredModules);
-
-    // Create hierarchical menu structure
-    const navItems: NavItem[] = [];
-    const processedModules = new Set<string>();
+  const convertModulesToNavItems = (permissions: any[], tenantKey: string): NavItem[] => {
+    console.log('🔄 convertModulesToNavItems called with:', permissions, 'tenantKey:', tenantKey);
 
     // Helper function to build tenant-aware routes
     const buildTenantRoute = (route: string): string => {
-      // If route doesn't start with /, add it
       if (!route.startsWith('/')) route = '/' + route;
-      // If route already starts with /[tenant_key] or is /dashboard, prepend tenant
       if (route.startsWith('/dashboard')) {
         return `/${tenantKey}${route}`;
       }
       return route;
     };
 
-    // Group modules into main categories
-    // Sales Management modules
-    const salesModules = filteredModules.filter(m =>
-      ['sales', 'sales_opportunities', 'deals'].includes(m.name)
-    );
-
-    // Customer Experience Management modules
-    const cemModules = filteredModules.filter(m =>
-      ['customers', 'contacts', 'feedback', 'feedback_new', 'surveys', 'customer_health', 'customer-club'].includes(m.name)
-    );
-
-    // Team Management modules
-    const teamModules = filteredModules.filter(m =>
-      ['coworkers', 'activities', 'tasks', 'calendar'].includes(m.name)
-    );
-
-
-
-
-
-    // Add dashboard first if exists
-    const dashboardModule = filteredModules.find(m => m.name === 'dashboard');
-    if (dashboardModule) {
-      navItems.push({
-        title: routeDisplayNames[dashboardModule.route] || dashboardModule.display_name,
-        href: buildTenantRoute(dashboardModule.route),
-        icon: iconMap[dashboardModule.icon] || LayoutDashboard,
-      });
-      processedModules.add(dashboardModule.name);
+    // اگر permissions خالی است، فقط داشبورد را نشان بده
+    if (!permissions || permissions.length === 0) {
+      console.log('⚠️ No permissions found, showing minimal menu');
+      return [
+        {
+          title: 'داشبورد',
+          href: buildTenantRoute('/dashboard'),
+          icon: LayoutDashboard,
+        },
+        {
+          title: 'پروفایل',
+          href: buildTenantRoute('/dashboard/profile'),
+          icon: User,
+        }
+      ];
     }
 
-    // Add Sales Management mega menu
-    if (salesModules.length > 0) {
+    // تبدیل permissions به مجموعه‌ای از نام‌های ماژول‌ها
+    const availableModules = new Set(permissions.map(p => p.module || p.name));
+    console.log('📋 Available modules:', Array.from(availableModules));
+
+    // بررسی اینکه آیا کاربر CEO است یا خیر (بر اساس تعداد permissions)
+    const isCEO = permissions.length >= 30; // اگر بیش از 30 ماژول دارد، احتمالاً CEO است
+    
+    if (isCEO) {
+      console.log('✅ CEO detected - showing full menu structure');
+      // Create complete CEO menu structure as requested
+      const navItems: NavItem[] = [];
+
+      // 1. داشبورد
+      navItems.push({
+        title: 'داشبورد',
+        href: buildTenantRoute('/dashboard'),
+        icon: LayoutDashboard,
+      });
+
+      // 2. مدیریت فروش
       navItems.push({
         title: 'مدیریت فروش',
         href: buildTenantRoute('/dashboard/sales'),
         icon: TrendingUp,
         children: [
-          ...salesModules.map(module => {
-            processedModules.add(module.name);
-            return {
-              title: routeDisplayNames[module.route] || module.display_name,
-              href: buildTenantRoute(module.route),
-              icon: iconMap[module.icon] || TrendingUp,
-            };
-          }),
           {
             title: 'محصولات',
             href: buildTenantRoute('/dashboard/products'),
@@ -398,42 +322,64 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
             href: buildTenantRoute('/dashboard/sales'),
             icon: TrendingUp,
           }
-        ],
+        ]
       });
-    }
 
-    // Add Customer Experience Management mega menu
-    if (cemModules.length > 0) {
+      // 3. مدیریت تجربه مشتری
       navItems.push({
         title: 'مدیریت تجربه مشتری',
-        href: buildTenantRoute('/dashboard/cem'),
+        href: buildTenantRoute('/dashboard/customers'),
         icon: Users,
-        children: cemModules.map(module => {
-          processedModules.add(module.name);
-          return {
-            title: routeDisplayNames[module.route] || module.display_name,
-            href: buildTenantRoute(module.route),
-            icon: iconMap[module.icon] || Users,
-          };
-        }),
+        children: [
+          {
+            title: 'مشتریان',
+            href: buildTenantRoute('/dashboard/customers'),
+            icon: Users,
+          },
+          {
+            title: 'مخاطبین',
+            href: buildTenantRoute('/dashboard/contacts'),
+            icon: Contact,
+          },
+          {
+            title: 'باشگاه مشتریان',
+            href: buildTenantRoute('/dashboard/customer-club'),
+            icon: Users,
+          },
+          {
+            title: 'بازخوردها',
+            href: buildTenantRoute('/dashboard/feedback'),
+            icon: MessageCircle,
+          }
+        ]
       });
-    }
 
-    // Add Team Management mega menu
-    if (teamModules.length > 0) {
+      // 4. مدیریت همکاران
       navItems.push({
         title: 'مدیریت همکاران',
         href: buildTenantRoute('/dashboard/coworkers'),
         icon: Activity,
         children: [
-          ...teamModules.map(module => {
-            processedModules.add(module.name);
-            return {
-              title: routeDisplayNames[module.route] || module.display_name,
-              href: buildTenantRoute(module.route),
-              icon: iconMap[module.icon] || Activity,
-            };
-          }),
+          {
+            title: 'همکاران',
+            href: buildTenantRoute('/dashboard/coworkers'),
+            icon: Users,
+          },
+          {
+            title: 'فعالیت‌ها',
+            href: buildTenantRoute('/dashboard/activities'),
+            icon: Activity,
+          },
+          {
+            title: 'تقویم',
+            href: buildTenantRoute('/dashboard/calendar'),
+            icon: Calendar,
+          },
+          {
+            title: 'وظایف',
+            href: buildTenantRoute('/dashboard/tasks'),
+            icon: CheckCircle,
+          },
           {
             title: 'مدیریت اسناد',
             href: buildTenantRoute('/dashboard/documents'),
@@ -443,46 +389,126 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
             title: 'گزارش‌گیری',
             href: buildTenantRoute('/dashboard/reports'),
             icon: BarChart3,
-          },
-          {
-            title: 'مدیریت وظایف',
-            href: buildTenantRoute('/dashboard/tasks'),
-            icon: CheckCircle,
           }
-        ],
+        ]
       });
+
+      // 5. مدیریت وظایف (standalone)
+      navItems.push({
+        title: 'مدیریت وظایف',
+        href: buildTenantRoute('/dashboard/tasks'),
+        icon: CheckCircle,
+      });
+
+      // 6. مانیتورینگ سیستم
+      navItems.push({
+        title: 'مانیتورینگ سیستم',
+        href: buildTenantRoute('/dashboard/system-monitoring'),
+        icon: Monitor,
+      });
+
+      // 7. چت
+      navItems.push({
+        title: 'چت',
+        href: buildTenantRoute('/dashboard/chat'),
+        icon: MessageCircle,
+      });
+
+      // 8. باشگاه مشتریان (standalone)
+      navItems.push({
+        title: 'باشگاه مشتریان',
+        href: buildTenantRoute('/dashboard/customer-club'),
+        icon: Users,
+      });
+
+      // 9. صدای رابین
+      navItems.push({
+        title: 'صدای رابین',
+        href: buildTenantRoute('/dashboard/voice-assistant'),
+        icon: Mic,
+      });
+
+      console.log('✅ Final CEO nav items:', navItems);
+      return navItems;
+    } else {
+      // برای کاربران غیر CEO، فقط ماژول‌هایی که دسترسی دارند را نشان بده
+      console.log('📝 Non-CEO user - building limited menu based on permissions');
+      const navItems: NavItem[] = [];
+
+      // همیشه داشبورد را اضافه کن
+      navItems.push({
+        title: 'داشبورد',
+        href: buildTenantRoute('/dashboard'),
+        icon: LayoutDashboard,
+      });
+
+      // اضافه کردن سایر ماژول‌ها بر اساس دسترسی
+      if (availableModules.has('customers')) {
+        navItems.push({
+          title: 'مشتریان',
+          href: buildTenantRoute('/dashboard/customers'),
+          icon: Users,
+        });
+      }
+
+      if (availableModules.has('contacts')) {
+        navItems.push({
+          title: 'مخاطبین',
+          href: buildTenantRoute('/dashboard/contacts'),
+          icon: Contact,
+        });
+      }
+
+      if (availableModules.has('activities')) {
+        navItems.push({
+          title: 'فعالیت‌ها',
+          href: buildTenantRoute('/dashboard/activities'),
+          icon: Activity,
+        });
+      }
+
+      if (availableModules.has('calendar')) {
+        navItems.push({
+          title: 'تقویم',
+          href: buildTenantRoute('/dashboard/calendar'),
+          icon: Calendar,
+        });
+      }
+
+      if (availableModules.has('products')) {
+        navItems.push({
+          title: 'محصولات',
+          href: buildTenantRoute('/dashboard/products'),
+          icon: Package,
+        });
+      }
+
+      if (availableModules.has('sales')) {
+        navItems.push({
+          title: 'فروش‌ها',
+          href: buildTenantRoute('/dashboard/sales'),
+          icon: TrendingUp,
+        });
+      }
+
+      if (availableModules.has('reports')) {
+        navItems.push({
+          title: 'گزارش‌ها',
+          href: buildTenantRoute('/dashboard/reports'),
+          icon: BarChart3,
+        });
+      }
+
+      // همیشه پروفایل را اضافه کن
+      navItems.push({
+        title: 'پروفایل',
+        href: buildTenantRoute('/dashboard/profile'),
+        icon: User,
+      });
+
+      console.log('✅ Final limited nav items:', navItems);
+      return navItems;
     }
-
-    // Add System Monitoring
-    navItems.push({
-      title: 'مانیتورینگ سیستم',
-      href: buildTenantRoute('/dashboard/system-monitoring'),
-      icon: Monitor,
-    });
-
-    // Add Chat as standalone item
-    navItems.push({
-      title: 'چت',
-      href: buildTenantRoute('/dashboard/chat'),
-      icon: MessageCircle,
-    });
-
-    // Add Customer Club with Email Management
-    navItems.push({
-      title: 'باشگاه مشتریان',
-      href: buildTenantRoute('/dashboard/customer-club'),
-      icon: Users,
-    });
-
-    // Add Rabin Voice Assistant
-    navItems.push({
-      title: 'صدای رابین',
-      href: buildTenantRoute('/dashboard/voice-assistant'),
-      icon: Mic,
-    });
-
-    console.log('✅ Final nav items:', navItems);
-    return navItems;
   };
 
   const toggleExpanded = (title: string) => {

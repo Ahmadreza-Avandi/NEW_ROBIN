@@ -25,11 +25,13 @@ async function handleGetCustomer(request: NextRequest, session: any) {
     connection = await pool.getConnection();
 
     try {
-      // دریافت اطلاعات مشتری
-      const [customers] = await connection.query(
-        'SELECT * FROM customers WHERE id = ? AND tenant_key = ?',
-        [customerId, tenantKey]
-      ) as any[];
+      // دریافت اطلاعات کامل مشتری با نام کاربر ایجادکننده
+      const [customers] = await connection.query(`
+        SELECT c.*, u.name as assigned_user_name, u.email as assigned_user_email
+        FROM customers c 
+        LEFT JOIN users u ON c.created_by = u.id AND c.tenant_key = u.tenant_key
+        WHERE c.id = ? AND c.tenant_key = ?
+      `, [customerId, tenantKey]) as any[];
 
       if (customers.length === 0) {
         return NextResponse.json(
@@ -38,9 +40,102 @@ async function handleGetCustomer(request: NextRequest, session: any) {
         );
       }
 
+      const customer = customers[0];
+
+      // دریافت محصولات علاقه‌مند
+      const [interestedProducts] = await connection.query(`
+        SELECT cpi.id, p.id as product_id, p.name as product_name, p.description, p.price, p.category,
+               cpi.interest_level, cpi.notes, cpi.created_at
+        FROM customer_product_interests cpi
+        JOIN products p ON cpi.product_id = p.id
+        WHERE cpi.customer_id = ? AND p.tenant_key = ?
+        ORDER BY cpi.created_at DESC
+      `, [customerId, tenantKey]) as any[];
+
+      // دریافت آمار فروش
+      const [salesStats] = await connection.query(`
+        SELECT 
+          COUNT(*) as total_sales,
+          SUM(total_amount) as total_sales_amount,
+          SUM(CASE WHEN payment_status = 'paid' THEN total_amount ELSE 0 END) as paid_amount,
+          SUM(CASE WHEN payment_status = 'pending' THEN total_amount ELSE 0 END) as pending_amount,
+          MAX(sale_date) as last_sale_date
+        FROM sales 
+        WHERE customer_id = ? AND tenant_key = ?
+      `, [customerId, tenantKey]) as any[];
+
+      // دریافت آمار تیکت‌ها
+      const [ticketStats] = await connection.query(`
+        SELECT 
+          COUNT(*) as total_tickets,
+          COUNT(CASE WHEN status = 'open' THEN 1 END) as open_tickets,
+          COUNT(CASE WHEN status = 'closed' THEN 1 END) as closed_tickets,
+          MAX(created_at) as last_ticket_date
+        FROM tickets 
+        WHERE customer_id = ? AND tenant_key = ?
+      `, [customerId, tenantKey]) as any[];
+
+      // دریافت آمار فعالیت‌ها
+      const [activityStats] = await connection.query(`
+        SELECT 
+          COUNT(*) as total_activities,
+          COUNT(CASE WHEN type = 'call' THEN 1 END) as total_calls,
+          COUNT(CASE WHEN type = 'meeting' THEN 1 END) as total_meetings,
+          COUNT(CASE WHEN type = 'email' THEN 1 END) as total_emails,
+          MAX(created_at) as last_activity_date
+        FROM activities 
+        WHERE customer_id = ? AND tenant_key = ?
+      `, [customerId, tenantKey]) as any[];
+
+      // دریافت آخرین فعالیت‌ها (5 مورد)
+      const [recentActivities] = await connection.query(`
+        SELECT a.*, u.name as performed_by_name
+        FROM activities a
+        LEFT JOIN users u ON a.performed_by = u.id AND a.tenant_key = u.tenant_key
+        WHERE a.customer_id = ? AND a.tenant_key = ?
+        ORDER BY a.created_at DESC
+        LIMIT 5
+      `, [customerId, tenantKey]) as any[];
+
+      // دریافت مخاطبین (از طریق company_id)
+      const [contacts] = await connection.query(`
+        SELECT id, first_name, last_name, email, phone, job_title, is_primary, created_at
+        FROM contacts 
+        WHERE company_id = ? AND tenant_key = ?
+        ORDER BY is_primary DESC, created_at DESC
+      `, [customerId, tenantKey]) as any[];
+
+      // ترکیب همه اطلاعات
+      const customerData = {
+        ...customer,
+        interested_products: interestedProducts,
+        sales_stats: salesStats[0] || {
+          total_sales: 0,
+          total_sales_amount: 0,
+          paid_amount: 0,
+          pending_amount: 0,
+          last_sale_date: null
+        },
+        ticket_stats: ticketStats[0] || {
+          total_tickets: 0,
+          open_tickets: 0,
+          closed_tickets: 0,
+          last_ticket_date: null
+        },
+        activity_stats: activityStats[0] || {
+          total_activities: 0,
+          total_calls: 0,
+          total_meetings: 0,
+          total_emails: 0,
+          last_activity_date: null
+        },
+        recent_activities: recentActivities,
+        contacts: contacts
+      };
+
       return NextResponse.json({
         success: true,
-        data: customers[0]
+        data: customerData
       });
     } finally {
       connection.release();

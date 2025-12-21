@@ -1,35 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+import { verifyAdminToken } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('admin_token')?.value;
+    console.log('🔍 Admin auth verification request received');
+    
+    const admin = await verifyAdminToken(request);
 
-    if (!token) {
+    if (!admin) {
+      console.log('❌ Admin verification failed - no valid token');
       return NextResponse.json(
-        { success: false, message: 'توکن یافت نشد' },
+        { success: false, message: 'غیر مجاز - لطفاً وارد شوید' },
         { status: 401 }
       );
     }
 
-    // اعتبارسنجی token
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-
+    console.log('✅ Admin verification successful:', { id: admin.id, email: admin.email });
+    
     return NextResponse.json({
       success: true,
       admin: {
-        id: decoded.id,
-        name: decoded.name,
-        email: decoded.email
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role
       }
     });
 
   } catch (error) {
+    console.error('❌ خطا در تأیید احراز هویت admin:', error);
     return NextResponse.json(
-      { success: false, message: 'توکن نامعتبر است' },
-      { status: 401 }
+      { success: false, message: 'خطای سرور' },
+      { status: 500 }
     );
   }
 }

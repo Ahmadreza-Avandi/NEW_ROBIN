@@ -86,7 +86,7 @@ async function handleCreateTenant(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { tenant_key, company_name, admin_name, admin_email, admin_phone, admin_password, subscription_plan, subscription_months } = body;
+    const { tenant_key, company_name, admin_name, admin_email, admin_phone, admin_password, subscription_plan, subscription_months, subscription_end } = body;
 
     // اعتبارسنجی ورودی
     if (!tenant_key || !company_name || !admin_name || !admin_email || !admin_password || !subscription_plan) {
@@ -146,7 +146,8 @@ async function handleCreateTenant(request: NextRequest) {
       admin_phone: admin_phone || '',
       admin_password,
       plan_key: subscription_plan,
-      subscription_months: subscription_months || 1
+      subscription_months: subscription_months || 1,
+      subscription_end: subscription_end || null
     });
 
     if (!result.success) {

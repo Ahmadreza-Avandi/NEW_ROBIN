@@ -1,0 +1,429 @@
+# WordPress CRM Integration - Persian Translation
+# Copyright (C) 2024 Your Company
+# This file is distributed under the same license as the WordPress CRM Integration package.
+msgid ""
+msgstr ""
+"Project-Id-Version: WordPress CRM Integration 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wordpress-crm-integration\n"
+"POT-Creation-Date: 2024-12-21 12:00+0000\n"
+"PO-Revision-Date: 2024-12-21 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Persian\n"
+"Language: fa_IR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n==0 || n==1);\n"
+"X-Generator: Poedit 3.0\n"
+
+#: wordpress-crm-integration.php
+msgid "CRM Integration"
+msgstr "یکپارچه‌سازی CRM"
+
+msgid "General Settings"
+msgstr "تنظیمات عمومی"
+
+msgid "Field Mapping"
+msgstr "نگاشت فیلدها"
+
+msgid "Advanced Settings"
+msgstr "تنظیمات پیشرفته"
+
+msgid "Sync Logs"
+msgstr "گزارش‌های همگام‌سازی"
+
+msgid "Monitoring & Testing"
+msgstr "نظارت و تست"
+
+msgid "Backup & Restore"
+msgstr "پشتیبان‌گیری و بازیابی"
+
+msgid "CRM Connection Settings"
+msgstr "تنظیمات اتصال CRM"
+
+msgid "CRM URL"
+msgstr "آدرس CRM"
+
+msgid "API Key"
+msgstr "کلید API"
+
+msgid "Tenant Key"
+msgstr "کلید مستاجر"
+
+msgid "Synchronization Settings"
+msgstr "تنظیمات همگام‌سازی"
+
+msgid "Enable Sync"
+msgstr "فعال‌سازی همگام‌سازی"
+
+msgid "Test Connection"
+msgstr "تست اتصال"
+
+msgid "Field Mapping Configuration"
+msgstr "پیکربندی نگاشت فیلدها"
+
+msgid "Map WordPress fields to your CRM fields. Required fields are marked with an asterisk (*)."
+msgstr "فیلدهای وردپرس را به فیلدهای CRM خود نگاشت دهید. فیلدهای الزامی با ستاره (*) مشخص شده‌اند."
+
+msgid "Note:"
+msgstr "توجه:"
+
+msgid "WooCommerce is not active. Order and product mapping options will be limited to basic WordPress fields."
+msgstr "ووکامرس فعال نیست. گزینه‌های نگاشت سفارش و محصول به فیلدهای پایه وردپرس محدود خواهد شد."
+
+msgid "Customer Fields"
+msgstr "فیلدهای مشتری"
+
+msgid "Order Fields"
+msgstr "فیلدهای سفارش"
+
+msgid "Product Fields"
+msgstr "فیلدهای محصول"
+
+msgid "-- Select WordPress Field --"
+msgstr "-- انتخاب فیلد وردپرس --"
+
+msgid "Refresh WordPress Fields"
+msgstr "به‌روزرسانی فیلدهای وردپرس"
+
+msgid "Save Field Mappings"
+msgstr "ذخیره نگاشت فیلدها"
+
+msgid "Email Address"
+msgstr "آدرس ایمیل"
+
+msgid "Customer email address (required)"
+msgstr "آدرس ایمیل مشتری (الزامی)"
+
+msgid "First Name"
+msgstr "نام"
+
+msgid "Last Name"
+msgstr "نام خانوادگی"
+
+msgid "Phone Number"
+msgstr "شماره تلفن"
+
+msgid "Company Name"
+msgstr "نام شرکت"
+
+msgid "Address"
+msgstr "آدرس"
+
+msgid "City"
+msgstr "شهر"
+
+msgid "State/Province"
+msgstr "استان/ایالت"
+
+msgid "Country"
+msgstr "کشور"
+
+msgid "Postal Code"
+msgstr "کد پستی"
+
+msgid "Customer Email"
+msgstr "ایمیل مشتری"
+
+msgid "Total Amount"
+msgstr "مبلغ کل"
+
+msgid "Currency"
+msgstr "واحد پول"
+
+msgid "Order Status"
+msgstr "وضعیت سفارش"
+
+msgid "Order Date"
+msgstr "تاریخ سفارش"
+
+msgid "Product Name"
+msgstr "نام محصول"
+
+msgid "Description"
+msgstr "توضیحات"
+
+msgid "SKU"
+msgstr "کد محصول"
+
+msgid "Price"
+msgstr "قیمت"
+
+msgid "Category"
+msgstr "دسته‌بندی"
+
+msgid "Testing connection..."
+msgstr "در حال تست اتصال..."
+
+msgid "Connection successful!"
+msgstr "اتصال موفقیت‌آمیز!"
+
+msgid "Connection failed:"
+msgstr "اتصال ناموفق:"
+
+msgid "Loading fields..."
+msgstr "در حال بارگذاری فیلدها..."
+
+msgid "Validating credentials..."
+msgstr "در حال اعتبارسنجی مدارک..."
+
+msgid "Credentials are valid"
+msgstr "مدارک معتبر هستند"
+
+msgid "Invalid credentials"
+msgstr "مدارک نامعتبر"
+
+msgid "Checking connection status..."
+msgstr "در حال بررسی وضعیت اتصال..."
+
+msgid "Configure your CRM connection settings below. Make sure to test the connection before enabling synchronization."
+msgstr "تنظیمات اتصال CRM خود را در زیر پیکربندی کنید. قبل از فعال‌سازی همگام‌سازی، اتصال را تست کنید."
+
+msgid "Choose which data types to synchronize with your CRM system."
+msgstr "انتخاب کنید که کدام نوع داده‌ها با سیستم CRM شما همگام‌سازی شوند."
+
+msgid "Enter your CRM system URL (e.g., https://your-crm.com)"
+msgstr "آدرس سیستم CRM خود را وارد کنید (مثال: https://your-crm.com)"
+
+msgid "Enter your API key for CRM authentication"
+msgstr "کلید API خود را برای احراز هویت CRM وارد کنید"
+
+msgid "Enter your tenant key (optional)"
+msgstr "کلید مستاجر خود را وارد کنید (اختیاری)"
+
+msgid "Customers"
+msgstr "مشتریان"
+
+msgid "Orders"
+msgstr "سفارشات"
+
+msgid "Products"
+msgstr "محصولات"
+
+msgid "Sync Logs & Monitoring"
+msgstr "گزارش‌ها و نظارت همگام‌سازی"
+
+msgid "Last 7 Days Statistics"
+msgstr "آمار ۷ روز گذشته"
+
+msgid "Log Levels"
+msgstr "سطوح گزارش"
+
+msgid "Entity Types"
+msgstr "انواع موجودیت"
+
+msgid "Recent Critical Errors"
+msgstr "خطاهای حیاتی اخیر"
+
+msgid "All Levels"
+msgstr "همه سطوح"
+
+msgid "Debug"
+msgstr "اشکال‌زدایی"
+
+msgid "Info"
+msgstr "اطلاعات"
+
+msgid "Warning"
+msgstr "هشدار"
+
+msgid "Error"
+msgstr "خطا"
+
+msgid "Critical"
+msgstr "حیاتی"
+
+msgid "All Entity Types"
+msgstr "همه انواع موجودیت"
+
+msgid "Customer"
+msgstr "مشتری"
+
+msgid "Order"
+msgstr "سفارش"
+
+msgid "Product"
+msgstr "محصول"
+
+msgid "Search logs..."
+msgstr "جستجو در گزارش‌ها..."
+
+msgid "to"
+msgstr "تا"
+
+msgid "Filter"
+msgstr "فیلتر"
+
+msgid "Clear"
+msgstr "پاک کردن"
+
+msgid "Export CSV"
+msgstr "خروجی CSV"
+
+msgid "Cleanup Old Logs"
+msgstr "پاک‌سازی گزارش‌های قدیمی"
+
+msgid "Are you sure you want to cleanup old logs?"
+msgstr "آیا مطمئن هستید که می‌خواهید گزارش‌های قدیمی را پاک کنید؟"
+
+msgid "Date"
+msgstr "تاریخ"
+
+msgid "Level"
+msgstr "سطح"
+
+msgid "Entity"
+msgstr "موجودیت"
+
+msgid "Action"
+msgstr "عمل"
+
+msgid "Message"
+msgstr "پیام"
+
+msgid "User"
+msgstr "کاربر"
+
+msgid "No logs found matching your criteria."
+msgstr "هیچ گزارشی با معیارهای شما یافت نشد."
+
+msgid "System"
+msgstr "سیستم"
+
+msgid "Unknown"
+msgstr "نامشخص"
+
+msgid "Failed"
+msgstr "ناموفق"
+
+msgid "Success"
+msgstr "موفق"
+
+msgid "WordPress Fields"
+msgstr "فیلدهای وردپرس"
+
+msgid "User Meta"
+msgstr "متای کاربر"
+
+msgid "WooCommerce Billing"
+msgstr "صورتحساب ووکامرس"
+
+msgid "WooCommerce Shipping"
+msgstr "حمل‌ونقل ووکامرس"
+
+msgid "Custom Fields"
+msgstr "فیلدهای سفارشی"
+
+msgid "You do not have sufficient permissions to access this page."
+msgstr "شما مجوز کافی برای دسترسی به این صفحه را ندارید."
+
+msgid "Settings saved successfully."
+msgstr "تنظیمات با موفقیت ذخیره شد."
+
+msgid "Please enter a valid CRM URL."
+msgstr "لطفاً یک آدرس CRM معتبر وارد کنید."
+
+msgid "Please enter an API key."
+msgstr "لطفاً یک کلید API وارد کنید."
+
+msgid "Connection test successful. Your CRM credentials are valid."
+msgstr "تست اتصال موفقیت‌آمیز. مدارک CRM شما معتبر هستند."
+
+msgid "Connection test failed. Please check your CRM URL and API key."
+msgstr "تست اتصال ناموفق. لطفاً آدرس CRM و کلید API خود را بررسی کنید."
+
+msgid "Field mappings saved successfully."
+msgstr "نگاشت فیلدها با موفقیت ذخیره شد."
+
+msgid "Please map all required fields before saving."
+msgstr "لطفاً قبل از ذخیره، همه فیلدهای الزامی را نگاشت دهید."
+
+msgid "Sync enabled for selected data types."
+msgstr "همگام‌سازی برای انواع داده‌های انتخابی فعال شد."
+
+msgid "Sync disabled for all data types."
+msgstr "همگام‌سازی برای همه انواع داده‌ها غیرفعال شد."
+
+msgid "Manual sync test completed successfully."
+msgstr "تست همگام‌سازی دستی با موفقیت تکمیل شد."
+
+msgid "Manual sync test failed. Please check your configuration."
+msgstr "تست همگام‌سازی دستی ناموفق. لطفاً پیکربندی خود را بررسی کنید."
+
+msgid "Error threshold reset successfully. Sync operations will resume."
+msgstr "آستانه خطا با موفقیت بازنشانی شد. عملیات همگام‌سازی از سر گرفته خواهد شد."
+
+msgid "Plugin activated successfully. Please configure your CRM connection."
+msgstr "افزونه با موفقیت فعال شد. لطفاً اتصال CRM خود را پیکربندی کنید."
+
+msgid "Plugin deactivated successfully."
+msgstr "افزونه با موفقیت غیرفعال شد."
+
+msgid "WordPress CRM Integration cannot be activated due to compatibility issues:"
+msgstr "یکپارچه‌سازی CRM وردپرس به دلیل مشکلات سازگاری نمی‌تواند فعال شود:"
+
+msgid "Please resolve these issues and try again."
+msgstr "لطفاً این مشکلات را حل کنید و دوباره تلاش کنید."
+
+msgid "Plugin Activation Error"
+msgstr "خطای فعال‌سازی افزونه"
+
+msgid "Enter the base URL of your CRM system (e.g., https://your-crm-domain.com)"
+msgstr "آدرس پایه سیستم CRM خود را وارد کنید (مثال: https://your-crm-domain.com)"
+
+msgid "Enter your API key"
+msgstr "کلید API خود را وارد کنید"
+
+msgid "Your CRM API key for authentication"
+msgstr "کلید API سیستم CRM شما برای احراز هویت"
+
+msgid "Optional tenant key"
+msgstr "کلید مستاجر اختیاری"
+
+msgid "Optional: Tenant key for multi-tenant CRM systems"
+msgstr "اختیاری: کلید مستاجر برای سیستم‌های CRM چندمستاجره"
+
+msgid "Customer Data"
+msgstr "داده‌های مشتری"
+
+msgid "WooCommerce Orders"
+msgstr "سفارشات ووکامرس"
+
+msgid "(WooCommerce required)"
+msgstr "(ووکامرس مورد نیاز است)"
+
+msgid "Sync Status"
+msgstr "وضعیت همگام‌سازی"
+
+msgid "System Information"
+msgstr "اطلاعات سیستم"
+
+msgid "WordPress Version:"
+msgstr "نسخه وردپرس:"
+
+msgid "PHP Version:"
+msgstr "نسخه PHP:"
+
+msgid "WooCommerce:"
+msgstr "ووکامرس:"
+
+msgid "Active"
+msgstr "فعال"
+
+msgid "Not Active"
+msgstr "غیرفعال"
+
+msgid "Plugin Version:"
+msgstr "نسخه افزونه:"
+
+msgid "Quick Actions"
+msgstr "اقدامات سریع"
+
+msgid "Configure Field Mapping"
+msgstr "پیکربندی نگاشت فیلدها"
+
+msgid "Every 5 Minutes (CRM Integration)"
+msgstr "هر ۵ دقیقه (یکپارچه‌سازی CRM)"
+
+msgid "Every 15 Minutes (CRM Integration)"
+msgstr "هر ۱۵ دقیقه (یکپارچه‌سازی CRM)"

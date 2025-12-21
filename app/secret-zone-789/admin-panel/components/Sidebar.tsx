@@ -19,6 +19,7 @@ let FiLogOut: any = IconFallback;
 let FiLayers: any = IconFallback;
 let FiMenu: any = IconFallback;
 let FiX: any = IconFallback;
+let FiKey: any = IconFallback;
 
 try {
   const icons = require('react-icons/fi');
@@ -31,6 +32,7 @@ try {
   FiLayers = icons.FiLayers;
   FiMenu = icons.FiMenu;
   FiX = icons.FiX;
+  FiKey = icons.FiKey;
 } catch (e) {
   // react-icons not installed — icon fallbacks will be used
 }
@@ -129,6 +131,24 @@ export default function Sidebar({ activeTab, onTabChange, onLogout }: SidebarPro
           {/* Settings Section */}
           <div className="mt-8 pt-6 border-t border-blue-700">
             <ul className="space-y-2">
+              <li>
+                <button
+                  onClick={() => handleNavItemClick('api_keys')}
+                  className={`
+                    w-full flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                    ${activeTab === 'api_keys' 
+                      ? 'bg-blue-700 text-white shadow-md' 
+                      : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                    }
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-blue-900
+                    touch-manipulation
+                  `}
+                  aria-current={activeTab === 'api_keys' ? 'page' : undefined}
+                >
+                  <FiKey className="ml-3 text-lg flex-shrink-0" />
+                  <span className="truncate">کلیدهای API</span>
+                </button>
+              </li>
               <li>
                 <button
                   onClick={() => handleNavItemClick('settings')}

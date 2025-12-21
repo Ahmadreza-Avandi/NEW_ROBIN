@@ -90,7 +90,7 @@ export default function CustomersPage() {
         method: 'POST',
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
-          'X-Tenant-Key': params?.tenant_key || tenantKey,
+          'X-Tenant-Key': (params?.tenant_key as string) || tenantKey,
         },
         body: formData
       });
@@ -183,13 +183,19 @@ export default function CustomersPage() {
 
   const loadStats = async () => {
     try {
-      // TODO: Implement stats API
-      // const response = await fetch('/api/tenant/customers/stats');
-      // const data = await response.json();
+      const token = getAuthToken();
+      const response = await fetch('/api/tenant/customers/stats', {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'X-Tenant-Key': tenantKey,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
 
-      // if (data.success) {
-      //   setStats(data.data);
-      // }
+      if (data.success) {
+        setStats(data.data);
+      }
     } catch (error) {
       console.error('Error loading stats:', error);
     }
@@ -460,7 +466,7 @@ export default function CustomersPage() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Key': params?.tenant_key || tenantKey
+          'X-Tenant-Key': (params?.tenant_key as string) || tenantKey
         },
       });
 
@@ -496,16 +502,16 @@ export default function CustomersPage() {
       'نام': customer.name,
       'ایمیل': customer.email || '-',
       'تلفن': customer.phone || '-',
-      'شرکت': customer.company || '-',
+      'شرکت': customer.company_name || '-',
       'وضعیت': getStatusLabel(customer.status),
-      'بخش': getSegmentLabel(customer.segment),
-      'اولویت': getPriorityLabel(customer.priority),
+      'بخش': getSegmentLabel(customer.segment || ''),
+      'اولویت': getPriorityLabel(customer.priority || ''),
       'ارزش بالقوه': customer.potentialValue ? `${(customer.potentialValue / 1000000).toLocaleString('fa-IR')} میلیون تومان` : '-',
-      'امتیاز رضایت': customer.satisfactionScore?.toLocaleString('fa-IR') || '-',
-      'مسئول': customer.assignedTo || '-',
-      'آخرین تعامل': customer.lastInteraction ? moment(customer.lastInteraction).format('jYYYY/jMM/jDD') : '-',
-      'تاریخ ایجاد': customer.createdAt ? moment(customer.createdAt).format('jYYYY/jMM/jDD') : '-',
-      'یادداشت': customer.notes || '-'
+      'امتیاز رضایت': customer.satisfaction_score ? parseFloat(customer.satisfaction_score.toString()).toLocaleString('fa-IR') : '-',
+      'مسئول': customer.assigned_user_name || '-',
+      'آخرین تعامل': customer.last_interaction ? moment(customer.last_interaction).format('jYYYY/jMM/jDD') : '-',
+      'تاریخ ایجاد': customer.created_at ? moment(customer.created_at).format('jYYYY/jMM/jDD') : '-',
+      'یادداشت': '-'
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
