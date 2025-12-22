@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { InvoiceDownloadButton } from '@/components/ui/invoice-download-button';
 import { 
   TrendingUp, 
   Plus, 
@@ -18,7 +19,9 @@ import {
   Calendar,
   User,
   Trash2,
-  Edit
+  Edit,
+  Download,
+  FileText
 } from 'lucide-react';
 import '../mobile-responsive.css';
 
@@ -297,10 +300,18 @@ export default function SalesPage() {
                     </div>
                   </div>
                   
-                  <div className="flex space-x-2 space-x-reverse">
+                  <div className="flex space-x-2 space-x-reverse flex-wrap gap-2">
+                    <InvoiceDownloadButton 
+                      saleId={sale.id}
+                      customerName={sale.customer_name}
+                      variant="outline"
+                      size="sm"
+                      showText={true}
+                    />
                     <Button variant="outline" size="sm" className="font-vazir">
                       <Edit className="h-4 w-4" />
-                      <span className="sr-only">ویرایش</span>
+                      <span className="hidden sm:inline mr-2">ویرایش</span>
+                      <span className="sr-only sm:not-sr-only">ویرایش</span>
                     </Button>
                     <Button 
                       variant="outline" 
@@ -309,7 +320,8 @@ export default function SalesPage() {
                       className="font-vazir text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">حذف</span>
+                      <span className="hidden sm:inline mr-2">حذف</span>
+                      <span className="sr-only sm:not-sr-only">حذف</span>
                     </Button>
                   </div>
                 </div>

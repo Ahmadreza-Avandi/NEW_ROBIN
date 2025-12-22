@@ -26,7 +26,8 @@ import {
     ShoppingCart,
     Award,
     Eye,
-    X
+    X,
+    Download
 } from 'lucide-react';
 
 interface Sale {
@@ -877,6 +878,33 @@ export default function SalesPage() {
                                     </div>
 
                                     <div className="flex flex-col space-y-2">
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            className="font-vazir text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            onClick={() => {
+                                                // باز کردن فاکتور در تب جدید
+                                                const token = getAuthToken();
+                                                const url = `/api/tenant/sales/invoice?id=${sale.id}`;
+                                                
+                                                // ایجاد فرم برای ارسال هدرها
+                                                const form = document.createElement('form');
+                                                form.method = 'GET';
+                                                form.action = url;
+                                                form.target = '_blank';
+                                                
+                                                // باز کردن در تب جدید
+                                                window.open(url, '_blank');
+                                                
+                                                toast({
+                                                    title: "فاکتور باز شد",
+                                                    description: "برای ذخیره PDF از دکمه چاپ استفاده کنید",
+                                                });
+                                            }}
+                                        >
+                                            <Download className="h-4 w-4 ml-2" />
+                                            مشاهده فاکتور
+                                        </Button>
                                         <Button 
                                             variant="outline" 
                                             size="sm" 

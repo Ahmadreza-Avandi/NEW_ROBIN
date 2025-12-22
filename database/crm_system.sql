@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 21, 2025 at 11:57 PM
+-- Generation Time: Dec 22, 2025 at 02:01 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -45,6 +45,13 @@ CREATE TABLE `activities` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `activities`
+--
+
+INSERT INTO `activities` (`id`, `tenant_key`, `customer_id`, `deal_id`, `type`, `title`, `description`, `start_time`, `end_time`, `duration`, `performed_by`, `outcome`, `location`, `notes`, `created_at`, `updated_at`) VALUES
+('4677ef54-df2b-11f0-b15d-581122e4f0be', 'rabin', 'eaf6744a-8373-435f-8e61-b8055af8132a', NULL, 'sale', 'فروش جدید به سارا محمدی', 'فروش 1 محصول به مبلغ ۷۰۰٬۰۰۰٬۰۰۰ تومان ثبت شد', '2025-12-22 11:42:20', NULL, NULL, 'unknown', 'completed', NULL, NULL, '2025-12-22 11:42:20', '2025-12-22 11:42:20');
 
 -- --------------------------------------------------------
 
@@ -1691,6 +1698,47 @@ CREATE TABLE `products` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`id`, `tenant_key`, `name`, `description`, `image`, `category`, `price`, `currency`, `status`, `sku`, `tags`, `specifications`, `created_by`, `created_at`, `updated_at`) VALUES
+('05f357d8-cf49-11f0-b141-c274cc12da08', 'rabin', 'خردکن', NULL, NULL, 'ماشین آلات', 2.00, 'IRR', 'inactive', 'RMcu001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('0b3199ca-cf48-11f0-b141-c274cc12da08', 'rabin', 'میز کار', NULL, NULL, 'میز کارگاهی', 1.00, 'IRR', 'inactive', 'RTw001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('146bdbbf-bc9b-11f0-8607-581122e4f0be', 'rabin', 'محصول رابین', 'نزیز', NULL, 'رابین', 20000000.00, 'IRR', 'active', '432', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('281bdfb9-cf47-11f0-b141-c274cc12da08', 'rabin', 'خمیرکن', NULL, NULL, 'ماشین آلات', 1.00, 'IRR', 'inactive', 'RMb001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('2bae6a08-cf49-11f0-b141-c274cc12da08', 'rabin', 'سرخ کن', NULL, NULL, 'ماشین آلات', -1.00, 'IRR', 'inactive', 'RMf001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('345b82aa-cf8a-11f0-b141-c274cc12da08', 'rabin', 'پهپاد s20 پلاس بیست لیتری', '1 میلیارد و 375 میلیون \nهر باتری 93 میلیون تومان', NULL, 'پهپاد کشاورزی', 1375000000.00, 'IRR', 'active', NULL, NULL, NULL, '3cbba416-c557-11f0-adb4-7a654ee49283', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('37a9326c-c5cc-11f0-adb4-7a654ee49283', 'rabin', 'میز کار الکترونیک', NULL, NULL, 'میز کارگاهی', 2.00, 'IRR', 'inactive', 'RTe01', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('46cc89fb-ce1b-11f0-8238-d2bc93e1fc48', 'rabin', 'پلت زن', 'دستگاه پلت زن مخصوص خوراک دام و طیور\nبا ظرفیت تحویل یک تن در ساعت', NULL, 'ماشین آلات', 2900000000.00, 'IRR', 'active', 'RMc010', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('47278702-c5cc-11f0-adb4-7a654ee49283', 'rabin', 'میزکار برق', NULL, NULL, 'میز کارگاهی', 396999999.00, 'IRR', 'active', 'RTe002', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('4a5cb255-cf47-11f0-b141-c274cc12da08', 'rabin', 'پهن کن', NULL, NULL, 'ماشین آلات', 1.00, 'IRR', 'inactive', 'RMb002', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('583e90e3-cf49-11f0-b141-c274cc12da08', 'rabin', 'دستگاه بسته بندی', NULL, NULL, 'ماشین آلات', 1.00, 'IRR', 'inactive', 'RMp001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('64406351-cf47-11f0-b141-c274cc12da08', 'rabin', 'تنور', NULL, NULL, 'ماشین آلات ', 1.00, 'IRR', 'inactive', 'RMb003', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('72b8171d-cf89-11f0-b141-c274cc12da08', 'rabin', 'پهپاد کشاورزی s10 ده لیتری', 'این قیمت 11 آبان 1404 ثبت شد\n\nنوع استاندارد 940 میلیون تومان با 4 باتری \n\nنوع اقتصادی 605 میلیون تومان قیمت هر باتری 55 میلیون تومان\n', NULL, 'پهپاد کشاورزی', 605000000.00, 'IRR', 'active', NULL, NULL, NULL, '3cbba416-c557-11f0-adb4-7a654ee49283', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('74bb058a-cf8a-11f0-b141-c274cc12da08', 'rabin', 'پهپاد s30 pro سی لیتری', '1 میلیارد و485 میلیون تومان با 4 باتری \n', NULL, 'پهپاد کشاورزی', 1475000000.00, 'IRR', 'active', NULL, NULL, NULL, '3cbba416-c557-11f0-adb4-7a654ee49283', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('778fe834-c5e0-11f0-adb4-7a654ee49283', 'rabin', 'دستگاه تولید کراکت خرمایی', NULL, NULL, 'ماشین آلات', 2.00, 'IRR', 'inactive', 'RMt010', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('793b0bdb-ce1b-11f0-8238-d2bc93e1fc48', 'rabin', 'آسیاب صنعتی', 'آسیاب صنعتی\nتک فاز\nموتور ۳ اسب بخار\n۲۸۴۰ دور بر ساعت ', NULL, 'ماشین آلات', 650000000.00, 'IRR', 'active', 'RMx003', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('83055a1e-c5e0-11f0-adb4-7a654ee49283', 'rabin', 'دستگاه تولید خمیر خرما', NULL, NULL, 'ماشین آلات', 2.00, 'IRR', 'inactive', 'RMt020', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('8931f50b-c5cb-11f0-adb4-7a654ee49283', 'rabin', 'پهپاد سمپاش 10 لیتری', NULL, NULL, 'پهپاد کشاورزی', 700000000.00, 'IRR', 'active', 'RDsd010', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('91d6dfb6-cf48-11f0-b141-c274cc12da08', 'rabin', 'آبگیر صنعتی', NULL, NULL, 'ماشین آلات', 1.00, 'IRR', 'inactive', 'RMwc001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('97781e63-cf47-11f0-b141-c274cc12da08', 'rabin', 'آبلیمو گیری', NULL, NULL, 'ماشین آلات', 2.00, 'IRR', 'inactive', 'RMl001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('9b769990-c5cb-11f0-adb4-7a654ee49283', 'rabin', 'پهپاد سمپاش 20 لیتری', NULL, NULL, 'پهپاد کشاورزی', 1100000000.00, 'IRR', 'active', 'RDsd020', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('a2a66b02-cf45-11f0-b141-c274cc12da08', 'rabin', 'دستگاه تولید سس خرما', NULL, NULL, 'ماشین آلات', 1.00, 'IRR', 'inactive', 'RMt030', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('abb035c9-c5cb-11f0-adb4-7a654ee49283', 'rabin', 'پهپاد سمپاش 30 لیتری', NULL, NULL, 'پهپاد کشاورزی', 1499999900.00, 'IRR', 'active', 'RDsd030', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('bfccd89f-cf45-11f0-b141-c274cc12da08', 'rabin', 'دستگاه تولید شکلات خرما', NULL, NULL, 'ماشین آلات', 2.00, 'IRR', 'inactive', 'RMt040', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('c051587f-cf8a-11f0-b141-c274cc12da08', 'rabin', 'پهپاد s50 pro پنجاه لیتری', NULL, NULL, 'پهپاد کشاورزی', 1825000000.00, 'IRR', 'active', NULL, NULL, NULL, '3cbba416-c557-11f0-adb4-7a654ee49283', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('c6bfb079-c5d4-11f0-adb4-7a654ee49283', 'rabin', 'موتور دریفت تک نفره', NULL, NULL, 'موتور', 2.00, 'IRR', 'inactive', 'RDt001', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('cc1d5c9e-c5cc-11f0-adb4-7a654ee49283', 'rabin', 'میز کار آهنگری', NULL, NULL, 'میز کارگاهی', 234000000.00, 'IRR', 'active', 'RTb001', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('d303285e-c5d4-11f0-adb4-7a654ee49283', 'rabin', 'موتور دریفت دو نفره', NULL, NULL, 'موتور', 2.00, 'IRR', 'inactive', 'RDt002', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('d663bc3b-c5cc-11f0-adb4-7a654ee49283', 'rabin', 'صندلی گردان', 'سایز بزرگ', NULL, 'صندلی کارگاهی', 125000000.00, 'IRR', 'active', 'RCr01', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('df631dee-c5cc-11f0-adb4-7a654ee49283', 'rabin', 'صندلی چهارگوش', NULL, NULL, 'صندلی کارگاهی', 127000000.00, 'IRR', 'active', 'RCs01', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('e0541cf7-cf48-11f0-b141-c274cc12da08', 'rabin', 'نوار شستشو', NULL, NULL, 'ماشین آلات', 1.00, 'IRR', 'inactive', 'RMwt001', NULL, NULL, 'e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('e56fc855-c5ce-11f0-adb4-7a654ee49283', 'rabin', 'ترولی صنعتی', NULL, NULL, 'میز کارگاهی', 130000000.00, 'IRR', 'active', 'RTt001', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('e57797bb-cf89-11f0-b141-c274cc12da08', 'rabin', 'پهپاد s20 بیست لیتری', 'ورژن استاندارد 1.135 میلیون تومان\nورژن اقتصادی 735 میلیون تومان قیمت هر باتری 77 میلیون تومان\n', NULL, 'پهپاد کشاورزی', 735000000.00, 'IRR', 'active', NULL, NULL, NULL, '3cbba416-c557-11f0-adb4-7a654ee49283', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('e6d689ec-c5cc-11f0-adb4-7a654ee49283', 'rabin', 'صندلی صنعتی 3', 'سایز کوچک', NULL, 'صندلی کارگاهی', 2.00, 'IRR', 'inactive', 'RCr02', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56'),
+('f4c5a90b-c5cc-11f0-adb4-7a654ee49283', 'rabin', 'میر کار مونتاژ', NULL, NULL, 'میز کارگاهی', 2.00, 'IRR', 'inactive', 'RTa01', NULL, NULL, 'ceo-001', '2025-12-22 10:33:56', '2025-12-22 10:33:56');
+
 -- --------------------------------------------------------
 
 --
@@ -1823,6 +1871,13 @@ CREATE TABLE `sales` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `sales`
+--
+
+INSERT INTO `sales` (`id`, `title`, `tenant_key`, `deal_id`, `customer_id`, `customer_name`, `total_amount`, `currency`, `payment_status`, `payment_method`, `sale_date`, `delivery_date`, `payment_due_date`, `notes`, `invoice_number`, `sales_person_id`, `sales_person_name`, `created_at`, `updated_at`) VALUES
+('59654db4-dd18-4b05-98f6-56d191dec9e5', 'فروش سارا محمدی - ۱۴۰۴/۱۰/۱', 'rabin', NULL, 'eaf6744a-8373-435f-8e61-b8055af8132a', 'سارا محمدی', 700000000.00, 'IRR', 'paid', 'نقدی', '2025-12-22 11:42:20', NULL, NULL, NULL, NULL, 'unknown', 'ناشناس', '2025-12-22 11:42:20', '2025-12-22 11:42:20');
+
 -- --------------------------------------------------------
 
 --
@@ -1907,6 +1962,13 @@ CREATE TABLE `sale_items` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `sale_items`
+--
+
+INSERT INTO `sale_items` (`id`, `tenant_key`, `sale_id`, `product_id`, `product_name`, `product_category`, `quantity`, `unit_price`, `discount_percentage`, `total_price`, `discount_amount`, `created_at`, `updated_at`) VALUES
+('46761ac7-df2b-11f0-b15d-581122e4f0be', 'rabin', '59654db4-dd18-4b05-98f6-56d191dec9e5', '8931f50b-c5cb-11f0-adb4-7a654ee49283', 'پهپاد سمپاش 10 لیتری', 'پهپاد کشاورزی', 1, 700000000.00, 0.00, 700000000.00, 0.00, '2025-12-22 11:42:20', '2025-12-22 11:42:20');
 
 -- --------------------------------------------------------
 
@@ -2198,7 +2260,12 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `username`, `full_name`, `name`, `email`, `password`, `role`, `department`, `position`, `status`, `avatar`, `avatar_url`, `phone`, `team`, `last_active`, `last_login`, `created_at`, `updated_at`, `created_by`, `tenant_key`) VALUES
 ('45f79574-e05d-4b05-8dfb-b71edf5c2547', NULL, NULL, 'مدیر تست', 'test-api@example.com', '$2b$10$O03D9j7.gHETPFRyC/IZeeh8BpaXRpGNpBIuWKcVzRwc8kCpyEeLC', 'ceo', NULL, NULL, 'active', NULL, NULL, NULL, NULL, '2025-12-19 22:11:08', NULL, '2025-12-19 22:11:08', '2025-12-19 22:11:08', NULL, 'test-api-1766182267074'),
 ('1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, NULL, 'مهندس کریمیRobintejarat@gmail.com', 'Robintejarat@gmail.com', '$2b$10$i1q2pF9abbpJyvPq2CedeOMLwCL2ZZ.vztYNR2zeBpSlbVioOAA96', 'ceo', NULL, NULL, 'active', NULL, NULL, NULL, NULL, '2025-12-19 22:11:19', NULL, '2025-12-19 22:11:19', '2025-12-19 22:11:19', NULL, 'rabin'),
-('772cc07b-dde8-11f0-abd9-581122e4f0be', NULL, NULL, 'احمدرضا آوندی', 'Ahmadreza.avandi@gmail.com', '$2a$10$2qF.mI/A4blwVo.mXKcg4.8flfOQWoFdKpX75O8cIn5gWC9VCHlWa', '', NULL, NULL, 'active', NULL, NULL, '09', NULL, '2025-12-20 21:11:35', NULL, '2025-12-20 21:11:35', '2025-12-20 21:29:21', NULL, 'rabin');
+('772cc07b-dde8-11f0-abd9-581122e4f0be', NULL, NULL, 'احمدرضا آوندی', 'Ahmadreza.avandi@gmail.com', '$2a$10$2qF.mI/A4blwVo.mXKcg4.8flfOQWoFdKpX75O8cIn5gWC9VCHlWa', '', NULL, NULL, 'active', NULL, NULL, '09', NULL, '2025-12-20 21:11:35', NULL, '2025-12-20 21:11:35', '2025-12-20 21:29:21', NULL, 'rabin'),
+('362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'rameshk.kosar@gmail.com', 'کوثر رامشک', 'کوثر رامشک', 'rameshk.kosar@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'agent', NULL, NULL, 'active', NULL, NULL, '09172087848', NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin'),
+('a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'alirezasahafi77@gmail.com', 'علیرضا صحافی', 'علیرضا صحافی', 'alirezasahafi77@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '09332107233', NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin'),
+('3cbba416-c557-11f0-adb4-7a654ee49283', 'zalireza034@gmail.com', 'علی رضا حسنی', 'علی رضا حسنی', 'zalireza034@gmail.com', '$2a$10$MVyksUJ7Uu4d6RO/HsBuFOggPrPTFT1iqVdQWpM091EdqTZkfnBeG', 'sales_manager', NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin'),
+('7ba67f8b-c557-11f0-adb4-7a654ee49283', 'M.razizi076@gmail.com', 'مهندس عزیزی', 'مهندس عزیزی', 'M.razizi076@gmail.com', '$2a$10$gaqyEEPhmqp3KiPULZb99.FsXexXIeRaJcN8CGG3JuQJ7f7mMj0fm', 'sales_agent', NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin'),
+('e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', 'Mahdineyestani7@gmail.com', 'مهدی نیستانی', 'مهدی نیستانی', 'Mahdineyestani7@gmail.com', '$2a$10$Bfa4XgvhrwgFcIYP507kKOOnfVTr8CAc/CBuUnTq1S1M3yMwIrtO2', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '09059699792', NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin');
 
 -- --------------------------------------------------------
 
