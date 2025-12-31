@@ -19,6 +19,7 @@ async function handleGetCustomers(request: NextRequest, session: any) {
     const priority = searchParams.get('priority') || '';
     const industry = searchParams.get('industry') || '';
     const city = searchParams.get('city') || '';
+    const type = searchParams.get('type') || '';
 
     const offset = (page - 1) * limit;
 
@@ -60,6 +61,11 @@ async function handleGetCustomers(request: NextRequest, session: any) {
       if (city && city !== 'all') {
         whereConditions.push('c.city = ?');
         queryParams.push(city);
+      }
+
+      if (type && type !== 'all') {
+        whereConditions.push('c.type = ?');
+        queryParams.push(type);
       }
 
       const whereClause = whereConditions.join(' AND ');
@@ -147,6 +153,7 @@ async function handleCreateCustomer(request: NextRequest, session: any) {
       annual_revenue,
       segment,
       priority = 'medium',
+      type = 'lead',
     } = body;
 
     if (!name) {
@@ -178,10 +185,11 @@ async function handleCreateCustomer(request: NextRequest, session: any) {
           annual_revenue,
           segment,
           priority,
+          type,
           created_by,
           created_at,
           updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [
           tenantKey,
           name,
@@ -198,6 +206,7 @@ async function handleCreateCustomer(request: NextRequest, session: any) {
           annual_revenue || null,
           segment || null,
           priority,
+          type,
           session.userId || session.id || null
         ]
       ) as any;

@@ -196,13 +196,13 @@ export const DEFAULT_PERMISSIONS = {
   // مدیر فروش - مجبور می‌کنه بفروشن
   sales_manager: [
     'dashboard', 'customers', 'contacts', 'products', 'sales', 'deals', 
-    'activities', 'reports', 'coworkers', 'tasks', 'calendar', 'chat'
+    'activities', 'reports', 'coworkers', 'tasks', 'calendar', 'chat', 'sales_pipeline'
   ],
   
   // کارشناس فروش - واقعاً می‌فروشه
   sales_specialist: [
     'dashboard', 'customers', 'contacts', 'products', 'sales', 'deals',
-    'activities', 'tasks', 'calendar', 'chat'
+    'activities', 'tasks', 'calendar', 'chat', 'sales_pipeline'
   ],
   
   // کارشناس فنی - باعث میشه فروش شدنی باشه

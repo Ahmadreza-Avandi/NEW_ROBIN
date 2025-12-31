@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise';
+import * as mysql from 'mysql2/promise';
 
 /**
  * Tenant Database Connection
@@ -69,12 +69,16 @@ export async function getTenantConnection(tenantKey: string): Promise<mysql.Pool
 
   // ایجاد pool جدید با تنظیمات بهینه
   const pool = mysql.createPool({
-    ...dbConfig,
+    host: dbConfig.host,
+    port: dbConfig.port,
+    user: dbConfig.user,
+    password: dbConfig.password,
+    database: dbConfig.database,
+    charset: dbConfig.charset,
+    timezone: dbConfig.timezone,
     waitForConnections: true,
     connectionLimit: 5, // کاهش تعداد اتصالات همزمان
     queueLimit: 0,
-    acquireTimeout: 10000,
-    timeout: 10000,
     idleTimeout: 300000, // 5 دقیقه
     maxIdle: 2, // حداکثر 2 اتصال idle
   });

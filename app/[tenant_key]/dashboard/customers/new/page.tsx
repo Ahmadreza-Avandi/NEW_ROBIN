@@ -37,6 +37,7 @@ export default function NewCustomerPage() {
     annual_revenue: '',
     segment: '',
     priority: 'medium',
+    type: 'lead',
   });
 
   const [selectedProducts, setSelectedProducts] = useState<Array<{
@@ -65,7 +66,7 @@ export default function NewCustomerPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Key': params?.tenant_key || tenantKey
+          'X-Tenant-Key': Array.isArray(params?.tenant_key) ? params.tenant_key[0] : (params?.tenant_key as string) || tenantKey
         },
         body: JSON.stringify({
           ...formData,
@@ -84,7 +85,7 @@ export default function NewCustomerPage() {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'X-Tenant-Key': params?.tenant_key || tenantKey
+                  'X-Tenant-Key': Array.isArray(params?.tenant_key) ? params.tenant_key[0] : (params?.tenant_key as string) || tenantKey
                 },
                 body: JSON.stringify({
                   customer_id: data.data.id,
@@ -351,6 +352,22 @@ export default function NewCustomerPage() {
                       <SelectItem value="high" className="font-vazir">بالا</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="type" className="font-vazir">نوع</Label>
+                  <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
+                    <SelectTrigger className="font-vazir">
+                      <SelectValue placeholder="انتخاب نوع" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lead" className="font-vazir">سرنخ</SelectItem>
+                      <SelectItem value="customer" className="font-vazir">مشتری</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground font-vazir">
+                    سرنخ: مشتری بالقوه که هنوز خرید نکرده | مشتری: مشتری واقعی که خرید کرده
+                  </p>
                 </div>
               </div>
             </div>

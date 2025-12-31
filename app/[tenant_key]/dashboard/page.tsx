@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useParams } from 'next/navigation';
 import { PageWrapper } from '@/components/layout/page-wrapper';
+import { AlertManager } from '@/components/alerts/alert-manager';
 import {
   Users,
   TrendingUp,
@@ -171,34 +172,7 @@ export default function DashboardPage() {
     >
 
       {/* هشدارهای مهم */}
-      {dashboardData.alerts.length > 0 && (
-        <Card className="border-destructive/20 bg-destructive/5">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 space-x-reverse text-destructive font-vazir">
-              <AlertTriangle className="h-5 w-5" />
-              <span>هشدارهای مهم</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {dashboardData.alerts.map((alert, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-destructive/20">
-                  <div>
-                    <p className="font-medium font-vazir">{alert.title}</p>
-                    <p className="text-sm text-muted-foreground font-vazir">{alert.message}</p>
-                  </div>
-                  <Badge
-                    variant={alert.priority === 'high' ? 'destructive' : 'secondary'}
-                    className="font-vazir"
-                  >
-                    {alert.priority === 'high' ? 'فوری' : 'متوسط'}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <AlertManager maxAlerts={5} showActions={true} />
 
       {/* آمار کلی */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">

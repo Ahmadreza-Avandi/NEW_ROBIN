@@ -123,6 +123,7 @@ export default function CustomersPage() {
   const [cityFilter, setCityFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [productFilter, setProductFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   // States for filter options
   const [industries, setIndustries] = useState<string[]>([]);
@@ -155,7 +156,7 @@ export default function CustomersPage() {
   // Load customers on component mount and when filters/page change
   useEffect(() => {
     loadCustomers();
-  }, [currentPage, itemsPerPage, debouncedSearchTerm, statusFilter, segmentFilter, priorityFilter, industryFilter, cityFilter, sourceFilter, productFilter]);
+  }, [currentPage, itemsPerPage, debouncedSearchTerm, statusFilter, segmentFilter, priorityFilter, industryFilter, cityFilter, sourceFilter, productFilter, typeFilter]);
 
   // Load filter options and stats
   useEffect(() => {
@@ -220,6 +221,7 @@ export default function CustomersPage() {
       if (cityFilter !== 'all') params.append('city', cityFilter);
       if (sourceFilter !== 'all') params.append('source', sourceFilter);
       if (productFilter !== 'all') params.append('product', productFilter);
+      if (typeFilter !== 'all') params.append('type', typeFilter);
 
       const token = getAuthToken();
       const response = await fetch(`/api/tenant/customers?${params.toString()}`, {
@@ -305,6 +307,22 @@ export default function CustomersPage() {
     }
   };
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'lead': return 'سرنخ';
+      case 'customer': return 'مشتری';
+      default: return type || 'سرنخ';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'lead': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'customer': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   const getStageName = (stage: string) => {
     switch (stage) {
       case 'new_lead': return 'لید جدید';
@@ -351,6 +369,16 @@ export default function CustomersPage() {
             </div>
           </div>
         </div>
+      ),
+    },
+    {
+      key: 'type',
+      label: 'نوع',
+      sortable: true,
+      render: (value: string) => (
+        <Badge className={`font-vazir ${getTypeColor(value)}`}>
+          {getTypeLabel(value)}
+        </Badge>
       ),
     },
     {
@@ -685,7 +713,7 @@ export default function CustomersPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-8">
+          <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-9">
             <div className="relative md:col-span-2">
               <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -696,6 +724,20 @@ export default function CustomersPage() {
                 dir="rtl"
               />
             </div>
+
+            <Select value={typeFilter} onValueChange={(value) => {
+              setTypeFilter(value);
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="font-vazir">
+                <SelectValue placeholder="نوع" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="font-vazir">همه انواع</SelectItem>
+                <SelectItem value="lead" className="font-vazir">سرنخ</SelectItem>
+                <SelectItem value="customer" className="font-vazir">مشتری</SelectItem>
+              </SelectContent>
+            </Select>
 
             <Select value={statusFilter} onValueChange={(value) => {
               setStatusFilter(value);
@@ -806,10 +848,10 @@ export default function CustomersPage() {
                 setSegmentFilter('all');
                 setPriorityFilter('all');
                 setIndustryFilter('all');
-
                 setCityFilter('all');
                 setSourceFilter('all');
                 setProductFilter('all');
+                setTypeFilter('all');
                 setCurrentPage(1);
               }}
               className="font-vazir"

@@ -29,6 +29,7 @@ import {
   Monitor,
   CheckCircle,
   Mic,
+  GitBranch,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -313,6 +314,11 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
         icon: TrendingUp,
         children: [
           {
+            title: 'پیگیری فروش',
+            href: buildTenantRoute('/dashboard/sales-pipeline'),
+            icon: GitBranch,
+          },
+          {
             title: 'محصولات',
             href: buildTenantRoute('/dashboard/products'),
             icon: Package,
@@ -488,6 +494,14 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
           title: 'فروش‌ها',
           href: buildTenantRoute('/dashboard/sales'),
           icon: TrendingUp,
+        });
+      }
+
+      if (availableModules.has('sales_pipeline')) {
+        navItems.push({
+          title: 'پیگیری فروش',
+          href: buildTenantRoute('/dashboard/sales-pipeline'),
+          icon: GitBranch,
         });
       }
 

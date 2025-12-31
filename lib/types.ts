@@ -42,6 +42,7 @@ export interface Customer {
   phone?: string;
   company_name?: string;
   status: 'active' | 'inactive' | 'follow_up' | 'rejected' | 'prospect' | 'customer';
+  type?: 'lead' | 'customer';
   segment?: 'enterprise' | 'small_business' | 'individual';
   priority?: 'low' | 'medium' | 'high';
   created_at: string;

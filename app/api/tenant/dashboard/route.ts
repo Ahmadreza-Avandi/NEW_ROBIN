@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantSessionFromRequest } from '@/lib/tenant-auth';
 import { getTenantConnection } from '@/lib/tenant-database';
+import { alertService } from '@/lib/alert-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -110,6 +111,9 @@ export async function GET(request: NextRequest) {
         userActivityReport = users;
       }
 
+      // دریافت هشدارهای داشبورد
+      const dashboardAlerts = await alertService.getDashboardAlerts(tenantKey);
+
       console.log('✅ داده‌های داشبورد دریافت شد');
 
       return NextResponse.json({
@@ -131,7 +135,7 @@ export async function GET(request: NextRequest) {
           recentCustomers: recentCustomers,
           todaySchedule: todaySchedule,
           userActivityReport: userActivityReport,
-          alerts: []
+          alerts: dashboardAlerts
         }
       });
     } finally {

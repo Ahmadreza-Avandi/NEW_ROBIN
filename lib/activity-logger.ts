@@ -4,7 +4,7 @@ interface ActivityLogParams {
   tenantKey: string;
   userId: string;
   userName?: string;
-  type: 'sale' | 'product' | 'customer' | 'other';
+  type: 'sale' | 'product' | 'customer' | 'lead' | 'other';
   title: string;
   description?: string;
   customerId?: string;
