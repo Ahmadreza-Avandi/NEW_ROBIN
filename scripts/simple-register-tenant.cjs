@@ -8,14 +8,69 @@
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const path = require('path');
+const fs = require('fs');
 
-require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
+// Smart environment loading - try multiple env files
+const envPaths = [
+  path.join(__dirname, '..', '.env.local'),
+  path.join(__dirname, '..', '.env'),
+  path.join(__dirname, '..', '.env.production'),
+];
 
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+    console.log(`📁 Loaded env from: ${envPath}`);
+    break;
+  }
+}
+
+// Smart environment detection
+function detectEnvironment() {
+  const isDocker = process.env.DOCKER_CONTAINER === 'true' || 
+                   process.env.HOSTNAME?.includes('docker') ||
+                   process.env.HOSTNAME?.includes('nextjs') ||
+                   process.env.HOSTNAME?.includes('crm');
+  
+  const isLocal = process.env.NODE_ENV === 'development' && !isDocker;
+  
+  return { isDocker, isLocal };
+}
+
+function getDbConfig() {
+  const env = detectEnvironment();
+  
+  // Smart host detection
+  let host = process.env.DATABASE_HOST || process.env.DB_HOST;
+  if (env.isLocal && (host === 'mysql' || !host)) {
+    host = 'localhost';
+  } else if (env.isDocker && (host === 'localhost' || !host)) {
+    host = 'mysql';
+  } else if (!host) {
+    host = process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost';
+  }
+  
+  // Smart user detection
+  let user = process.env.DATABASE_USER || process.env.DB_USER;
+  if (!user) {
+    user = env.isLocal ? 'root' : 'crm_user';
+  }
+  
+  // Smart password detection
+  let password = process.env.DATABASE_PASSWORD || process.env.DB_PASSWORD;
+  if (!password) {
+    password = env.isLocal ? '' : '1234';
+  }
+  
+  return { host, user, password };
+}
+
+const dbConfig = getDbConfig();
 const DB_CONFIG = {
-  host: process.env.DATABASE_HOST || 'localhost',
+  host: dbConfig.host,
   port: parseInt(process.env.DATABASE_PORT || '3306'),
-  user: process.env.DATABASE_USER || 'root',
-  password: process.env.DATABASE_PASSWORD,
+  user: dbConfig.user,
+  password: dbConfig.password,
 };
 
 async function registerTenant(tenantData) {

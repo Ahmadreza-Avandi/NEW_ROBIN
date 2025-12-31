@@ -296,7 +296,7 @@ export default function ActivitiesPage() {
       }
 
       // Load recent customers (last 3 created)
-      const customersResponse = await fetch(`/api/tenant/customers?limit=3&sort=created_at&order=desc`, {
+      const customersResponse = await fetch(`/api/tenant/customers?limit=3`, {
         headers: {
           'X-Tenant-Key': tenantKey,
           'Authorization': token ? `Bearer ${token}` : '',
@@ -304,8 +304,8 @@ export default function ActivitiesPage() {
         }
       });
       const customersData = await customersResponse.json();
-      if (customersData.success && customersData.data) {
-        setRecentCustomers(customersData.data.slice(0, 3).map((c: any) => ({
+      if (customersData.success && customersData.customers) {
+        setRecentCustomers(customersData.customers.slice(0, 3).map((c: any) => ({
           id: c.id,
           name: c.name,
           date: c.created_at,

@@ -1,5 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMasterConnection } from '@/lib/master-database';
+import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
+
+// Smart environment detection
+function detectEnvironment() {
+  const isDocker = process.env.DOCKER_CONTAINER === 'true' || 
+                   process.env.HOSTNAME?.includes('docker') ||
+                   process.env.HOSTNAME?.includes('nextjs') ||
+                   process.env.HOSTNAME?.includes('crm');
+  
+  const isLocal = process.env.NODE_ENV === 'development' && !isDocker;
+  
+  return { isDocker, isLocal };
+}
+
+function getDbConfig() {
+  const env = detectEnvironment();
+  
+  let host = process.env.DATABASE_HOST || process.env.DB_HOST;
+  if (env.isLocal && (host === 'mysql' || !host)) {
+    host = 'localhost';
+  } else if (env.isDocker && (host === 'localhost' || !host)) {
+    host = 'mysql';
+  } else if (!host) {
+    host = process.env.NODE_ENV === 'production' ? 'mysql' : 'localhost';
+  }
+  
+  let user = process.env.DATABASE_USER || process.env.DB_USER;
+  if (!user) {
+    user = env.isLocal ? 'root' : 'crm_user';
+  }
+  
+  let password = process.env.DATABASE_PASSWORD || process.env.DB_PASSWORD;
+  if (!password) {
+    password = env.isLocal ? '' : '1234';
+  }
+  
+  return { host, user, password };
+}
 
 export async function POST(request: NextRequest) {
   let connection;
@@ -61,46 +100,128 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Validation passed, creating tenant...');
 
-    // فراخوانی اسکریپت ثبت tenant (بدون ایجاد دیتابیس جداگانه)
-    const { registerTenant } = require('@/scripts/simple-register-tenant.cjs');
-    
-    const result = await registerTenant({
-      tenant_key,
-      company_name,
-      admin_name,
-      admin_email,
-      admin_phone: admin_phone || '',
-      admin_password,
-      plan_key: subscription_plan,
-      subscription_months: subscription_months || 1,
-      subscription_end: subscription_end || null
-    });
+    // دریافت اطلاعات پلن
+    const [plans] = await connection.query(
+      'SELECT * FROM subscription_plans WHERE plan_key = ?',
+      [subscription_plan]
+    ) as any[];
 
-    if (!result.success) {
-      console.error('❌ Register tenant failed:', result.error);
+    if (plans.length === 0) {
       return NextResponse.json(
-        { success: false, message: result.error || 'خطا در ایجاد tenant' },
-        { status: 500 }
+        { success: false, message: `پلن ${subscription_plan} یافت نشد` },
+        { status: 400 }
       );
     }
 
-    console.log('✅ Tenant created successfully:', result.tenant_id);
+    const plan = plans[0];
+    console.log(`✅ پلن ${plan.plan_name} یافت شد`);
+
+    // محاسبه تاریخ انقضا
+    const subscription_start = new Date();
+    let calculated_subscription_end: Date;
+    
+    if (subscription_end) {
+      calculated_subscription_end = new Date(subscription_end);
+    } else {
+      calculated_subscription_end = new Date();
+      calculated_subscription_end.setMonth(calculated_subscription_end.getMonth() + (subscription_months || 1));
+    }
+
+    const dbConfig = getDbConfig();
+
+    // ثبت tenant در master database
+    console.log('💾 ثبت tenant در master database...');
+    const [result] = await connection.query(`
+      INSERT INTO tenants (
+        tenant_key, company_name, db_name, db_host, db_port, db_user, db_password,
+        admin_name, admin_email, admin_phone,
+        subscription_status, subscription_plan, subscription_start, subscription_end,
+        max_users, max_customers, max_storage_mb, features,
+        is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      tenant_key, company_name,
+      'crm_system', dbConfig.host, 3306, 
+      dbConfig.user, dbConfig.password,
+      admin_name, admin_email, admin_phone || '',
+      'active', subscription_plan, subscription_start, calculated_subscription_end,
+      plan.max_users, plan.max_customers, plan.max_storage_mb, 
+      JSON.stringify(plan.features || {}),
+      true
+    ]) as any[];
+
+    const tenant_id = result.insertId;
+    console.log(`✅ Tenant ثبت شد (ID: ${tenant_id})`);
+
+    // ثبت در subscription_history
+    console.log('📝 ثبت تاریخچه اشتراک...');
+    const amount = (subscription_months || 1) === 12 ? plan.price_yearly : plan.price_monthly;
+    
+    await connection.query(`
+      INSERT INTO subscription_history (
+        tenant_id, plan_key, subscription_type, start_date, end_date, amount, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [
+      tenant_id, subscription_plan, 
+      (subscription_months || 1) === 12 ? 'yearly' : 'monthly', 
+      subscription_start, calculated_subscription_end, amount, 'completed'
+    ]);
+
+    console.log('✅ تاریخچه ثبت شد');
+
+    // ثبت لاگ
+    console.log('📋 ثبت لاگ فعالیت...');
+    await connection.query(`
+      INSERT INTO tenant_activity_logs (
+        tenant_id, activity_type, description, metadata
+      ) VALUES (?, ?, ?, ?)
+    `, [
+      tenant_id, 'tenant_created', 
+      `Tenant created: ${company_name}`, 
+      JSON.stringify({ plan_key: subscription_plan, subscription_months: subscription_months || 1, admin_email })
+    ]);
+
+    console.log('✅ لاگ ثبت شد');
+
+    // ایجاد کاربر admin در crm_system
+    console.log('👤 ایجاد کاربر admin...');
+    const passwordHash = await bcrypt.hash(admin_password, 10);
+    const userId = uuidv4();
+
+    // Switch to crm_system database for user creation
+    await connection.query('USE crm_system');
+    
+    await connection.query(`
+      INSERT INTO users (
+        id, name, email, password, role, status, tenant_key, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+    `, [
+      userId, admin_name, admin_email, passwordHash, 'ceo', 'active', tenant_key
+    ]);
+
+    console.log('✅ کاربر admin ایجاد شد');
+    console.log('✅ Tenant created successfully:', tenant_id);
+
+    // Generate URL based on environment
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const tenantUrl = `${baseUrl}/${tenant_key}/login`;
 
     return NextResponse.json({
       success: true,
       message: 'Tenant با موفقیت ایجاد شد',
       data: {
-        tenant_id: result.tenant_id,
-        tenant_key: result.tenant_key,
-        url: result.url,
-        admin_password: result.admin_password
+        tenant_id: tenant_id,
+        tenant_key: tenant_key,
+        url: tenantUrl,
+        admin_password: admin_password
       }
     });
 
   } catch (error) {
     console.error('❌ خطا در ایجاد tenant:', error);
+    const errorMessage = error instanceof Error ? error.message : 'خطای سرور';
     return NextResponse.json(
-      { success: false, message: 'خطای سرور' },
+      { success: false, message: errorMessage },
       { status: 500 }
     );
   } finally {

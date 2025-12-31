@@ -45,8 +45,8 @@ export async function PUT(
         const { id: productId } = await params;
         const body = await req.json();
 
-        // Only CEO and managers can update products
-        if (!hasPermission(userRole || '', ['ceo', 'مدیر', 'sales_manager', 'مدیر فروش'])) {
+        // CEO, managers and sales agents can update products
+        if (!hasPermission(userRole || '', ['ceo', 'مدیر', 'sales_manager', 'مدیر فروش', 'sales_agent', 'employee', 'کارشناس فروش', 'همکار'])) {
             return NextResponse.json(
                 { success: false, message: 'عدم دسترسی' },
                 { status: 403 }

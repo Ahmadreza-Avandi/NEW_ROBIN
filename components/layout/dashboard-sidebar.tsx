@@ -499,6 +499,13 @@ export const ResponsiveSidebar: React.FC<ResponsiveSidebarProps> = ({
         });
       }
 
+      // صدای رابین برای همه کاربران
+      navItems.push({
+        title: 'صدای رابین',
+        href: buildTenantRoute('/dashboard/voice-assistant'),
+        icon: Mic,
+      });
+
       // همیشه پروفایل را اضافه کن
       navItems.push({
         title: 'پروفایل',

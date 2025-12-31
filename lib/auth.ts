@@ -62,10 +62,14 @@ export async function getCurrentUser(request: NextRequest): Promise<User | null>
 export function hasPermission(user: User | string, requiredRoles: string | string[]): boolean {
   const roleHierarchy = {
     'ceo': 5,
+    'مدیر': 5,
     'sales_manager': 4,
+    'مدیر فروش': 4,
     'manager': 4,
     'supervisor': 3,
     'sales_agent': 2,
+    'کارشناس فروش': 2,
+    'همکار': 2,
     'agent': 2,
     'employee': 2,
     'user': 1
