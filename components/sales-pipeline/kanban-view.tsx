@@ -10,6 +10,7 @@ import {
   Draggable,
   DropResult,
 } from '@hello-pangea/dnd';
+import { useMemo } from 'react';
 import {
   User,
   Calendar,
@@ -214,37 +215,34 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 }) => {
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
 
-  // Group leads by stage
-  const leadsByStage = stages.reduce((acc, stage) => {
-    acc[stage.name] = leads.filter(lead => lead.current_pipeline_stage === stage.name);
-    return acc;
-  }, {} as Record<PipelineStageType, Lead[]>);
-
-  const handleDragStart = (start: any) => {
-    const lead = leads.find(l => l.id === start.draggableId);
-    setDraggedLead(lead || null);
-  };
-
-  const handleDragEnd = async (result: DropResult) => {
-    setDraggedLead(null);
+  // Helper functions - تعریف در ابتدا
+  const getStageEnglishName = (stageName: string): PipelineStageType => {
+    // اگر قبلاً انگلیسیه، همونو برگردون
+    const englishStages = ['new_lead', 'contacted', 'needs_analysis', 'proposal_sent', 'negotiation', 'closed_won', 'closed_lost'];
+    if (englishStages.includes(stageName as PipelineStageType)) {
+      return stageName as PipelineStageType;
+    }
     
-    const { destination, source, draggableId } = result;
-
-    // If dropped outside a droppable area
-    if (!destination) {
-      return;
-    }
-
-    // If dropped in the same position
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-
-    const newStage = destination.droppableId as PipelineStageType;
-    await onStageChange(draggableId, newStage);
+    // mapping کامل برای همه حالات
+    const stageMapping: Record<string, PipelineStageType> = {
+      // فارسی استاندارد
+      'سرنخ جدید': 'new_lead',
+      'تماس اولیه': 'contacted',
+      'نیازسنجی': 'needs_analysis', 
+      'ارسال پیشنهاد': 'proposal_sent',
+      'مذاکره': 'negotiation',
+      'برنده شده': 'closed_won',
+      'از دست رفته': 'closed_lost',
+      
+      // فارسی موجود در دیتابیس
+      'جذب': 'new_lead',
+      'تماس و مشاوره اولیه': 'contacted',
+      'ارائه پیشنهاد': 'proposal_sent',
+      'مذاکره و بستن قرارداد': 'negotiation',
+      'فروش و تحویل محصول': 'closed_won'
+    };
+    
+    return stageMapping[stageName] || 'new_lead';
   };
 
   const getStageDisplayName = (stageName: PipelineStageType) => {
@@ -273,6 +271,61 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     return colors[stageName] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
+  // Get unique stages by English name
+  const uniqueStages = useMemo(() => {
+    const seen = new Set<PipelineStageType>();
+    return stages.filter(stage => {
+      const englishName = getStageEnglishName(stage.name);
+      if (seen.has(englishName)) {
+        return false;
+      }
+      seen.add(englishName);
+      return true;
+    });
+  }, [stages]);
+
+  // Group leads by stage (using English stage names) - memoized for stability
+  const leadsByStage = useMemo(() => {
+    console.log('🔍 Raw stages from API:', stages.map(s => ({ name: s.name, display_name: s.display_name })));
+    console.log('🎯 Unique stages:', uniqueStages.map(s => ({ name: s.name, english: getStageEnglishName(s.name) })));
+    
+    return uniqueStages.reduce((acc, stage) => {
+      const englishStageName = getStageEnglishName(stage.name);
+      acc[englishStageName] = leads.filter(lead => {
+        const leadEnglishStage = getStageEnglishName(lead.current_pipeline_stage);
+        return leadEnglishStage === englishStageName;
+      });
+      return acc;
+    }, {} as Record<PipelineStageType, Lead[]>);
+  }, [uniqueStages, leads]);
+
+  const handleDragStart = (start: any) => {
+    const lead = leads.find(l => l.id === start.draggableId);
+    setDraggedLead(lead || null);
+  };
+
+  const handleDragEnd = async (result: DropResult) => {
+    setDraggedLead(null);
+    
+    const { destination, source, draggableId } = result;
+
+    // If dropped outside a droppable area
+    if (!destination) {
+      return;
+    }
+
+    // If dropped in the same position
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    const newStage = destination.droppableId as PipelineStageType;
+    await onStageChange(draggableId, newStage);
+  };
+
   if (stages.length === 0) {
     return (
       <Card className="shadow-lg">
@@ -290,8 +343,9 @@ const KanbanView: React.FC<KanbanViewProps> = ({
   return (
     <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex space-x-4 space-x-reverse overflow-x-auto pb-4">
-        {stages.map((stage) => {
-          const stageLeads = leadsByStage[stage.name] || [];
+        {uniqueStages.map((stage) => {
+          const stableDroppableId = getStageEnglishName(stage.name);
+          const stageLeads = leadsByStage[stableDroppableId] || [];
           const totalValue = stageLeads.reduce((sum, lead) => sum + (lead.deal_value || 0), 0);
           
           return (
@@ -300,9 +354,9 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-vazir">
-                      {getStageDisplayName(stage.name)}
+                      {getStageDisplayName(stableDroppableId)}
                     </CardTitle>
-                    <Badge className={`font-vazir ${getStageColor(stage.name)}`}>
+                    <Badge className={`font-vazir ${getStageColor(stableDroppableId)}`}>
                       {stageLeads.length}
                     </Badge>
                   </div>
@@ -316,7 +370,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                   )}
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <Droppable droppableId={stage.name}>
+                  <Droppable droppableId={stableDroppableId}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}

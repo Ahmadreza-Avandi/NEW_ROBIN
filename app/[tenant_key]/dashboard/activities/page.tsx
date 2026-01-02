@@ -32,7 +32,6 @@ import {
   CalendarDays,
   X,
   Users,
-  ShoppingCart,
   DollarSign,
   Package
 } from 'lucide-react';
@@ -138,7 +137,6 @@ export default function ActivitiesPage() {
       loadRecentData();
     }
   }, [activities]);
-
   const loadActivities = async () => {
     try {
       setLoading(true);
@@ -207,7 +205,6 @@ export default function ActivitiesPage() {
       console.error('Error loading customers:', error);
     }
   };
-
   const loadCoworkers = async () => {
     try {
       const token = getAuthToken();
@@ -276,7 +273,6 @@ export default function ActivitiesPage() {
           type: m.customer_name || 'نامشخص'
         })));
       }
-
       // Load recent calls (from activities table)
       const callsResponse = await fetch(`/api/tenant/activities?type=call&limit=3&sort=desc`, {
         headers: {
@@ -356,7 +352,6 @@ export default function ActivitiesPage() {
       console.error('Error loading recent data:', error);
     }
   };
-
   const handleAddActivity = async () => {
     if (!newActivity.customer_id || !newActivity.title) {
       setError('مشتری و عنوان الزامی است');
@@ -442,7 +437,6 @@ export default function ActivitiesPage() {
       });
     }
   };
-
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'call': return Phone;
@@ -528,7 +522,6 @@ export default function ActivitiesPage() {
           </Button>
         </div>
       </div>
-
       {/* آمار کلی */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 text-white overflow-hidden relative">
@@ -581,7 +574,6 @@ export default function ActivitiesPage() {
           </CardContent>
         </Card>
       </div>
-
       {/* فرم افزودن فعالیت */}
       {showAddForm && (
         <Card className="border-primary/30 bg-primary/5">
@@ -672,7 +664,6 @@ export default function ActivitiesPage() {
           </CardContent>
         </Card>
       )}
-
       {/* فیلترها */}
       <Card className="border-border/50">
         <CardHeader>
@@ -750,7 +741,6 @@ export default function ActivitiesPage() {
                 پاک کردن فیلترها
               </Button>
             </div>
-
             {/* ردیف دوم - فیلتر تاریخ سفارشی و مشتری */}
             {dateFilter === 'custom' && (
               <div className="grid gap-4 md:grid-cols-3">
@@ -832,7 +822,6 @@ export default function ActivitiesPage() {
                     </Button>
                   </Badge>
                 )}
-
                 {filterType !== 'all' && (
                   <Badge variant="secondary" className="font-vazir">
                     نوع: {getTypeLabel(filterType)}
@@ -897,7 +886,7 @@ export default function ActivitiesPage() {
                   <div className="font-medium text-green-800 truncate">{meeting.name}</div>
                   <div className="text-green-600 text-[10px]">{meeting.type}</div>
                   <div className="text-green-500 text-[10px]">
-                    {new Date(meeting.date).toLocaleDateString('fa-IR')}
+                    {meeting.date && new Date(meeting.date).toLocaleDateString('fa-IR')}
                   </div>
                 </div>
               ))
@@ -906,7 +895,6 @@ export default function ActivitiesPage() {
             )}
           </CardContent>
         </Card>
-
         {/* تماس‌های اخیر */}
         <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-50 to-blue-50 border-l-4 border-l-blue-500">
           <CardHeader className="pb-2">
@@ -922,7 +910,7 @@ export default function ActivitiesPage() {
                   <div className="font-medium text-blue-800 truncate">{call.name}</div>
                   <div className="text-blue-600 text-[10px]">{call.type}</div>
                   <div className="text-blue-500 text-[10px]">
-                    {new Date(call.date).toLocaleDateString('fa-IR')}
+                    {call.date && new Date(call.date).toLocaleDateString('fa-IR')}
                   </div>
                 </div>
               ))
@@ -978,7 +966,6 @@ export default function ActivitiesPage() {
             )}
           </CardContent>
         </Card>
-
         {/* فروش‌های اخیر */}
         <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-emerald-50 to-teal-50 border-l-4 border-l-emerald-500">
           <CardHeader className="pb-2">
@@ -1045,7 +1032,6 @@ export default function ActivitiesPage() {
                             {getOutcomeLabel(activity.outcome)}
                           </Badge>
                         </div>
-
                         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 mt-3">
                           <div className="flex items-center space-x-2 space-x-reverse">
                             <User className="h-4 w-4 text-muted-foreground" />

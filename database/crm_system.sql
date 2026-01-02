@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 22, 2025 at 02:01 PM
+-- Generation Time: Jan 02, 2026 at 04:40 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -51,7 +51,22 @@ CREATE TABLE `activities` (
 --
 
 INSERT INTO `activities` (`id`, `tenant_key`, `customer_id`, `deal_id`, `type`, `title`, `description`, `start_time`, `end_time`, `duration`, `performed_by`, `outcome`, `location`, `notes`, `created_at`, `updated_at`) VALUES
-('4677ef54-df2b-11f0-b15d-581122e4f0be', 'rabin', 'eaf6744a-8373-435f-8e61-b8055af8132a', NULL, 'sale', 'فروش جدید به سارا محمدی', 'فروش 1 محصول به مبلغ ۷۰۰٬۰۰۰٬۰۰۰ تومان ثبت شد', '2025-12-22 11:42:20', NULL, NULL, 'unknown', 'completed', NULL, NULL, '2025-12-22 11:42:20', '2025-12-22 11:42:20');
+('4677ef54-df2b-11f0-b15d-581122e4f0be', 'rabin', 'eaf6744a-8373-435f-8e61-b8055af8132a', NULL, 'sale', 'فروش جدید به سارا محمدی', 'فروش 1 محصول به مبلغ ۷۰۰٬۰۰۰٬۰۰۰ تومان ثبت شد', '2025-12-22 11:42:20', NULL, NULL, 'unknown', 'completed', NULL, NULL, '2025-12-22 11:42:20', '2025-12-22 11:42:20'),
+('9dafc4fd-e433-11f0-89b7-581122e4f0be', 'rabin', '0', NULL, 'customer', 'مشتری جدید: مشتری جدید تست', 'مشتری مشتری جدید تست اضافه شد', '2025-12-28 21:24:38', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2025-12-28 21:24:38', '2025-12-28 21:24:38'),
+('890017f8-e779-11f0-8eb1-581122e4f0be', 'rabin', '0', NULL, 'customer', 'مشتری جدید: تست دستی لید', 'مشتری تست دستی لید اضافه شد', '2026-01-02 01:22:42', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 01:22:42', '2026-01-02 01:22:42'),
+('2b3c5878-e77d-11f0-8eb1-581122e4f0be', 'rabin', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', NULL, 'lead', 'تغییر مرحله سرنخ: تست دستی لید', 'مرحله سرنخ تست دستی لید از \"سرنخ جدید\" به \"نیازسنجی\" تغییر کرد', '2026-01-02 01:48:43', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 01:48:43', '2026-01-02 01:48:43'),
+('a8f073e1-e77d-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, 'lead', 'تغییر مرحله سرنخ: علی احمدی', 'مرحله سرنخ علی احمدی از \"سرنخ جدید\" به \"سرنخ جدید\" تغییر کرد', '2026-01-02 01:52:13', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 01:52:13', '2026-01-02 01:52:13'),
+('aeaac9a8-e77d-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, 'lead', 'تغییر مرحله سرنخ: علی احمدی', 'مرحله سرنخ علی احمدی از \"سرنخ جدید\" به \"سرنخ جدید\" تغییر کرد', '2026-01-02 01:52:23', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 01:52:23', '2026-01-02 01:52:23'),
+('3dcd24d1-e77e-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, 'lead', 'تغییر مرحله سرنخ: علی احمدی', 'مرحله سرنخ علی احمدی از \"سرنخ جدید\" به \"سرنخ جدید\" تغییر کرد', '2026-01-02 01:56:23', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 01:56:23', '2026-01-02 01:56:23'),
+('43b84161-e77e-11f0-8eb1-581122e4f0be', 'rabin', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', NULL, 'lead', 'تغییر مرحله سرنخ: تست دستی لید', 'مرحله سرنخ تست دستی لید از \"نیازسنجی\" به \"ارسال پیشنهاد\" تغییر کرد', '2026-01-02 01:56:33', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 01:56:33', '2026-01-02 01:56:33'),
+('4a886062-e77e-11f0-8eb1-581122e4f0be', 'rabin', 'test-lead-won-1767217298737', NULL, 'lead', 'تغییر مرحله سرنخ: تست تبدیل مستقیم', 'مرحله سرنخ تست تبدیل مستقیم از \"مذاکره\" به \"برنده شده\" تغییر کرد', '2026-01-02 01:56:45', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 01:56:45', '2026-01-02 01:56:45'),
+('6953dd78-e77e-11f0-8eb1-581122e4f0be', 'rabin', 'test-lead-won-1767217298737', NULL, 'lead', 'تغییر مرحله سرنخ: تست تبدیل مستقیم', 'مرحله سرنخ تست تبدیل مستقیم از \"مذاکره\" به \"برنده شده\" تغییر کرد', '2026-01-02 01:57:36', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 01:57:36', '2026-01-02 01:57:36'),
+('2cadfab7-e77f-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, 'lead', 'تغییر مرحله سرنخ: علی احمدی', 'مرحله سرنخ علی احمدی از \"سرنخ جدید\" به \"نیازسنجی\" تغییر کرد', '2026-01-02 02:03:04', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 02:03:04', '2026-01-02 02:03:04'),
+('3252f09c-e77f-11f0-8eb1-581122e4f0be', 'rabin', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', NULL, 'lead', 'تغییر مرحله سرنخ: تست دستی لید', 'مرحله سرنخ تست دستی لید از \"ارسال پیشنهاد\" به \"مذاکره\" تغییر کرد', '2026-01-02 02:03:13', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 02:03:13', '2026-01-02 02:03:13'),
+('356b118e-e77f-11f0-8eb1-581122e4f0be', 'rabin', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', NULL, 'lead', 'تغییر مرحله سرنخ: تست دستی لید', 'مرحله سرنخ تست دستی لید از \"مذاکره\" به \"برنده شده\" تغییر کرد', '2026-01-02 02:03:19', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 02:03:19', '2026-01-02 02:03:19'),
+('54464cbe-e77f-11f0-8eb1-581122e4f0be', 'rabin', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', NULL, 'lead', 'تغییر مرحله سرنخ: تست دستی لید', 'مرحله سرنخ تست دستی لید از \"مذاکره\" به \"برنده شده\" تغییر کرد', '2026-01-02 02:04:10', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 02:04:10', '2026-01-02 02:04:10'),
+('43a90626-e780-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, 'lead', 'تغییر مرحله سرنخ: علی احمدی', 'مرحله سرنخ علی احمدی از \"نیازسنجی\" به \"تماس اولیه\" تغییر کرد', '2026-01-02 02:10:52', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 02:10:52', '2026-01-02 02:10:52'),
+('46a8e7a9-e780-11f0-8eb1-581122e4f0be', 'rabin', '9daea1e8-e433-11f0-89b7-581122e4f0be', NULL, 'lead', 'تغییر مرحله سرنخ: مشتری جدید تست', 'مرحله سرنخ مشتری جدید تست از \"سرنخ جدید\" به \"تماس اولیه\" تغییر کرد', '2026-01-02 02:10:57', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'completed', NULL, NULL, '2026-01-02 02:10:57', '2026-01-02 02:10:57');
 
 -- --------------------------------------------------------
 
@@ -397,13 +412,18 @@ CREATE TABLE `customers` (
   `priority` enum('low','medium','high') DEFAULT 'medium',
   `created_by` varchar(255) DEFAULT NULL,
   `assigned_to` varchar(36) DEFAULT NULL,
+  `sales_owner` varchar(36) DEFAULT NULL COMMENT 'Assigned sales person for this lead',
   `total_tickets` int(11) DEFAULT 0,
   `satisfaction_score` decimal(3,2) DEFAULT NULL,
   `potential_value` decimal(15,2) DEFAULT NULL,
+  `deal_value` decimal(15,2) DEFAULT NULL COMMENT 'Potential deal value for this lead',
+  `success_probability` int(11) DEFAULT 50 COMMENT 'Success probability percentage (0-100)',
   `actual_value` decimal(15,2) DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `last_interaction` timestamp NULL DEFAULT NULL,
+  `last_followup_date` timestamp NULL DEFAULT NULL COMMENT 'Date of last follow-up contact',
+  `next_action_date` timestamp NULL DEFAULT NULL COMMENT 'Scheduled date for next action',
   `last_contact_date` timestamp NULL DEFAULT NULL,
   `contact_attempts` int(11) DEFAULT 0,
   `source` varchar(100) DEFAULT NULL COMMENT 'منبع کسب مشتری',
@@ -411,22 +431,31 @@ CREATE TABLE `customers` (
   `custom_fields` longtext DEFAULT NULL COMMENT 'فیلدهای سفارشی' CHECK (json_valid(`custom_fields`)),
   `last_activity_date` timestamp NULL DEFAULT NULL COMMENT 'آخرین فعالیت',
   `lead_score` int(11) DEFAULT 0 COMMENT 'امتیاز مشتری',
-  `lifecycle_stage` enum('subscriber','lead','marketing_qualified_lead','sales_qualified_lead','opportunity','customer','evangelist','other') DEFAULT 'lead' COMMENT 'مرحله چرخه حیات مشتری'
+  `lead_temperature` enum('hot','warm','cold') DEFAULT 'warm' COMMENT 'Lead temperature based on interaction and probability',
+  `loss_reason` text DEFAULT NULL COMMENT 'Reason for losing the lead (required for closed_lost)',
+  `lifecycle_stage` enum('subscriber','lead','marketing_qualified_lead','sales_qualified_lead','opportunity','customer','evangelist','other') DEFAULT 'lead' COMMENT 'مرحله چرخه حیات مشتری',
+  `type` enum('lead','customer') DEFAULT 'lead' COMMENT 'Customer type: lead (prospect) or customer (converted)',
+  `current_pipeline_stage` varchar(50) DEFAULT 'new_lead' COMMENT 'Current stage in the sales pipeline'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `customers`
 --
 
-INSERT INTO `customers` (`id`, `wordpress_user_id`, `tenant_key`, `first_name`, `last_name`, `company_name`, `name`, `email`, `phone`, `website`, `address`, `city`, `state`, `country`, `postal_code`, `industry`, `company_size`, `annual_revenue`, `status`, `segment`, `priority`, `created_by`, `assigned_to`, `total_tickets`, `satisfaction_score`, `potential_value`, `actual_value`, `created_at`, `updated_at`, `last_interaction`, `last_contact_date`, `contact_attempts`, `source`, `tags`, `custom_fields`, `last_activity_date`, `lead_score`, `lifecycle_stage`) VALUES
-('20487dac-de88-11f0-820c-581122e4f0be', 3791, 'default', NULL, NULL, 'شرکت default', 'مشتری تست default', 'test_default@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, 0, NULL, NULL, 0.00, '2025-12-21 16:14:28', '2025-12-21 16:14:28', NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'lead'),
-('2048e7f0-de88-11f0-820c-581122e4f0be', 3436, 'demo_tenant', NULL, NULL, 'شرکت demo_tenant', 'مشتری تست demo_tenant', 'test_demo_tenant@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, 0, NULL, NULL, 0.00, '2025-12-21 16:14:28', '2025-12-21 16:14:28', NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'lead'),
-('2049a95b-de88-11f0-820c-581122e4f0be', 7879, 'test_tenant', NULL, NULL, 'شرکت test_tenant', 'مشتری تست test_tenant', 'test_test_tenant@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, 0, NULL, NULL, 0.00, '2025-12-21 16:14:28', '2025-12-21 16:14:28', NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'lead'),
-('3acbb428-de89-11f0-820c-581122e4f0be', 1088, 'tenant_a', NULL, NULL, 'شرکت شرکت الف', 'مشتری شرکت الف تستی', 'customer_tenant_a@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, 0, NULL, NULL, 0.00, '2025-12-21 16:22:22', '2025-12-21 16:22:22', NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'lead'),
-('3acc1f8e-de89-11f0-820c-581122e4f0be', 5702, 'tenant_b', NULL, NULL, 'شرکت شرکت ب', 'مشتری شرکت ب تستی', 'customer_tenant_b@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, 0, NULL, NULL, 0.00, '2025-12-21 16:22:22', '2025-12-21 16:22:22', NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'lead'),
-('3acc8693-de89-11f0-820c-581122e4f0be', 10347, 'default', NULL, NULL, 'شرکت Default Tenant', 'مشتری Default Tenant تستی', 'customer_default@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, 0, NULL, NULL, 0.00, '2025-12-21 16:22:22', '2025-12-21 16:22:22', NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'lead'),
-('91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, 'rabin', NULL, NULL, 'شرکت رابین', 'علی احمدی', 'ali.ahmadi@rabin.com', '+989123456789', NULL, 'تهران، خیابان ولیعصر', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'active', 'small_business', 'high', NULL, NULL, 0, NULL, NULL, 0.00, '2025-12-21 16:35:48', '2025-12-21 16:35:48', NULL, NULL, 0, 'manual', NULL, NULL, NULL, 0, 'lead'),
-('eaf6744a-8373-435f-8e61-b8055af8132a', 12345, 'rabin', NULL, NULL, 'شرکت نمونه', 'سارا محمدی', 'sara.mohammadi@example.com', '+989987654321', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, 0, NULL, NULL, 0.00, '2025-12-21 16:35:48', '2025-12-21 16:35:48', NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'lead');
+INSERT INTO `customers` (`id`, `wordpress_user_id`, `tenant_key`, `first_name`, `last_name`, `company_name`, `name`, `email`, `phone`, `website`, `address`, `city`, `state`, `country`, `postal_code`, `industry`, `company_size`, `annual_revenue`, `status`, `segment`, `priority`, `created_by`, `assigned_to`, `sales_owner`, `total_tickets`, `satisfaction_score`, `potential_value`, `deal_value`, `success_probability`, `actual_value`, `created_at`, `updated_at`, `last_interaction`, `last_followup_date`, `next_action_date`, `last_contact_date`, `contact_attempts`, `source`, `tags`, `custom_fields`, `last_activity_date`, `lead_score`, `lead_temperature`, `loss_reason`, `lifecycle_stage`, `type`, `current_pipeline_stage`) VALUES
+('20487dac-de88-11f0-820c-581122e4f0be', 3791, 'default', NULL, NULL, 'شرکت default', 'مشتری تست default', 'test_default@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2025-12-21 16:14:28', '2025-12-21 16:14:28', NULL, NULL, NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'warm', NULL, 'lead', 'lead', 'new_lead'),
+('2048e7f0-de88-11f0-820c-581122e4f0be', 3436, 'demo_tenant', NULL, NULL, 'شرکت demo_tenant', 'مشتری تست demo_tenant', 'test_demo_tenant@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2025-12-21 16:14:28', '2025-12-21 16:14:28', NULL, NULL, NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'warm', NULL, 'lead', 'lead', 'new_lead'),
+('2049a95b-de88-11f0-820c-581122e4f0be', 7879, 'test_tenant', NULL, NULL, 'شرکت test_tenant', 'مشتری تست test_tenant', 'test_test_tenant@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2025-12-21 16:14:28', '2025-12-21 16:14:28', NULL, NULL, NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'warm', NULL, 'lead', 'lead', 'new_lead'),
+('3acbb428-de89-11f0-820c-581122e4f0be', 1088, 'tenant_a', NULL, NULL, 'شرکت شرکت الف', 'مشتری شرکت الف تستی', 'customer_tenant_a@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2025-12-21 16:22:22', '2025-12-21 16:22:22', NULL, NULL, NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'warm', NULL, 'lead', 'lead', 'new_lead'),
+('3acc1f8e-de89-11f0-820c-581122e4f0be', 5702, 'tenant_b', NULL, NULL, 'شرکت شرکت ب', 'مشتری شرکت ب تستی', 'customer_tenant_b@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2025-12-21 16:22:22', '2025-12-21 16:22:22', NULL, NULL, NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'warm', NULL, 'lead', 'lead', 'new_lead'),
+('3acc8693-de89-11f0-820c-581122e4f0be', 10347, 'default', NULL, NULL, 'شرکت Default Tenant', 'مشتری Default Tenant تستی', 'customer_default@example.com', '+98912345678', NULL, 'تهران، خیابان آزادی', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'prospect', '', 'medium', NULL, NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2025-12-21 16:22:22', '2025-12-21 16:22:22', NULL, NULL, NULL, NULL, 0, 'wordpress', NULL, NULL, NULL, 0, 'warm', NULL, 'lead', 'lead', 'new_lead'),
+('91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, 'rabin', NULL, NULL, 'شرکت رابین', 'علی احمدی', 'ali.ahmadi@rabin.com', '+989123456789', NULL, 'تهران، خیابان ولیعصر', 'تهران', 'تهران', 'ایران', NULL, NULL, NULL, NULL, 'active', 'small_business', 'high', NULL, NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2025-12-21 16:35:48', '2026-01-02 02:10:52', NULL, NULL, NULL, NULL, 0, 'manual', NULL, NULL, NULL, 0, 'cold', NULL, 'lead', 'lead', 'contacted'),
+('9daea1e8-e433-11f0-89b7-581122e4f0be', NULL, 'rabin', NULL, NULL, NULL, 'مشتری جدید تست', NULL, NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', NULL, 'medium', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2025-12-28 21:24:38', '2026-01-02 02:10:57', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'cold', NULL, 'lead', 'lead', 'contacted'),
+('test-lead-1767216400366', NULL, 'rabin', NULL, NULL, NULL, 'تست اتوماسیون کامل', 'test@fullautomation.com', '09123456789', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, NULL, 'test-user', 0, NULL, NULL, 1500000.00, 80, 0.00, '2025-12-31 21:26:40', '2025-12-31 21:26:40', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'warm', NULL, 'lead', 'customer', 'closed_won'),
+('overdue-lead-1767216400567', NULL, 'rabin', NULL, NULL, NULL, 'سرنخ عقب‌افتاده', 'overdue@test.com', NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2025-12-31 21:26:40', '2025-12-31 21:32:40', NULL, '2025-12-26 20:30:00', NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'cold', NULL, 'lead', 'lead', 'contacted'),
+('test-lead-auto-1767217298737', NULL, 'rabin', NULL, NULL, NULL, 'تست اتوماسیون مستقیم', 'test1@direct.com', '09111111111', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, NULL, 'test-user', 0, NULL, NULL, 1000000.00, 70, 0.00, '2025-12-31 21:41:38', '2025-12-31 21:53:35', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'cold', NULL, 'lead', 'lead', 'contacted'),
+('test-lead-won-1767217298737', NULL, 'rabin', NULL, NULL, NULL, 'تست تبدیل مستقیم', 'test2@direct.com', '09222222222', NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'small_business', 'medium', NULL, NULL, 'test-user', 0, NULL, NULL, 2000000.00, 90, 0.00, '2025-12-31 21:41:38', '2025-12-31 21:53:35', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'cold', NULL, 'lead', 'lead', 'negotiation'),
+('88fdb5f4-e779-11f0-8eb1-581122e4f0be', NULL, 'rabin', NULL, NULL, NULL, 'تست دستی لید', NULL, NULL, NULL, NULL, NULL, NULL, 'Iran', NULL, NULL, NULL, NULL, 'prospect', 'individual', 'medium', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, NULL, 0, NULL, NULL, NULL, 50, 0.00, '2026-01-02 01:22:42', '2026-01-02 02:03:13', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 'cold', NULL, 'lead', 'lead', 'negotiation');
 
 -- --------------------------------------------------------
 
@@ -1476,6 +1505,41 @@ CREATE TABLE `interaction_tags` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lead_pipeline_history`
+--
+
+CREATE TABLE `lead_pipeline_history` (
+  `id` varchar(36) NOT NULL DEFAULT uuid(),
+  `tenant_key` varchar(50) DEFAULT 'rabin',
+  `customer_id` varchar(36) NOT NULL,
+  `from_stage` varchar(50) DEFAULT NULL,
+  `to_stage` varchar(50) NOT NULL,
+  `changed_by` varchar(36) NOT NULL,
+  `change_reason` text DEFAULT NULL,
+  `changed_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `lead_pipeline_history`
+--
+
+INSERT INTO `lead_pipeline_history` (`id`, `tenant_key`, `customer_id`, `from_stage`, `to_stage`, `changed_by`, `change_reason`, `changed_at`) VALUES
+('2b398164-e77d-11f0-8eb1-581122e4f0be', 'rabin', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', 'new_lead', 'needs_analysis', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, '2026-01-02 01:48:43'),
+('2cad4917-e77f-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', 'new_lead', 'needs_analysis', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, '2026-01-02 02:03:04'),
+('32514971-e77f-11f0-8eb1-581122e4f0be', 'rabin', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', 'proposal_sent', 'negotiation', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, '2026-01-02 02:03:13'),
+('3dcb3bcd-e77e-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', 'new_lead', 'new_lead', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, '2026-01-02 01:56:23'),
+('438c017d-e780-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', 'needs_analysis', 'contacted', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, '2026-01-02 02:10:52'),
+('43b7fdac-e77e-11f0-8eb1-581122e4f0be', 'rabin', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', 'needs_analysis', 'proposal_sent', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, '2026-01-02 01:56:33'),
+('46a89cc4-e780-11f0-8eb1-581122e4f0be', 'rabin', '9daea1e8-e433-11f0-89b7-581122e4f0be', 'new_lead', 'contacted', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, '2026-01-02 02:10:57'),
+('a8efa57f-e77d-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', 'new_lead', 'new_lead', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, '2026-01-02 01:52:13'),
+('aeaa8fb0-e77d-11f0-8eb1-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', 'new_lead', 'new_lead', '1337dd2e-aba8-4d95-ac96-a540979a17cd', NULL, '2026-01-02 01:52:23'),
+('fc937bb7-e676-11f0-a64c-581122e4f0be', 'rabin', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, 'new_lead', 'system', 'Initial pipeline setup - migrated existing customer', '2025-12-31 18:31:56'),
+('fc938b5b-e676-11f0-a64c-581122e4f0be', 'rabin', 'eaf6744a-8373-435f-8e61-b8055af8132a', NULL, 'new_lead', 'system', 'Initial pipeline setup - migrated existing customer', '2025-12-31 18:31:56'),
+('fc939071-e676-11f0-a64c-581122e4f0be', 'rabin', '9daea1e8-e433-11f0-89b7-581122e4f0be', NULL, 'new_lead', 'system', 'Initial pipeline setup - migrated existing customer', '2025-12-31 18:31:56');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `modules`
 --
 
@@ -1534,7 +1598,10 @@ INSERT INTO `modules` (`id`, `name`, `display_name`, `description`, `route`, `ic
 ('demo-012', 'documents', 'مدیریت اسناد', NULL, '/dashboard/documents', 'FileText', NULL, 12, 1, '2025-10-24 17:28:45'),
 ('demo-013', 'chat', 'چت', NULL, '/dashboard/chat', 'MessageCircle', NULL, 13, 1, '2025-10-24 17:28:45'),
 ('demo-014', 'customer-club', 'باشگاه مشتریان', NULL, '/dashboard/customer-club', 'Users', NULL, 14, 1, '2025-10-24 17:28:45'),
-('demo-015', 'feedback', 'بازخوردها', NULL, '/dashboard/feedback', 'MessageCircle2', NULL, 15, 1, '2025-10-24 17:28:45');
+('demo-015', 'feedback', 'بازخوردها', NULL, '/dashboard/feedback', 'MessageCircle2', NULL, 15, 1, '2025-10-24 17:28:45'),
+('mod-022', 'sales_pipeline', 'پیگیری فروش', 'سیستم مدیریت فرآیند فروش و پیگیری سرنخ‌ها', '/dashboard/sales-pipeline', 'TrendingUp', NULL, 25, 1, '2025-12-31 19:29:42'),
+('mod-022', 'sales_pipeline', 'پیگیری فروش', 'سیستم مدیریت فرآیند فروش و پیگیری سرنخ‌ها', '/dashboard/sales-pipeline', 'TrendingUp', NULL, 25, 1, '2025-12-31 19:57:12'),
+('mod-022', 'sales_pipeline', 'پیگیری فروش', 'سیستم مدیریت فرآیند فروش و پیگیری سرنخ‌ها', '/dashboard/sales-pipeline', 'TrendingUp', NULL, 25, 1, '2025-12-31 20:03:11');
 
 -- --------------------------------------------------------
 
@@ -1659,20 +1726,29 @@ CREATE TABLE `pipeline_stages` (
   `description` text DEFAULT NULL,
   `stage_order` int(11) NOT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `color` varchar(7) DEFAULT '#3B82F6'
+  `color` varchar(7) DEFAULT '#3B82F6',
+  `tenant_key` varchar(50) DEFAULT 'rabin',
+  `display_name` varchar(100) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `pipeline_stages`
 --
 
-INSERT INTO `pipeline_stages` (`id`, `name`, `code`, `description`, `stage_order`, `is_active`, `color`) VALUES
-('stage-001', 'جذب', 'lead_generation', 'جذب مشتری و شناسایی فرصت فروش', 1, 1, '#10B981'),
-('stage-002', 'نیازسنجی', 'needs_analysis', 'بررسی و تحلیل نیازهای مشتری', 2, 1, '#3B82F6'),
-('stage-003', 'تماس و مشاوره اولیه', 'initial_consultation', 'برقراری تماس اولیه و ارائه مشاوره', 3, 1, '#8B5CF6'),
-('stage-004', 'ارائه پیشنهاد', 'proposal_presentation', 'تهیه و ارائه پیشنهاد فنی و مالی', 4, 1, '#F59E0B'),
-('stage-005', 'مذاکره و بستن قرارداد', 'negotiation_contract', 'مذاکره نهایی و امضای قرارداد', 5, 1, '#EF4444'),
-('stage-006', 'فروش و تحویل محصول', 'sales_delivery', 'تکمیل فروش و تحویل محصول/خدمات', 6, 1, '#059669');
+INSERT INTO `pipeline_stages` (`id`, `name`, `code`, `description`, `stage_order`, `is_active`, `color`, `tenant_key`, `display_name`) VALUES
+('stage-001', 'جذب', 'lead_generation', 'جذب مشتری و شناسایی فرصت فروش', 1, 1, '#10B981', 'rabin', ''),
+('stage-002', 'نیازسنجی', 'needs_analysis', 'بررسی و تحلیل نیازهای مشتری', 2, 1, '#3B82F6', 'rabin', ''),
+('stage-003', 'تماس و مشاوره اولیه', 'initial_consultation', 'برقراری تماس اولیه و ارائه مشاوره', 3, 1, '#8B5CF6', 'rabin', ''),
+('stage-004', 'ارائه پیشنهاد', 'proposal_presentation', 'تهیه و ارائه پیشنهاد فنی و مالی', 4, 1, '#F59E0B', 'rabin', ''),
+('stage-005', 'مذاکره و بستن قرارداد', 'negotiation_contract', 'مذاکره نهایی و امضای قرارداد', 5, 1, '#EF4444', 'rabin', ''),
+('stage-006', 'فروش و تحویل محصول', 'sales_delivery', 'تکمیل فروش و تحویل محصول/خدمات', 6, 1, '#059669', 'rabin', ''),
+('5a61a440-e677-11f0-a64c-581122e4f0be', 'new_lead', '', NULL, 1, 1, '#3B82F6', 'rabin', 'سرنخ جدید'),
+('5a620ffa-e677-11f0-a64c-581122e4f0be', 'contacted', '', NULL, 2, 1, '#3B82F6', 'rabin', 'تماس اولیه'),
+('5a62851b-e677-11f0-a64c-581122e4f0be', 'needs_analysis', '', NULL, 3, 1, '#3B82F6', 'rabin', 'نیازسنجی'),
+('5a631a78-e677-11f0-a64c-581122e4f0be', 'proposal_sent', '', NULL, 4, 1, '#3B82F6', 'rabin', 'ارسال پیشنهاد'),
+('5a637854-e677-11f0-a64c-581122e4f0be', 'negotiation', '', NULL, 5, 1, '#3B82F6', 'rabin', 'مذاکره'),
+('5a63eb7f-e677-11f0-a64c-581122e4f0be', 'closed_won', '', NULL, 6, 1, '#3B82F6', 'rabin', 'برنده شده'),
+('5a6461bd-e677-11f0-a64c-581122e4f0be', 'closed_lost', '', NULL, 7, 1, '#3B82F6', 'rabin', 'از دست رفته');
 
 -- --------------------------------------------------------
 
@@ -1876,7 +1952,8 @@ CREATE TABLE `sales` (
 --
 
 INSERT INTO `sales` (`id`, `title`, `tenant_key`, `deal_id`, `customer_id`, `customer_name`, `total_amount`, `currency`, `payment_status`, `payment_method`, `sale_date`, `delivery_date`, `payment_due_date`, `notes`, `invoice_number`, `sales_person_id`, `sales_person_name`, `created_at`, `updated_at`) VALUES
-('59654db4-dd18-4b05-98f6-56d191dec9e5', 'فروش سارا محمدی - ۱۴۰۴/۱۰/۱', 'rabin', NULL, 'eaf6744a-8373-435f-8e61-b8055af8132a', 'سارا محمدی', 700000000.00, 'IRR', 'paid', 'نقدی', '2025-12-22 11:42:20', NULL, NULL, NULL, NULL, 'unknown', 'ناشناس', '2025-12-22 11:42:20', '2025-12-22 11:42:20');
+('59654db4-dd18-4b05-98f6-56d191dec9e5', 'فروش سارا محمدی - ۱۴۰۴/۱۰/۱', 'rabin', NULL, 'eaf6744a-8373-435f-8e61-b8055af8132a', 'سارا محمدی', 700000000.00, 'IRR', 'paid', 'نقدی', '2025-12-22 11:42:20', NULL, NULL, NULL, NULL, 'unknown', 'ناشناس', '2025-12-22 11:42:20', '2025-12-22 11:42:20'),
+('66217f8a-e68f-11f0-a64c-581122e4f0be', NULL, 'rabin', NULL, 'test-lead-1767216400366', 'تست اتوماسیون کامل', 1500000.00, 'IRR', 'paid', NULL, '2025-12-31 21:26:40', NULL, NULL, 'فروش ناشی از تبدیل خودکار سرنخ', NULL, 'test-user', 'کاربر تست', '2025-12-31 21:26:40', '2025-12-31 21:26:40');
 
 -- --------------------------------------------------------
 
@@ -2103,6 +2180,21 @@ CREATE TABLE `tasks` (
   `attachments` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attachments`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `tasks`
+--
+
+INSERT INTO `tasks` (`id`, `tenant_key`, `title`, `description`, `customer_id`, `deal_id`, `project_id`, `assigned_to`, `assigned_by`, `priority`, `status`, `category`, `due_date`, `created_at`, `updated_at`, `completed_at`, `completion_notes`, `attachments`) VALUES
+('2b3d4dd8-e77d-11f0-8eb1-581122e4f0be', 'rabin', 'آماده‌سازی و ارسال پیشنهاد', 'آماده‌سازی پیشنهاد مناسب بر اساس نیازهای شناسایی شده تست دستی لید', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'low', 'pending', 'follow_up', '2026-01-06 20:30:00', '2026-01-02 01:48:43', '2026-01-02 01:48:43', NULL, NULL, NULL),
+('a8f156e7-e77d-11f0-8eb1-581122e4f0be', 'rabin', 'تماس اولیه با سرنخ جدید', 'برقراری تماس اولیه با سرنخ جدید علی احمدی و معرفی خدمات', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'low', 'pending', 'follow_up', '2026-01-02 20:30:00', '2026-01-02 01:52:13', '2026-01-02 01:52:13', NULL, NULL, NULL),
+('aeacf2e0-e77d-11f0-8eb1-581122e4f0be', 'rabin', 'تماس اولیه با سرنخ جدید', 'برقراری تماس اولیه با سرنخ جدید علی احمدی و معرفی خدمات', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'low', 'pending', 'follow_up', '2026-01-02 20:30:00', '2026-01-02 01:52:23', '2026-01-02 01:52:23', NULL, NULL, NULL),
+('3dce612a-e77e-11f0-8eb1-581122e4f0be', 'rabin', 'تماس اولیه با سرنخ جدید', 'برقراری تماس اولیه با سرنخ جدید علی احمدی و معرفی خدمات', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'low', 'pending', 'follow_up', '2026-01-02 20:30:00', '2026-01-02 01:56:23', '2026-01-02 01:56:23', NULL, NULL, NULL),
+('43b9b1e0-e77e-11f0-8eb1-581122e4f0be', 'rabin', 'پیگیری پیشنهاد و شروع مذاکره', 'پیگیری پیشنهاد ارسالی و پاسخ به سوالات تست دستی لید', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'high', 'pending', 'follow_up', '2026-01-04 20:30:00', '2026-01-02 01:56:33', '2026-01-02 01:56:33', NULL, NULL, NULL),
+('2caed457-e77f-11f0-8eb1-581122e4f0be', 'rabin', 'آماده‌سازی و ارسال پیشنهاد', 'آماده‌سازی پیشنهاد مناسب بر اساس نیازهای شناسایی شده علی احمدی', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'low', 'pending', 'follow_up', '2026-01-06 20:30:00', '2026-01-02 02:03:04', '2026-01-02 02:03:04', NULL, NULL, NULL),
+('325431f9-e77f-11f0-8eb1-581122e4f0be', 'rabin', 'نهایی‌سازی مذاکرات و بستن قرارداد', 'ادامه مذاکرات و نهایی‌سازی شرایط قرارداد با تست دستی لید', '88fdb5f4-e779-11f0-8eb1-581122e4f0be', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'high', 'pending', 'follow_up', '2026-01-08 20:30:00', '2026-01-02 02:03:13', '2026-01-02 02:03:13', NULL, NULL, NULL),
+('43b0474d-e780-11f0-8eb1-581122e4f0be', 'rabin', 'نیازسنجی و بررسی نیازهای مشتری', 'انجام نیازسنجی دقیق و شناسایی نیازهای علی احمدی', '91c6fe7e-5267-4903-9f7a-169e56f3c828', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'low', 'pending', 'follow_up', '2026-01-04 20:30:00', '2026-01-02 02:10:52', '2026-01-02 02:10:52', NULL, NULL, NULL),
+('46aa0899-e780-11f0-8eb1-581122e4f0be', 'rabin', 'نیازسنجی و بررسی نیازهای مشتری', 'انجام نیازسنجی دقیق و شناسایی نیازهای مشتری جدید تست', '9daea1e8-e433-11f0-89b7-581122e4f0be', NULL, NULL, '1337dd2e-aba8-4d95-ac96-a540979a17cd', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'low', 'pending', 'follow_up', '2026-01-04 20:30:00', '2026-01-02 02:10:57', '2026-01-02 02:10:57', NULL, NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -2265,7 +2357,8 @@ INSERT INTO `users` (`id`, `username`, `full_name`, `name`, `email`, `password`,
 ('a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'alirezasahafi77@gmail.com', 'علیرضا صحافی', 'علیرضا صحافی', 'alirezasahafi77@gmail.com', '$2a$10$gToKzPcgV3ide/025rPLW.bZrPTtXgVJQOBpIZ86IomdJqP.au4yq', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '09332107233', NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin'),
 ('3cbba416-c557-11f0-adb4-7a654ee49283', 'zalireza034@gmail.com', 'علی رضا حسنی', 'علی رضا حسنی', 'zalireza034@gmail.com', '$2a$10$MVyksUJ7Uu4d6RO/HsBuFOggPrPTFT1iqVdQWpM091EdqTZkfnBeG', 'sales_manager', NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin'),
 ('7ba67f8b-c557-11f0-adb4-7a654ee49283', 'M.razizi076@gmail.com', 'مهندس عزیزی', 'مهندس عزیزی', 'M.razizi076@gmail.com', '$2a$10$gaqyEEPhmqp3KiPULZb99.FsXexXIeRaJcN8CGG3JuQJ7f7mMj0fm', 'sales_agent', NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin'),
-('e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', 'Mahdineyestani7@gmail.com', 'مهدی نیستانی', 'مهدی نیستانی', 'Mahdineyestani7@gmail.com', '$2a$10$Bfa4XgvhrwgFcIYP507kKOOnfVTr8CAc/CBuUnTq1S1M3yMwIrtO2', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '09059699792', NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin');
+('e4c86d62-cdcd-11f0-8238-d2bc93e1fc48', 'Mahdineyestani7@gmail.com', 'مهدی نیستانی', 'مهدی نیستانی', 'Mahdineyestani7@gmail.com', '$2a$10$Bfa4XgvhrwgFcIYP507kKOOnfVTr8CAc/CBuUnTq1S1M3yMwIrtO2', 'sales_agent', NULL, NULL, 'active', NULL, NULL, '09059699792', NULL, NULL, NULL, '2025-12-22 10:33:56', '2025-12-22 10:33:56', NULL, 'rabin'),
+('7e30fdaa-afb1-4cbc-ba92-da2a34dbdf36', NULL, NULL, 'شمسایی', 'info@aghbanushop.ir', '$2b$10$tTn4QFCJ2/NMYtECAb9gQecOtwLYvjONZZEb3XDZfM.chyeOLMH7a', 'ceo', NULL, NULL, 'active', NULL, NULL, NULL, NULL, '2025-12-28 21:08:28', NULL, '2025-12-28 21:08:28', '2025-12-28 21:08:28', NULL, 'aghbanushop');
 
 -- --------------------------------------------------------
 
@@ -2517,12 +2610,11 @@ INSERT INTO `user_module_permissions` (`id`, `user_id`, `module_id`, `granted`, 
 ('ump-mg7nci6z', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-004', 1, '2025-10-01 07:10:05', '2025-10-01 07:10:05'),
 ('ump-mg7nck3l', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-005', 1, '2025-10-01 07:10:07', '2025-10-01 07:10:07'),
 ('ump-mg7nclcp', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-008', 1, '2025-10-01 07:10:09', '2025-10-01 07:10:09'),
-('ump-mg7ncm4z', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-009', 1, '2025-10-01 07:10:10', '2025-10-01 07:10:10'),
+('ump-mg7ncm4z', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-009', 1, '2025-10-01 07:10:10', '2026-01-02 03:38:55'),
 ('ump-mg7ncn75', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-010', 1, '2025-10-01 07:10:11', '2025-10-01 07:10:11'),
 ('ump-mg7ncppl', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-012', 1, '2025-10-01 07:10:15', '2025-10-01 07:10:15'),
 ('ump-mg7ncqks', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-013', 1, '2025-10-01 07:10:16', '2025-10-01 07:10:16'),
 ('ump-mg7ncrs3', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-014', 1, '2025-10-01 07:10:17', '2025-10-01 07:10:17'),
-('ump-mg7ncsty', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-022', 1, '2025-10-01 07:10:19', '2025-10-01 07:10:19'),
 ('ump-mg7nctv6', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-007', 1, '2025-10-01 07:10:20', '2025-10-01 07:10:20'),
 ('ump-mg7ncurb', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-015', 1, '2025-10-01 07:10:21', '2025-10-01 07:10:21'),
 ('ump-mg7ncw3p', '362bb74f-3810-4ae4-ab26-ef93fce6c05f', 'mod-016', 1, '2025-10-01 07:10:23', '2025-10-01 07:10:23'),
@@ -2537,7 +2629,6 @@ INSERT INTO `user_module_permissions` (`id`, `user_id`, `module_id`, `granted`, 
 ('ump-mg7vdywm', 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'mod-012', 0, '2025-10-01 10:55:10', '2025-11-19 08:24:10'),
 ('ump-mg7vdzlv', 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'mod-013', 0, '2025-10-01 10:55:11', '2025-11-19 08:24:10'),
 ('ump-mg7ve0kn', 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'mod-014', 0, '2025-10-01 10:55:12', '2025-11-19 08:24:12'),
-('ump-mg7ve1ua', 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'mod-022', 0, '2025-10-01 10:55:14', '2025-11-19 08:24:14'),
 ('ump-mg7ve35q', 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'mod-007', 0, '2025-10-01 10:55:16', '2025-11-19 08:24:14'),
 ('ump-mg7ve7dh', 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'mod-015', 0, '2025-10-01 10:55:21', '2025-11-19 08:24:16'),
 ('ump-mg7ve80u', 'a0389f14-6a2a-4ccc-b257-9c4ec2704c4f', 'mod-016', 0, '2025-10-01 10:55:22', '2025-11-19 08:24:17'),
@@ -2716,7 +2807,6 @@ INSERT INTO `user_module_permissions` (`id`, `user_id`, `module_id`, `granted`, 
 ('ump-mi64iki5', '7ba67f8b-c557-11f0-adb4-7a654ee49283', 'demo-015', 1, '2025-11-19 14:54:34', '2025-11-19 14:54:34'),
 ('ump-mi64imjw', '7ba67f8b-c557-11f0-adb4-7a654ee49283', 'demo-013', 1, '2025-11-19 14:54:36', '2025-11-19 14:54:36'),
 ('ump-mi64inyq', '7ba67f8b-c557-11f0-adb4-7a654ee49283', 'mod-007', 1, '2025-11-19 14:54:38', '2025-11-19 14:54:38'),
-('ump-mi64iop0', '7ba67f8b-c557-11f0-adb4-7a654ee49283', 'mod-022', 1, '2025-11-19 14:54:39', '2025-11-19 14:54:39'),
 ('ump-mi64ipms', '7ba67f8b-c557-11f0-adb4-7a654ee49283', 'mod-014', 1, '2025-11-19 14:54:40', '2025-11-19 14:54:40'),
 ('ump-mi64iq6e', '7ba67f8b-c557-11f0-adb4-7a654ee49283', 'mod-013', 1, '2025-11-19 14:54:41', '2025-11-19 14:54:44'),
 ('ump-mi64irdj', '7ba67f8b-c557-11f0-adb4-7a654ee49283', 'demo-007', 1, '2025-11-19 14:54:42', '2025-11-19 14:54:42'),
@@ -2751,7 +2841,10 @@ INSERT INTO `user_module_permissions` (`id`, `user_id`, `module_id`, `granted`, 
 ('ump-mjet9oov-mzggy', '772cc07b-dde8-11f0-abd9-581122e4f0be', 'mod-013', 1, '2025-12-20 17:59:21', '2025-12-20 17:59:21'),
 ('ump-mjet9ooz-rs3e8', '772cc07b-dde8-11f0-abd9-581122e4f0be', 'mod-022', 1, '2025-12-20 17:59:21', '2025-12-20 17:59:21'),
 ('ump-mjet9op3-gau67', '772cc07b-dde8-11f0-abd9-581122e4f0be', 'mod-014', 1, '2025-12-20 17:59:21', '2025-12-20 17:59:21'),
-('ump-mjet9op7-56auf', '772cc07b-dde8-11f0-abd9-581122e4f0be', 'mod-015', 1, '2025-12-20 17:59:21', '2025-12-20 17:59:21');
+('ump-mjet9op7-56auf', '772cc07b-dde8-11f0-abd9-581122e4f0be', 'mod-015', 1, '2025-12-20 17:59:21', '2025-12-20 17:59:21'),
+('ump-mjueu6tq-djsfh', '45f79574-e05d-4b05-8dfb-b71edf5c2547', 'mod-022', 1, '2025-12-31 19:29:42', '2025-12-31 19:29:42'),
+('ump-mjueu6tu-7nbob', '1337dd2e-aba8-4d95-ac96-a540979a17cd', 'mod-022', 1, '2025-12-31 19:29:42', '2025-12-31 19:29:42'),
+('ump-mjueu6u0-751t7', '7e30fdaa-afb1-4cbc-ba92-da2a34dbdf36', 'mod-022', 1, '2025-12-31 19:29:42', '2025-12-31 19:29:42');
 
 -- --------------------------------------------------------
 
@@ -3007,7 +3100,14 @@ ALTER TABLE `customers`
   ADD KEY `idx_customers_company_name` (`company_name`),
   ADD KEY `idx_tenant_key` (`tenant_key`),
   ADD KEY `idx_customers_tenant` (`tenant_key`),
-  ADD KEY `idx_wordpress_user_id` (`wordpress_user_id`);
+  ADD KEY `idx_wordpress_user_id` (`wordpress_user_id`),
+  ADD KEY `idx_customers_pipeline_stage` (`current_pipeline_stage`),
+  ADD KEY `idx_customers_type` (`type`),
+  ADD KEY `idx_customers_temperature` (`lead_temperature`),
+  ADD KEY `idx_customers_sales_owner` (`sales_owner`),
+  ADD KEY `idx_customers_followup_date` (`last_followup_date`),
+  ADD KEY `idx_customers_next_action` (`next_action_date`),
+  ADD KEY `idx_customers_pipeline_composite` (`tenant_key`,`type`,`current_pipeline_stage`);
 
 --
 -- Indexes for table `customer_product_interests`
@@ -3087,6 +3187,15 @@ ALTER TABLE `feedback`
 --
 ALTER TABLE `interactions`
   ADD KEY `idx_tenant_key` (`tenant_key`);
+
+--
+-- Indexes for table `lead_pipeline_history`
+--
+ALTER TABLE `lead_pipeline_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pipeline_history_customer` (`customer_id`),
+  ADD KEY `idx_pipeline_history_tenant` (`tenant_key`),
+  ADD KEY `idx_pipeline_history_date` (`changed_at`);
 
 --
 -- Indexes for table `notifications`

@@ -217,9 +217,9 @@ export default function DashboardPage() {
             <CardDescription className="dashboard-body-muted">آخرین فعالیت‌های تیم امروز</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
               {dashboardData.teamActivities.length > 0 ? (
-                dashboardData.teamActivities.map((activity) => (
+                dashboardData.teamActivities.slice(0, 5).map((activity) => (
                   <div key={activity.id} className="flex items-start space-x-3 space-x-reverse p-3 border border-cyan-200 rounded-lg hover:border-cyan-400 transition-all duration-300">
                     <div className={`p-2 rounded-full ${activity.type === 'call' ? 'bg-cyan-100 text-cyan-600' :
                       activity.type === 'meeting' ? 'bg-orange-100 text-orange-600' :
@@ -272,9 +272,9 @@ export default function DashboardPage() {
             <CardDescription className="dashboard-body-muted">آخرین مشتریان اضافه شده</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
               {dashboardData.recentCustomers.length > 0 ? (
-                dashboardData.recentCustomers.map((customer) => (
+                dashboardData.recentCustomers.slice(0, 5).map((customer) => (
                   <div key={customer.id} className="flex items-center justify-between p-3 border border-green-200 rounded-lg hover:border-green-400 transition-all duration-300">
                     <div className="flex items-center space-x-3 space-x-reverse">
                       <Avatar className="h-8 w-8">
@@ -328,9 +328,9 @@ export default function DashboardPage() {
             <CardDescription className="dashboard-body-muted">وظایف و برنامه‌های امروز</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
               {dashboardData.todaySchedule.length > 0 ? (
-                dashboardData.todaySchedule.map((task) => (
+                dashboardData.todaySchedule.slice(0, 5).map((task) => (
                   <div key={task.id} className="flex items-center justify-between p-3 border border-cyan-200 rounded-lg hover:border-cyan-400 transition-all duration-300">
                     <div className="flex items-center space-x-3 space-x-reverse">
                       <div className={`h-3 w-3 rounded-full ${task.priority === 'high' ? 'bg-red-500' :
@@ -381,9 +381,9 @@ export default function DashboardPage() {
               <CardDescription className="dashboard-body-muted">عملکرد تیم امروز</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
                 {dashboardData.userActivityReport.length > 0 ? (
-                  dashboardData.userActivityReport.map((user) => (
+                  dashboardData.userActivityReport.slice(0, 5).map((user) => (
                     <div key={user.id} className="flex items-center justify-between p-3 border border-orange-200 rounded-lg hover:border-orange-400 transition-all duration-300">
                       <div className="flex items-center space-x-3 space-x-reverse">
                         <Avatar className="h-8 w-8">

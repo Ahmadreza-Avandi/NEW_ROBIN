@@ -223,8 +223,14 @@ export const DEFAULT_PERMISSIONS = {
     'tasks', 'sales', 'products', 'feedback', 'chat', 'calendar'
   ],
   agent: [
-    'dashboard', 'customers', 'contacts', 'activities', 'interactions',
+    'dashboard', 'customers', 'contacts', 'products', 'activities', 'interactions',
     'tasks', 'feedback', 'chat', 'tickets'
+  ],
+  
+  // همکار عمومی
+  employee: [
+    'dashboard', 'customers', 'contacts', 'products', 'activities', 'interactions',
+    'tasks', 'feedback', 'chat', 'calendar'
   ]
 };
 

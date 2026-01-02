@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,10 +42,11 @@ import {
 // Import components
 import KanbanView from '@/components/sales-pipeline/kanban-view';
 import ListView from '@/components/sales-pipeline/list-view';
-import LeadDetailsModal from '@/components/sales-pipeline/lead-details-modal-simple';
+// import LeadDetailsModal from '@/components/sales-pipeline/lead-details-modal-simple';
 
 export default function SalesPipelinePage() {
   const params = useParams();
+  const router = useRouter();
   const tenantKey = (params?.tenant_key as string) || '';
   const { toast } = useToast();
 
@@ -76,9 +77,9 @@ export default function SalesPipelinePage() {
     notes: ''
   });
 
-  // Lead details modal state
-  const [showLeadDetails, setShowLeadDetails] = useState(false);
-  const [selectedLeadId, setSelectedLeadId] = useState<string>('');
+  // Lead details modal state - removed since we navigate to customer page
+  // const [showLeadDetails, setShowLeadDetails] = useState(false);
+  // const [selectedLeadId, setSelectedLeadId] = useState<string>('');
 
   // Utility function to get auth token
   const getAuthToken = () => {
@@ -202,6 +203,7 @@ export default function SalesPipelinePage() {
   const handleStageChange = async (leadId: string, newStage: PipelineStageType) => {
     try {
       const token = getAuthToken();
+      
       const response = await fetch(`/api/${tenantKey}/sales-pipeline/lead/${leadId}/stage`, {
         method: 'PUT',
         headers: {
@@ -213,6 +215,7 @@ export default function SalesPipelinePage() {
       });
 
       const data = await response.json();
+      
       if (data.success) {
         toast({
           title: "موفقیت",
@@ -227,7 +230,7 @@ export default function SalesPipelinePage() {
         });
       }
     } catch (error) {
-      console.error('Error changing stage:', error);
+      console.error('❌ Error changing stage:', error);
       toast({
         title: "خطا",
         description: "خطا در اتصال به سرور",
@@ -260,8 +263,8 @@ export default function SalesPipelinePage() {
   };
 
   const handleLeadClick = (lead: Lead) => {
-    setSelectedLeadId(lead.id);
-    setShowLeadDetails(true);
+    // Navigate to customer details page
+    router.push(`/${tenantKey}/dashboard/customers/${lead.id}`);
   };
 
   if (loading) {
@@ -630,15 +633,6 @@ export default function SalesPipelinePage() {
           />
         )}
       </div>
-
-      {/* Lead Details Modal */}
-      <LeadDetailsModal
-        isOpen={showLeadDetails}
-        onClose={() => setShowLeadDetails(false)}
-        leadId={selectedLeadId}
-        tenantKey={tenantKey}
-        onLeadUpdated={loadPipelineData}
-      />
     </div>
   );
 }
