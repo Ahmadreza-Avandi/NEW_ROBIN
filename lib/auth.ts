@@ -19,6 +19,7 @@ interface User {
   email: string;
   role: string;
   avatar_url?: string;
+  tenant_key?: string;
 }
 
 // دریافت کاربر فعلی از توکن
@@ -41,7 +42,7 @@ export async function getCurrentUser(request: NextRequest): Promise<User | null>
 
     const userId = decoded.id || decoded.userId;
     const [users] = await connection.execute(
-      'SELECT id, name, email, role, avatar_url FROM users WHERE id = ? AND status = "active"',
+      'SELECT id, name, email, role, avatar_url, tenant_key FROM users WHERE id = ? AND status = "active"',
       [userId]
     );
 
@@ -247,7 +248,7 @@ export async function loginUser(email: string, password: string): Promise<{
 
     // جستجوی کاربر
     const [users] = await connection.execute(
-      'SELECT id, name, email, password, role, avatar_url, status FROM users WHERE email = ?',
+      'SELECT id, name, email, password, role, avatar_url, status, tenant_key FROM users WHERE email = ?',
       [email]
     );
 
@@ -317,6 +318,7 @@ export async function loginUser(email: string, password: string): Promise<{
         userId: user.id, // برای سازگاری
         email: user.email,
         role: user.role,
+        tenantKey: user.tenant_key,
         timestamp: Date.now()
       },
       JWT_SECRET,

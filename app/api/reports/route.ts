@@ -44,6 +44,18 @@ export async function GET(req: NextRequest) {
         let whereClause = 'WHERE 1=1';
         const params: any[] = [];
 
+        // Add tenant filtering - اول از header بگیر، بعد از user object
+        const tenantKeyFromHeader = req.headers.get('X-Tenant-Key');
+        const tenantKey = tenantKeyFromHeader || currentUser.tenant_key || 'rabin';
+        
+        console.log('🔑 Reports API - Tenant Key Sources:');
+        console.log('   - From Header:', tenantKeyFromHeader);
+        console.log('   - From User:', currentUser.tenant_key);
+        console.log('   - Final Used:', tenantKey);
+        
+        whereClause += ' AND dr.tenant_key = ?';
+        params.push(tenantKey);
+
         // If not manager, only show own reports
         if (!isManager) {
             whereClause += ' AND dr.user_id = ?';
@@ -165,10 +177,11 @@ export async function POST(req: NextRequest) {
         const persianDate = toPersianDate(new Date(targetDate));
 
         // Check if report already exists for this date
+        const tenantKey = currentUser.tenant_key || 'rabin';
         const existingReport = await executeQuery(`
       SELECT id FROM daily_reports 
-      WHERE user_id = ? AND report_date = ?
-    `, [currentUser.id, targetDate]);
+      WHERE user_id = ? AND tenant_key = ? AND report_date = ?
+    `, [currentUser.id, tenantKey, targetDate]);
 
         let reportId;
 
@@ -212,15 +225,17 @@ export async function POST(req: NextRequest) {
         } else {
             // Create new report
             reportId = uuidv4();
+            const tenantKey = currentUser.tenant_key || 'rabin';
 
             await executeSingle(`
         INSERT INTO daily_reports (
-          id, user_id, report_date, persian_date, work_description,
+          id, user_id, tenant_key, report_date, persian_date, work_description,
           completed_tasks, working_hours, challenges, achievements, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
                 reportId,
                 currentUser.id,
+                tenantKey,
                 targetDate,
                 persianDate,
                 work_description,
@@ -297,11 +312,12 @@ export async function PUT(req: NextRequest) {
         }
 
         const today = new Date().toISOString().split('T')[0];
+        const tenantKey = currentUser.tenant_key || 'rabin';
 
         const todayReport = await executeQuery(`
       SELECT * FROM daily_reports 
-      WHERE user_id = ? AND report_date = ?
-    `, [currentUser.id, today]);
+      WHERE user_id = ? AND tenant_key = ? AND report_date = ?
+    `, [currentUser.id, tenantKey, today]);
 
         return NextResponse.json({
             success: true,

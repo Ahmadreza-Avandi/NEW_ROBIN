@@ -62,8 +62,15 @@ export async function GET(req: NextRequest) {
     const priority = searchParams.get('priority') || '';
     const assigned_to = searchParams.get('assigned_to') || '';
 
-    // فیلتر بر اساس tenant_key
-    const tenantKey = user.tenant_key || 'rabin';
+    // فیلتر بر اساس tenant_key - اول از header بگیر، بعد از user object
+    const tenantKeyFromHeader = req.headers.get('X-Tenant-Key');
+    const tenantKey = tenantKeyFromHeader || user.tenant_key || 'rabin';
+    
+    console.log('🔑 Tasks API - Tenant Key Sources:');
+    console.log('   - From Header:', tenantKeyFromHeader);
+    console.log('   - From User:', user.tenant_key);
+    console.log('   - Final Used:', tenantKey);
+    
     let whereClause = `WHERE t.tenant_key = '${tenantKey}'`;
     const params: any[] = [];
 

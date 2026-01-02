@@ -26,9 +26,15 @@ export async function GET(request: NextRequest) {
     const conn = await pool.getConnection();
 
     try {
+      // فیلتر بر اساس tenant_key
+      console.log('🔑 Tenant Tasks API - Using tenant_key:', tenantKey);
+      
       const [rows] = await conn.query(
-        'SELECT * FROM tasks ORDER BY created_at DESC'
+        'SELECT * FROM tasks WHERE tenant_key = ? ORDER BY created_at DESC',
+        [tenantKey]
       );
+
+      console.log('📊 Tenant Tasks API - Found tasks:', (rows as any[]).length);
 
       return NextResponse.json({
         success: true,
@@ -83,14 +89,15 @@ export async function POST(request: NextRequest) {
     try {
       const userId = session.userId || session.id;
       
+      // اضافه کردن tenant_key به task جدید
       const [result] = await conn.query(
         `INSERT INTO tasks (
           id, title, description, assigned_to, assigned_by,
-          status, priority, due_date, created_at, updated_at
-        ) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+          status, priority, due_date, tenant_key, created_at, updated_at
+        ) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         [
           title, description || null, assigned_to || userId, userId,
-          status || 'pending', priority || 'medium', due_date || null
+          status || 'pending', priority || 'medium', due_date || null, tenantKey
         ]
       ) as any;
 
@@ -190,8 +197,8 @@ export async function PUT(request: NextRequest) {
       values.push(taskIdentifier);
 
       await conn.query(
-        `UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`,
-        values
+        `UPDATE tasks SET ${updates.join(', ')} WHERE id = ? AND tenant_key = ?`,
+        [...values, tenantKey]
       );
 
       return NextResponse.json({
