@@ -15,10 +15,8 @@ import json
 import base64
 from dotenv import load_dotenv
 
-# بارگذاری متغیرهای محیطی از فایل .env
 load_dotenv()
 
-# تنظیمات لاگینگ
 logging.basicConfig(
     level=logging.INFO,
     format='[%(asctime)s] %(levelname)s: %(message)s',
@@ -26,19 +24,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --------------------- کلاس مدیریت دوربین‌ها ---------------------
 class CameraManager:
     def __init__(self):
-        self.cameras = []  # لیست دوربین‌ها
-        self.grid_size = (2, 2)  # تعداد ردیف و ستون در نمایش گرید
-        self.active_cam = -1     # -1 یعنی نمایش گرید، غیر از -1 یعنی نمایش تمام صفحه یک دوربین
+        self.cameras = []  
+        self.grid_size = (2, 2)  
+        self.active_cam = -1     
         self.window_name = "Face Recognition System"
         self.last_click = 0
-        self.click_delay = 500   # میلی‌ثانیه
-        self.frame_counter = 0   # شمارنده فریم برای پردازش متناوب
-        self.process_interval = 5  # پردازش چهره هر 5 فریم یکبار
+        self.click_delay = 500   
+        self.frame_counter = 0   
+        self.process_interval = 5 
 
-        # دیکشنری روزهای هفته فارسی
         self.persian_days = {
             0: "شنبه",
             1: "یکشنبه",
@@ -49,7 +45,6 @@ class CameraManager:
             6: "جمعه"
         }
 
-        # اتصال به دیتابیس MySQL با استفاده از متغیرهای محیطی
         try:
             self.db = mysql.connector.connect(
                 host=os.environ.get('MYSQL_HOST', 'localhost'),
@@ -63,7 +58,6 @@ class CameraManager:
             logger.error("خطا در اتصال به دیتابیس: %s", err)
             self.db = None
 
-        # اتصال به Redis با تنظیمات لوکال
         try:
             self.redis_db = redis.StrictRedis(
                 host=os.environ.get('REDIS_HOST', 'localhost'),
@@ -81,12 +75,10 @@ class CameraManager:
             logger.error("خطا در اتصال به Redis: %s", e)
             self.redis_db = None
 
-        # بارگذاری Haar Cascade جهت تشخیص چهره
         self.face_cascade = cv2.CascadeClassifier(
             cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
         )
 
-        # بارگذاری و آموزش مدل تشخیص چهره
         try:
             if not hasattr(cv2, 'face'):
                 raise AttributeError("ماژول cv2.face موجود نیست. لطفاً opencv-contrib-python را نصب کنید.")
@@ -107,7 +99,6 @@ class CameraManager:
             logger.error("خطا در مقداردهی مدل: %s", e)
             self.face_recognizer = None
 
-        # تنظیمات پیشرفته لاگ‌گیری
         log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
         logger.setLevel(log_level)
         file_handler = logging.handlers.RotatingFileHandler(
@@ -119,7 +110,6 @@ class CameraManager:
         file_handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s'))
         logger.addHandler(file_handler)
 
-        # دیکشنری جهت جلوگیری از ثبت مکرر حضور (به مدت 2 ساعت)
         self.last_checkin = {}
 
     def add_camera(self, name, source, location):
@@ -129,7 +119,6 @@ class CameraManager:
         """
         cap = cv2.VideoCapture(source)
         if cap.isOpened():
-            # تشخیص اینکه آیا منبع، دوربین داخلی است یا خارجی
             is_external = not (isinstance(source, int) and source == 0)
             self.cameras.append({
                 'cap': cap,
@@ -166,19 +155,15 @@ class CameraManager:
           - پیش‌بینی برچسب با استفاده از مدل آموزش‌دیده.
           - ثبت حضور در صورت تشخیص با اطمینان کافی.
         """
-        # کاهش رزولوشن برای بهبود عملکرد
         frame_small = cv2.resize(frame, (320, 240))
         gray = cv2.cvtColor(frame_small, cv2.COLOR_BGR2GRAY)
         
-        # استفاده از minSize کوچکتر جهت تشخیص چهره‌های دور
         faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=4, minSize=(20, 20))
         
-        # ضریب مقیاس برای تبدیل مختصات به فریم اصلی
         scale_factor_x = frame.shape[1] / frame_small.shape[1]
         scale_factor_y = frame.shape[0] / frame_small.shape[0]
         
         for (x, y, w, h) in faces:
-            # تبدیل مختصات به فریم اصلی
             x_orig = int(x * scale_factor_x)
             y_orig = int(y * scale_factor_y)
             w_orig = int(w * scale_factor_x)
@@ -186,10 +171,8 @@ class CameraManager:
             
             cv2.rectangle(frame, (x_orig, y_orig), (x_orig+w_orig, y_orig+h_orig), (0, 255, 0), 2)
             
-            # استخراج ناحیه چهره از تصویر اصلی برای دقت بیشتر در تشخیص
             face_roi = cv2.cvtColor(frame[y_orig:y_orig+h_orig, x_orig:x_orig+w_orig], cv2.COLOR_BGR2GRAY)
 
-            # اگر چهره کوچک باشد، بزرگ‌نمایی می‌شود
             if w_orig < 100 or h_orig < 100:
                 try:
                     face_roi = cv2.resize(face_roi, (100, 100), interpolation=cv2.INTER_AREA)
@@ -198,14 +181,11 @@ class CameraManager:
 
             if self.face_recognizer is not None:
                 try:
-                    # استاندارد کردن اندازه تصویر چهره برای تشخیص
                     face_roi_std = cv2.resize(face_roi, (200, 200), interpolation=cv2.INTER_AREA)
                     label, confidence = self.face_recognizer.predict(face_roi_std)
                     
-                    # تنظیم آستانه دقت
                     if confidence < 85:
                         national_code = str(label)
-                        # استفاده از دیکشنری last_checkin برای جلوگیری از ثبت مکرر
                         if national_code not in self.last_checkin:
                             self.log_attendance(national_code, location)
                             self.last_checkin[national_code] = datetime.now()
@@ -214,7 +194,6 @@ class CameraManager:
                 except Exception as e:
                     logger.error("خطا در پیش‌بینی چهره: %s", e)
         
-        # تغییر اندازه فریم نهایی برای نمایش
         return cv2.resize(frame, (640, 480))
 
     def log_attendance(self, national_code, location):
@@ -228,7 +207,6 @@ class CameraManager:
         
         try:
             with self.db.cursor() as cursor:
-                # دریافت اطلاعات کاربر و کلاس
                 cursor.execute("""
                     SELECT u.fullName, u.classId, c.name as className 
                     FROM User u 
@@ -273,10 +251,8 @@ class CameraManager:
                     self.db.commit()
                     logger.info(f"رکورد حضور برای {full_name} به‌روزرسانی شد")
                 else:
-                    # استفاده از نام کلاس به عنوان لوکیشن اگر موجود باشد
                     actual_location = class_name if class_name else location
                         
-                    # ثبت حضور جدید
                     cursor.execute("""
                         INSERT INTO attendance (
                             nationalCode, 
@@ -295,8 +271,8 @@ class CameraManager:
                         full_name,
                         class_id,
                         class_name,
-                        jalali_date_str,          # تاریخ جلالی
-                        now.strftime('%H:%M:%S'), # زمان ورود
+                        jalali_date_str,          
+                        now.strftime('%H:%M:%S'), 
                         actual_location,
                         day_of_week
                     ))
@@ -304,7 +280,6 @@ class CameraManager:
                     self.db.commit()
                     logger.info(f"حضور برای {full_name} در کلاس {class_name} ثبت شد")
                 
-                # آپدیت last_seen
                 self.update_last_seen(national_code, full_name, now, class_name or location)
                 
         except mysql.connector.Error as err:
@@ -317,7 +292,6 @@ class CameraManager:
             labels = []
             faces = []
             
-            # جمع‌آوری کلیدهای کاربران از ردیس
             keys = self.redis_db.keys('*')
             if not keys:
                 logger.warning("هیچ داده آموزشی در ردیس وجود ندارد")
@@ -329,22 +303,18 @@ class CameraManager:
                 np_arr = np.frombuffer(img_bytes, np.uint8)
                 img = cv2.imdecode(np_arr, cv2.IMREAD_GRAYSCALE)
                 
-                # تغییر سایز تصویر برای بهینه‌سازی حافظه
                 img = cv2.resize(img, (200, 200), interpolation=cv2.INTER_AREA)
                 
                 faces.append(img)
                 labels.append(int(data['nationalCode']))
             
-            # آموزش مدل و ذخیره
             self.face_recognizer.train(faces, np.array(labels))
             
-            # ایجاد پوشه trainer اگر وجود ندارد
             os.makedirs("trainer", exist_ok=True)
             self.face_recognizer.save("trainer/model.xml")
             logger.info("مدل با %d تصویر از ردیس آموزش داده شد", len(faces))
             
-            # بهینه‌سازی برای رزبری پای
-            cv2.ocl.setUseOpenCL(False)  # غیرفعال کردن OpenCL برای سازگاری بهتر
+            cv2.ocl.setUseOpenCL(False)  
             
         except Exception as e:
             logger.error("خطا در آموزش مدل: %s", e)
@@ -384,24 +354,19 @@ class CameraManager:
           - پردازش فریم جهت تشخیص چهره (فقط هر چند فریم یکبار).
           - در صورت عدم دریافت فریم، استفاده از یک فریم سیاه.
         """
-        # افزایش شمارنده فریم
         self.frame_counter += 1
         
-        # تعیین اینکه آیا در این فریم باید پردازش چهره انجام شود یا خیر
         process_face_this_frame = (self.frame_counter % self.process_interval == 0)
         
         for cam in self.cameras:
             ret, frame = cam['cap'].read()
             if ret:
-                # تنظیم فاصله کانونی برای دوربین‌های خارجی
                 if cam.get('is_external', False):
                     frame = self.adjust_focal_distance(frame, zoom_factor=1.5)
                 
-                # پردازش چهره فقط در فریم‌های مشخص
                 if process_face_this_frame:
                     cam['frame'] = self.process_faces(frame, cam['location'])
                 else:
-                    # در فریم‌های دیگر فقط تغییر اندازه بدون پردازش چهره
                     cam['frame'] = cv2.resize(frame, (640, 480))
             else:
                 cam['frame'] = np.zeros((480, 640, 3), dtype=np.uint8)
@@ -455,15 +420,10 @@ class CameraManager:
 def main():
     manager = CameraManager()
 
-    # اضافه کردن دوربین‌ها:
     manager.add_camera("دوربین لپتاپ", 0, "لپتاپ")
-    # مثال اضافه کردن دوربین خارجی (در صورت وجود):
-    #manager.add_camera(" 12 مکا", "rtsp://admin:@192.168.1.168:80/ch0_0.264", "12 مکا")
 
-    # زمان‌بندی پاکسازی دیکشنری حضور (هر 2 ساعت) جهت جلوگیری از ثبت مکرر
     schedule.every(2).hours.do(manager.last_checkin.clear)
 
-    # تنظیم رویداد ماوس برای تغییر حالت نمایش (دابل کلیک)
     def mouse_handler(event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDBLCLK:
             manager.toggle_fullscreen(x, y)
@@ -476,7 +436,7 @@ def main():
             manager.update_frames()
             manager.show_interface()
             schedule.run_pending()
-            if cv2.waitKey(1) == 27:  # خروج با کلید ESC
+            if cv2.waitKey(1) == 27: # خروج با کلید ESC
                 break
     finally:
         for cam in manager.cameras:

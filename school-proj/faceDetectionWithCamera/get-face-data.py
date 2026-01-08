@@ -12,8 +12,6 @@ from persiantools.jdatetime import JalaliDateTime
 import boto3
 from botocore.exceptions import NoCredentialsError
 
-# --------------------- تنظیمات اولیه ---------------------
-# ایجاد پوشه‌های مورد نیاز برای ذخیره مدل و لیبل‌ها
 os.makedirs("trainer", exist_ok=True)
 os.makedirs("labels", exist_ok=True)
 
@@ -44,11 +42,9 @@ except Exception as e:
     logging.warning("⚠️ سرویس بدون Redis ادامه می‌یابد. برخی قابلیت‌ها ممکن است کار نکنند.")
     redis_client = None
 
-# تنظیم Flask و CORS
 app = Flask(__name__)
 CORS(app)
 
-# مسیرهای Haar Cascade برای تشخیص چهره و چشم
 HAAR_CASCADE_PATHS = {
     "face": "assets/face_detection/haarcascade_frontalface_default.xml",
     "eye": "assets/face_detection/haarcascade_eye.xml"
@@ -60,7 +56,6 @@ for key, path in HAAR_CASCADE_PATHS.items():
 face_cascade = cv2.CascadeClassifier(HAAR_CASCADE_PATHS["face"])
 eye_cascade = cv2.CascadeClassifier(HAAR_CASCADE_PATHS["eye"])
 
-# --------------------- تنظیمات فضای ابری لیارا ---------------------
 LIARA_ACCESS_KEY = 'u2cgc3ev1i29tmeg'
 LIARA_SECRET_KEY = '46c86213-2684-4421-9c1d-7d96cb22ac14'
 LIARA_BUCKET_NAME = 'photo-attendance-system'
@@ -72,7 +67,6 @@ s3_client = boto3.client('s3',
                          endpoint_url=LIARA_ENDPOINT_URL)
 
 
-# --------------------- توابع کمکی ---------------------
 def upload_to_liara(national_code, color_image_data):
     """آپلود تصویر رنگی به فضای ابری لیارا"""
     try:
@@ -124,11 +118,9 @@ def detect_and_validate_face(image):
             face_gray = gray[y:y + h, x:x + w]
             face_color = image[y:y + h, x:x + w]
 
-            # تغییر اندازه به ابعاد ثابت
             resized_gray = cv2.resize(face_gray, (200, 200))
             resized_color = cv2.resize(face_color, (200, 200))
 
-            # اعتبارسنجی چشم‌ها
             eyes = eye_cascade.detectMultiScale(resized_gray)
             if len(eyes) < 2:
                 logging.warning("چهره شناسایی شده چشم‌های کافی ندارد.")
@@ -184,7 +176,6 @@ def validate_inputs(data):
     return True
 
 
-# --------------------- روت‌های API ---------------------
 @app.route('/', methods=['GET'])
 def index():
     return jsonify({"status": "success", "message": "سرور در حال اجراست."})
@@ -211,10 +202,8 @@ def upload_image():
         if face_gray is None:
             return jsonify({"status": "error", "message": "چهره معتبر در تصویر شناسایی نشد."}), 400
 
-        # ذخیره تصویر خاکستری در Redis
         save_to_redis(national_code, full_name, face_gray)
 
-        # ذخیره تصویر رنگی در لیارا
         _, buffer = cv2.imencode('.jpg', face_color)
         upload_to_liara(national_code, buffer.tobytes())
 
@@ -229,7 +218,5 @@ def upload_image():
         return jsonify({"status": "error", "message": "خطای سرور داخلی."}), 500
 
 
-# --------------------- اجرای سرور ---------------------
 if __name__ == '__main__':
-    # اجرای فلسک در حالت دسترس از همه آدرس‌ها برای استفاده در داکر
     app.run(host='0.0.0.0', port=5000, debug=True)

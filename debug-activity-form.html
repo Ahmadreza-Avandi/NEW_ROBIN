@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست فرم ثبت فعالیت</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 تست فرم ثبت فعالیت</h1>
+        
+        <div class="form-group">
+            <label>🔑 Token (از کوکی auth-token):</label>
+            <input type="text" id="authToken" placeholder="auth-token از Developer Tools > Application > Cookies">
+        </div>
+
+        <div class="form-group">
+            <label>👤 مشتری:</label>
+            <select id="customerId">
+                <option value="">انتخاب مشتری...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>📞 نوع فعالیت:</label>
+            <select id="activityType">
+                <option value="call">تماس تلفنی</option>
+                <option value="meeting">جلسه</option>
+                <option value="email">ایمیل</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>📝 عنوان:</label>
+            <input type="text" id="activityTitle" placeholder="عنوان فعالیت" value="تست ثبت فعالیت">
+        </div>
+
+        <div class="form-group">
+            <label>📄 توضیحات:</label>
+            <textarea id="activityDescription" rows="3" placeholder="توضیحات تفصیلی...">این یک تست برای بررسی مشکل ثبت فعالیت است</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>✅ نتیجه:</label>
+            <select id="activityOutcome">
+                <option value="completed">تکمیل شده</option>
+                <option value="follow_up_needed">نیاز به پیگیری</option>
+                <option value="successful">موفق</option>
+            </select>
+        </div>
+
+        <button onclick="loadCustomers()">🔄 بارگذاری مشتریان</button>
+        <button onclick="testActivitySubmit()">📤 تست ثبت فعالیت</button>
+        <button onclick="checkAuth()">🔐 بررسی احراز هویت</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const TENANT_KEY = 'rabin';
+        const BASE_URL = 'http://localhost:3000';
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+
+        function getAuthToken() {
+            const token = document.getElementById('authToken').value.trim();
+            if (!token) {
+                // Try to get from cookie
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === 'auth-token') {
+                        document.getElementById('authToken').value = value;
+                        return value;
+                    }
+                }
+                showResult('❌ Token یافت نشد. لطفاً وارد کنید یا از صفحه اصلی لاگین کنید.', 'error');
+                return null;
+            }
+            return token;
+        }
+
+        async function checkAuth() {
+            const token = getAuthToken();
+            if (!token) return;
+
+            try {
+                showResult('🔍 در حال بررسی احراز هویت...', 'info');
+
+                const response = await fetch(`${BASE_URL}/api/tenant/profile`, {
+                    headers: {
+                        'X-Tenant-Key': TENANT_KEY,
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult(`✅ احراز هویت موفق:
+نام: ${data.user?.name || 'نامشخص'}
+نقش: ${data.user?.role || 'نامشخص'}
+ID: ${data.user?.id || 'نامشخص'}`, 'success');
+                } else {
+                    showResult(`❌ احراز هویت ناموفق:
+Status: ${response.status}
+Message: ${data.message || 'خطای نامشخص'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ خطا در بررسی احراز هویت:
+${error.message}`, 'error');
+            }
+        }
+
+        async function loadCustomers() {
+            const token = getAuthToken();
+            if (!token) return;
+
+            try {
+                showResult('🔍 در حال بارگذاری مشتریان...', 'info');
+
+                const response = await fetch(`${BASE_URL}/api/tenant/customers-simple?limit=100`, {
+                    headers: {
+                        'X-Tenant-Key': TENANT_KEY,
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const select = document.getElementById('customerId');
+                    select.innerHTML = '<option value="">انتخاب مشتری...</option>';
+                    
+                    data.data.forEach(customer => {
+                        const option = document.createElement('option');
+                        option.value = customer.id;
+                        option.textContent = `${customer.name} (${customer.segment || 'نامشخص'})`;
+                        select.appendChild(option);
+                    });
+
+                    showResult(`✅ ${data.data.length} مشتری بارگذاری شد`, 'success');
+                } else {
+                    showResult(`❌ خطا در بارگذاری مشتریان:
+Status: ${response.status}
+Message: ${data.message || 'خطای نامشخص'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ خطا در بارگذاری مشتریان:
+${error.message}`, 'error');
+            }
+        }
+
+        async function testActivitySubmit() {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const customerId = document.getElementById('customerId').value;
+            const type = document.getElementById('activityType').value;
+            const title = document.getElementById('activityTitle').value;
+            const description = document.getElementById('activityDescription').value;
+            const outcome = document.getElementById('activityOutcome').value;
+
+            // Validation
+            if (!customerId) {
+                showResult('❌ لطفاً مشتری را انتخاب کنید', 'error');
+                return;
+            }
+
+            if (!title.trim()) {
+                showResult('❌ لطفاً عنوان را وارد کنید', 'error');
+                return;
+            }
+
+            const activityData = {
+                customer_id: customerId,
+                type: type,
+                title: title.trim(),
+                description: description.trim(),
+                outcome: outcome,
+                start_time: new Date().toISOString()
+            };
+
+            try {
+                showResult('📤 در حال ارسال فعالیت...', 'info');
+
+                const response = await fetch(`${BASE_URL}/api/tenant/activities`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Tenant-Key': TENANT_KEY,
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(activityData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult(`✅ فعالیت با موفقیت ثبت شد!
+ID: ${data.data?.id || 'نامشخص'}
+Message: ${data.message}
+
+📋 داده‌های ارسالی:
+${JSON.stringify(activityData, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ خطا در ثبت فعالیت:
+Status: ${response.status}
+Message: ${data.message || 'خطای نامشخص'}
+
+📋 داده‌های ارسالی:
+${JSON.stringify(activityData, null, 2)}
+
+📋 Response:
+${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ خطا در ارسال درخواست:
+${error.message}
+
+📋 داده‌های ارسالی:
+${JSON.stringify(activityData, null, 2)}`, 'error');
+            }
+        }
+
+        // Auto-load customers on page load
+        window.addEventListener('load', () => {
+            // Try to get token from cookie automatically
+            getAuthToken();
+        });
+    </script>
+</body>
+</html>

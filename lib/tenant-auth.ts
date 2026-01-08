@@ -79,9 +79,11 @@ export function getTenantSessionFromRequest(
     // دریافت token از header یا cookie
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '') || 
+                  request.cookies.get('auth-token')?.value ||
                   request.cookies.get('tenant_token')?.value;
 
     if (!token) {
+      console.log('❌ Token یافت نشد در headers یا cookies');
       return null;
     }
 
@@ -90,12 +92,14 @@ export function getTenantSessionFromRequest(
 
     // بررسی tenant key
     if (decoded.tenantKey !== tenantKey) {
+      console.log('❌ Tenant key مطابقت ندارد:', decoded.tenantKey, 'vs', tenantKey);
       return null;
     }
 
+    console.log('✅ Session معتبر برای کاربر:', decoded.name || decoded.email);
     return decoded;
   } catch (error) {
-    console.error('Error verifying tenant session:', error);
+    console.error('❌ خطا در تایید tenant session:', error);
     return null;
   }
 }

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Debug Production Activity API</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        button.danger:hover {
+            background: #c82333;
+        }
+        button.success {
+            background: #28a745;
+        }
+        button.success:hover {
+            background: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Production Activity API</h1>
+        <p><strong>URL:</strong> https://crm.robintejarat.com/api/tenant/activities</p>
+        
+        <div class="grid">
+            <div class="section">
+                <h3>🔐 Authentication</h3>
+                <div class="form-group">
+                    <label>Auth Token (از کوکی auth-token):</label>
+                    <textarea id="authToken" rows="3" placeholder="Token را از Developer Tools > Application > Cookies کپی کنید"></textarea>
+                </div>
+                <button onclick="checkAuth()">🔐 بررسی احراز هویت</button>
+                <button onclick="getTokenFromCookie()">🍪 گرفتن Token از Cookie</button>
+            </div>
+
+            <div class="section">
+                <h3>👥 Customer Selection</h3>
+                <div class="form-group">
+                    <label>مشتری:</label>
+                    <select id="customerId">
+                        <option value="">انتخاب مشتری...</option>
+                    </select>
+                </div>
+                <button onclick="loadCustomers()">🔄 بارگذاری مشتریان</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📝 Activity Form</h3>
+            <div class="grid">
+                <div>
+                    <div class="form-group">
+                        <label>نوع فعالیت:</label>
+                        <select id="activityType">
+                            <option value="call">تماس تلفنی</option>
+                            <option value="meeting">جلسه</option>
+                            <option value="email">ایمیل</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>عنوان:</label>
+                        <input type="text" id="activityTitle" placeholder="عنوان فعالیت" value="تست Production Debug">
+                    </div>
+                </div>
+                <div>
+                    <div class="form-group">
+                        <label>نتیجه:</label>
+                        <select id="activityOutcome">
+                            <option value="completed">تکمیل شده</option>
+                            <option value="follow_up_needed">نیاز به پیگیری</option>
+                            <option value="successful">موفق</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>توضیحات:</label>
+                        <textarea id="activityDescription" rows="2" placeholder="توضیحات...">تست برای بررسی مشکل 500 در production</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Test Actions</h3>
+            <button onclick="testActivitySubmit()" class="success">📤 تست ثبت فعالیت</button>
+            <button onclick="testWithCurl()" class="info">🌐 نمایش دستور cURL</button>
+            <button onclick="debugRequest()" class="warning">🔍 Debug کامل Request</button>
+            <button onclick="clearResult()" class="danger">🗑️ پاک کردن نتایج</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const TENANT_KEY = 'rabin';
+        const BASE_URL = 'https://crm.robintejarat.com';
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+
+        function clearResult() {
+            document.getElementById('result').textContent = '';
+        }
+
+        function getAuthToken() {
+            let token = document.getElementById('authToken').value.trim();
+            if (!token) {
+                // Try to get from cookie
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === 'auth-token') {
+                        token = value;
+                        document.getElementById('authToken').value = token;
+                        break;
+                    }
+                }
+            }
+            return token;
+        }
+
+        function getTokenFromCookie() {
+            const cookies = document.cookie.split(';');
+            let found = false;
+            
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'auth-token') {
+                    document.getElementById('authToken').value = value;
+                    showResult(`✅ Token از cookie پیدا شد:\n${value.substring(0, 100)}...`, 'success');
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) {
+                showResult(`❌ Token در cookies یافت نشد.\n\nCookies موجود:\n${document.cookie}`, 'error');
+            }
+        }
+
+        async function checkAuth() {
+            const token = getAuthToken();
+            if (!token) {
+                showResult('❌ Token یافت نشد. لطفاً ابتدا لاگین کنید و token را وارد کنید.', 'error');
+                return;
+            }
+
+            try {
+                showResult('🔍 در حال بررسی احراز هویت...', 'info');
+
+                const response = await fetch(`${BASE_URL}/api/tenant/profile`, {
+                    headers: {
+                        'X-Tenant-Key': TENANT_KEY,
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                showResult(`📊 نتیجه احراز هویت:
+Status: ${response.status}
+Success: ${data.success}
+User: ${data.user?.name || 'نامشخص'}
+Role: ${data.user?.role || 'نامشخص'}
+ID: ${data.user?.id || 'نامشخص'}
+
+Response:
+${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+
+            } catch (error) {
+                showResult(`❌ خطا در بررسی احراز هویت:
+${error.message}
+
+Stack:
+${error.stack}`, 'error');
+            }
+        }
+
+        async function loadCustomers() {
+            const token = getAuthToken();
+            if (!token) {
+                showResult('❌ ابتدا token را وارد کنید', 'error');
+                return;
+            }
+
+            try {
+                showResult('🔍 در حال بارگذاری مشتریان...', 'info');
+
+                const response = await fetch(`${BASE_URL}/api/tenant/customers-simple?limit=100`, {
+                    headers: {
+                        'X-Tenant-Key': TENANT_KEY,
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const select = document.getElementById('customerId');
+                    select.innerHTML = '<option value="">انتخاب مشتری...</option>';
+                    
+                    data.data.forEach(customer => {
+                        const option = document.createElement('option');
+                        option.value = customer.id;
+                        option.textContent = `${customer.name} (${customer.segment || 'نامشخص'})`;
+                        select.appendChild(option);
+                    });
+
+                    showResult(`✅ ${data.data.length} مشتری بارگذاری شد`, 'success');
+                } else {
+                    showResult(`❌ خطا در بارگذاری مشتریان:
+Status: ${response.status}
+Response: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ خطا در بارگذاری مشتریان:
+${error.message}`, 'error');
+            }
+        }
+
+        async function testActivitySubmit() {
+            const token = getAuthToken();
+            if (!token) {
+                showResult('❌ ابتدا token را وارد کنید', 'error');
+                return;
+            }
+
+            const customerId = document.getElementById('customerId').value;
+            const type = document.getElementById('activityType').value;
+            const title = document.getElementById('activityTitle').value;
+            const description = document.getElementById('activityDescription').value;
+            const outcome = document.getElementById('activityOutcome').value;
+
+            if (!customerId) {
+                showResult('❌ لطفاً مشتری را انتخاب کنید', 'error');
+                return;
+            }
+
+            if (!title.trim()) {
+                showResult('❌ لطفاً عنوان را وارد کنید', 'error');
+                return;
+            }
+
+            const activityData = {
+                customer_id: customerId,
+                type: type,
+                title: title.trim(),
+                description: description.trim(),
+                outcome: outcome,
+                start_time: new Date().toISOString()
+            };
+
+            try {
+                showResult('📤 در حال ارسال فعالیت...', 'info');
+
+                const response = await fetch(`${BASE_URL}/api/tenant/activities`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Tenant-Key': TENANT_KEY,
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(activityData)
+                });
+
+                const responseText = await response.text();
+                let data;
+                
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    data = { raw: responseText };
+                }
+                
+                showResult(`📊 نتیجه ثبت فعالیت:
+Status: ${response.status}
+Status Text: ${response.statusText}
+
+Request Data:
+${JSON.stringify(activityData, null, 2)}
+
+Response:
+${JSON.stringify(data, null, 2)}
+
+Raw Response:
+${responseText}`, response.ok ? 'success' : 'error');
+
+            } catch (error) {
+                showResult(`❌ خطا در ارسال درخواست:
+${error.message}
+
+Request Data:
+${JSON.stringify(activityData, null, 2)}
+
+Stack:
+${error.stack}`, 'error');
+            }
+        }
+
+        function testWithCurl() {
+            const token = getAuthToken();
+            const customerId = document.getElementById('customerId').value;
+            const type = document.getElementById('activityType').value;
+            const title = document.getElementById('activityTitle').value;
+            const description = document.getElementById('activityDescription').value;
+            const outcome = document.getElementById('activityOutcome').value;
+
+            if (!token || !customerId || !title) {
+                showResult('❌ لطفاً همه فیلدهای ضروری را پر کنید', 'error');
+                return;
+            }
+
+            const activityData = {
+                customer_id: customerId,
+                type: type,
+                title: title.trim(),
+                description: description.trim(),
+                outcome: outcome,
+                start_time: new Date().toISOString()
+            };
+
+            const curlCommand = `curl -X POST "${BASE_URL}/api/tenant/activities" \\
+  -H "X-Tenant-Key: ${TENANT_KEY}" \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(activityData)}'`;
+
+            showResult(`🌐 دستور cURL برای تست:
+
+${curlCommand}
+
+📋 برای تست در terminal:
+1. این دستور را کپی کنید
+2. در terminal اجرا کنید
+3. نتیجه را بررسی کنید`, 'info');
+        }
+
+        async function debugRequest() {
+            const token = getAuthToken();
+            if (!token) {
+                showResult('❌ ابتدا token را وارد کنید', 'error');
+                return;
+            }
+
+            showResult(`🔍 Debug کامل Request:
+
+🔑 Token Info:
+Length: ${token.length}
+First 50 chars: ${token.substring(0, 50)}...
+Last 10 chars: ...${token.substring(token.length - 10)}
+
+📋 Headers:
+X-Tenant-Key: ${TENANT_KEY}
+Authorization: Bearer ${token.substring(0, 30)}...
+Content-Type: application/json
+
+🌐 URL: ${BASE_URL}/api/tenant/activities
+
+🍪 Current Cookies:
+${document.cookie}
+
+📊 Browser Info:
+User Agent: ${navigator.userAgent}
+Location: ${window.location.href}
+
+⏰ Current Time: ${new Date().toISOString()}`, 'info');
+        }
+
+        // Auto-load on page load
+        window.addEventListener('load', () => {
+            getTokenFromCookie();
+        });
+    </script>
+</body>
+</html>

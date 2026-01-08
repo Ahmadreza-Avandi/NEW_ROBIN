@@ -149,7 +149,16 @@ export async function POST(request: NextRequest) {
     const conn = await pool.getConnection();
 
     try {
-      const userId = (session as any).user?.id || session.userId || 'unknown';
+      const userId = (session as any).user?.id || (session as any).userId || 'unknown';
+      
+      console.log('📝 ثبت فعالیت جدید:', {
+        tenantKey,
+        customerId: customer_id,
+        type,
+        title,
+        userId,
+        sessionData: session
+      });
 
       const [result] = await conn.query(
         `INSERT INTO activities (
@@ -168,6 +177,8 @@ export async function POST(request: NextRequest) {
         ]
       ) as any;
 
+      console.log('✅ فعالیت با موفقیت ثبت شد:', result.insertId);
+
       return NextResponse.json({
         success: true,
         message: 'فعالیت با موفقیت ثبت شد',
@@ -179,8 +190,16 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ خطا در ثبت فعالیت:', error);
+    console.error('❌ جزئیات خطا:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      tenantKey,
+      body: { customer_id, type, title, description, outcome, start_time }
+    });
+    
+    const errorMessage = error instanceof Error ? error.message : 'خطای نامشخص';
     return NextResponse.json(
-      { success: false, message: 'خطای سرور' },
+      { success: false, message: 'خطای سرور', error: errorMessage },
       { status: 500 }
     );
   }
