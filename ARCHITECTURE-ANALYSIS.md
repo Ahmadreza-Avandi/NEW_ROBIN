@@ -111,7 +111,7 @@ LOG_LEVEL=INFO
 ### 3. Database Configuration (`lib/database.ts`)
 ```typescript
 {
-  host: "181.41.194.136",
+  host: "87.107.146.130",
   database: "crm_system",
   user: "crm_app_user",
   password: "Ahmad.1386",
@@ -328,7 +328,7 @@ console.log('📊 TTS Metrics:', {
 ### پیشنهاد: Database Config در .env
 ```bash
 # .env
-DB_HOST=181.41.194.136
+DB_HOST=87.107.146.130
 DB_NAME=crm_system
 DB_USER=crm_app_user
 DB_PASSWORD=Ahmad.1386
