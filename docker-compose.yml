@@ -127,7 +127,9 @@ services:
 
   # Nginx Reverse Proxy
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     container_name: crm-nginx
     ports:
       - "80:80"

@@ -1006,7 +1006,9 @@ version: '3.8'
 
 services:
   nginx-temp:
-    image: nginx:alpine
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     container_name: nginx-temp
     ports:
       - "80:80"
@@ -1050,7 +1052,7 @@ fi
 
 # راه‌اندازی nginx موقت
 echo "🌐 راه‌اندازی nginx موقت..."
-docker compose -f docker-compose.temp.yml up -d
+docker-compose -f docker-compose.temp.yml up -d
 
 # انتظار برای آماده شدن nginx
 sleep 10
@@ -1079,7 +1081,7 @@ fi
 
 # متوقف کردن nginx موقت
 echo "🛑 متوقف کردن nginx موقت..."
-docker compose -f docker-compose.temp.yml down
+docker-compose -f docker-compose.temp.yml down
 
 # پاک کردن فایل‌های موقت
 rm -f nginx/temp.conf docker-compose.temp.yml

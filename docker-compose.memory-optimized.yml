@@ -116,7 +116,9 @@ services:
       - crm-network
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     container_name: nginx
     restart: unless-stopped
     ports:

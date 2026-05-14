@@ -1,8 +1,12 @@
 # Stage 1: Base image
 FROM node:18-alpine AS base
 
+# تنظیم میرور آروان کلود برای Alpine
+RUN echo "https://mirror.arvancloud.ir/alpine/v3.20/main" > /etc/apk/repositories && \
+    echo "https://mirror.arvancloud.ir/alpine/v3.20/community" >> /etc/apk/repositories
+
 # Install minimal system dependencies
-RUN apk add --no-cache \
+RUN apk update && apk add --no-cache \
     libc6-compat \
     curl \
     bash \
