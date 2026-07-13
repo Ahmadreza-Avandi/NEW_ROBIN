@@ -44,7 +44,7 @@ export default function TenantLoginPage({ params }: { params: { tenant_key: stri
                 سیستم مدیریت ارتباط با مشتری
               </p>
               <p className="text-sm text-muted-foreground font-vazir">
-                Tenant: <span className="font-mono font-bold">{params.tenant_key}</span>
+                 <span className="font-mono font-bold">{params.tenant_key}</span>
               </p>
               <div className="w-16 h-1 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full"></div>
             </div>

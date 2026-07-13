@@ -1,5 +1,5 @@
 # Stage 1: Base image
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # تنظیم میرور آروان کلود برای Alpine
 RUN echo "https://mirror.arvancloud.ir/alpine/v3.20/main" > /etc/apk/repositories && \
@@ -24,11 +24,23 @@ RUN mkdir -p /app/debug /app/scripts /app/logs /app/uploads /app/public/uploads
 
 # مرحله 2: Dependencies
 FROM base AS deps
+
+# تنظیم متغیرهای محیطی برای skip کردن Puppeteer download
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
 COPY package*.json ./
 RUN npm install --only=production --prefer-offline --no-audit --progress=false
 
 # مرحله 3: Builder
 FROM base AS builder
+
+# تنظیم متغیرهای محیطی برای skip کردن Puppeteer download
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY next.config.js ./

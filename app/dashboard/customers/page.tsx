@@ -660,7 +660,7 @@ export default function CustomersPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-8">
-            <div className="relative md:col-span-2">
+            <div className="relative md:col-span-2">         
               <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="جستجوی نام، ایمیل یا تلفن..."

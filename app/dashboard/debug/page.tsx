@@ -120,7 +120,7 @@ export default function DebugPage() {
                   <div className="text-sm text-red-600 font-vazir">
                     خطا: {result.error}
                   </div>
-                )}
+                )}8888
                 {result.data && (
                   <details className="text-xs">
                     <summary className="cursor-pointer font-vazir">جزئیات پاسخ</summary>
@@ -129,7 +129,7 @@ export default function DebugPage() {
                     </pre>
                   </details>
                 )}
-              </div>
+               </div>
             </CardContent>
           </Card>
         ))}
