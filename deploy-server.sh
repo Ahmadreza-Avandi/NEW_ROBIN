@@ -1276,10 +1276,10 @@ if [ "$FORCE_CLEAN" = true ]; then
         
         # Build مرحله به مرحله برای حافظه کم
         echo "🔨 Build مرحله‌ای برای حافظه کم..."
-        docker-compose -f $COMPOSE_FILE build mysql --no-cache --force-rm
-        docker-compose -f $COMPOSE_FILE build phpmyadmin --no-cache --force-rm
-        docker-compose -f $COMPOSE_FILE build nextjs --no-cache --force-rm
-        docker-compose -f $COMPOSE_FILE build nginx --no-cache --force-rm
+        docker-compose -f $COMPOSE_FILE build --no-cache --force-rm mysql
+        docker-compose -f $COMPOSE_FILE build --no-cache --force-rm phpmyadmin
+        docker-compose -f $COMPOSE_FILE build --no-cache --force-rm nextjs
+        docker-compose -f $COMPOSE_FILE build --no-cache --force-rm nginx
         
         # راه‌اندازی
         docker-compose -f $COMPOSE_FILE up -d
@@ -1300,11 +1300,11 @@ else
         
         # Build مرحله به مرحله برای حافظه کم
         echo "🔨 Build مرحله‌ای برای حافظه کم..."
-        docker-compose -f $COMPOSE_FILE build mysql --force-rm || true
-        docker-compose -f $COMPOSE_FILE build phpmyadmin --force-rm || true
+        docker-compose -f $COMPOSE_FILE build --force-rm mysql || true
+        docker-compose -f $COMPOSE_FILE build --force-rm phpmyadmin || true
         echo "🔨 Build NextJS CRM..."
-        docker-compose -f $COMPOSE_FILE build nextjs --force-rm
-        docker-compose -f $COMPOSE_FILE build nginx --force-rm || true
+        docker-compose -f $COMPOSE_FILE build --force-rm nextjs
+        docker-compose -f $COMPOSE_FILE build --force-rm nginx || true
         
         # راه‌اندازی
         docker-compose -f $COMPOSE_FILE up -d
@@ -1312,7 +1312,7 @@ else
         echo "🔨 شروع build و راه‌اندازی..."
         # Build NextJS
         echo "🔨 Build NextJS CRM..."
-        docker-compose -f $COMPOSE_FILE build nextjs --force-rm
+        docker-compose -f $COMPOSE_FILE build --force-rm nextjs
         # راه‌اندازی همه سرویس‌ها
         docker-compose -f $COMPOSE_FILE up --build -d
     fi
